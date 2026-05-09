@@ -1,0 +1,270 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const SellPage = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    description: '',
+    images: [],
+    category: '',
+    productType: 2, // 1: 新品, 2: 二手
+    condition: 3, // 1: 全新, 2: 九成新, 3: 八成新, 4: 七成新, 5: 六成新及以下
+    usageTime: '',
+    hasDefect: false,
+    defectDescription: ''
+  });
+
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    // 模拟图片上传，实际项目中应该上传到服务器
+    const imageUrls = files.map(file => URL.createObjectURL(file));
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...imageUrls]
+    }));
+  };
+
+  const handleRemoveImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    // 模拟提交到服务器
+    setTimeout(() => {
+      setLoading(false);
+      alert('商品发布成功！');
+      navigate('/');
+    }, 1000);
+  };
+
+  return (
+    <div style={{ padding: '20px 0' }}>
+      <div className="container">
+        <h2 style={{ marginBottom: '20px' }}>发布商品</h2>
+        <form onSubmit={handleSubmit} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品类型</label>
+            <div style={{ display: 'flex', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="radio"
+                  name="productType"
+                  value="1"
+                  checked={formData.productType === 1}
+                  onChange={(e) => setFormData(prev => ({ ...prev, productType: parseInt(e.target.value) }))}
+                  style={{ marginRight: '8px' }}
+                />
+                <span>新品</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="radio"
+                  name="productType"
+                  value="2"
+                  checked={formData.productType === 2}
+                  onChange={(e) => setFormData(prev => ({ ...prev, productType: parseInt(e.target.value) }))}
+                  style={{ marginRight: '8px' }}
+                />
+                <span>二手</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品名称</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>价格</label>
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+              min="0"
+              step="0.01"
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品描述</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+              rows="5"
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品图片</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              style={{ marginBottom: '12px' }}
+            />
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {formData.images.map((image, index) => (
+                <div key={index} style={{ position: 'relative' }}>
+                  <img
+                    src={image}
+                    alt={`预览 ${index + 1}`}
+                    style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      background: '#ff4d4f',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品分类</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            >
+              <option value="">请选择分类</option>
+              <option value="electronics">电子产品</option>
+              <option value="clothing">服装</option>
+              <option value="books">图书</option>
+              <option value="home">家居</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+
+          {formData.productType === 2 && (
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ marginBottom: '12px' }}>二手商品信息</h3>
+              
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px' }}>成色</label>
+                <select
+                  name="condition"
+                  value={formData.condition}
+                  onChange={(e) => setFormData(prev => ({ ...prev, condition: parseInt(e.target.value) }))}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                >
+                  <option value="1">全新</option>
+                  <option value="2">九成新</option>
+                  <option value="3">八成新</option>
+                  <option value="4">七成新</option>
+                  <option value="5">六成新及以下</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px' }}>使用时间</label>
+                <input
+                  type="text"
+                  name="usageTime"
+                  value={formData.usageTime}
+                  onChange={handleChange}
+                  placeholder="例如：6个月"
+                  style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                  <input
+                    type="checkbox"
+                    name="hasDefect"
+                    checked={formData.hasDefect}
+                    onChange={handleChange}
+                    style={{ marginRight: '8px' }}
+                  />
+                  <label>有瑕疵</label>
+                </div>
+                {formData.hasDefect && (
+                  <textarea
+                    name="defectDescription"
+                    value={formData.defectDescription}
+                    onChange={handleChange}
+                    placeholder="请描述瑕疵情况"
+                    rows="3"
+                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', resize: 'vertical' }}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: '10px 30px',
+                background: '#1890ff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              {loading ? '发布中...' : '发布商品'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default SellPage;

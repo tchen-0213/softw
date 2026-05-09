@@ -1,0 +1,75 @@
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:3001/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// 请求拦截器
+api.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => {
+    return Promise.reject(error);
+  }
+);
+
+// 商品相关API
+export const productApi = {
+  getList: (params) => api.get('/products', { params }),
+  getDetail: (id) => api.get(`/products/${id}`),
+  search: (params) => api.get('/products/search', { params }),
+  getRecommended: () => api.get('/products/recommended'),
+  create: (data) => api.post('/products', data),
+  update: (id, data) => api.put(`/products/${id}`, data),
+  delete: (id) => api.delete(`/products/${id}`)
+};
+
+// 用户相关API
+export const userApi = {
+  register: (data) => api.post('/users/register', data),
+  login: (data) => api.post('/users/login', data),
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (data) => api.put('/users/profile', data),
+  updatePassword: (data) => api.put('/users/password', data)
+};
+
+// 订单相关API
+export const orderApi = {
+  create: (data) => api.post('/orders', data),
+  getList: (params) => api.get('/orders', { params }),
+  getDetail: (id) => api.get(`/orders/${id}`),
+  update: (id, data) => api.put(`/orders/${id}`, data),
+  cancel: (id) => api.post(`/orders/${id}/cancel`),
+  pay: (id) => api.post(`/orders/${id}/pay`)
+};
+
+// 二手商品相关API
+export const secondhandApi = {
+  getList: (params) => api.get('/secondhand', { params }),
+  getDetail: (id) => api.get(`/secondhand/${id}`),
+  search: (params) => api.get('/secondhand/search', { params }),
+  create: (data) => api.post('/secondhand', data),
+  update: (id, data) => api.put(`/secondhand/${id}`, data),
+  delete: (id) => api.delete(`/secondhand/${id}`)
+};
+
+// 评价相关API
+export const evaluationApi = {
+  create: (data) => api.post('/evaluations', data),
+  getProductEvaluations: (params) => api.get('/evaluations/product', { params }),
+  getUserEvaluations: (params) => api.get('/evaluations/user', { params }),
+  reply: (id, data) => api.put(`/evaluations/${id}/reply`, data),
+  approve: (id) => api.put(`/evaluations/${id}/approve`)
+};
+
+export default api;
