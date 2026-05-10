@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { productImages } from '../../data/imageAssets';
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]);
@@ -21,7 +22,7 @@ const OrderPage = () => {
               name: '全新 iPhone 15 Pro',
               price: 199.99,
               quantity: 1,
-              image: 'https://via.placeholder.com/80x80?text=iPhone'
+              image: productImages.iphone
             }
           ]
         },
@@ -36,7 +37,7 @@ const OrderPage = () => {
               name: 'MacBook Pro 2026',
               price: 599.99,
               quantity: 1,
-              image: 'https://via.placeholder.com/80x80?text=MacBook'
+              image: productImages.macbook
             }
           ]
         },
@@ -51,7 +52,7 @@ const OrderPage = () => {
               name: 'AirPods Pro 2',
               price: 99.99,
               quantity: 1,
-              image: 'https://via.placeholder.com/80x80?text=AirPods'
+              image: productImages.airpods
             }
           ]
         },
@@ -66,7 +67,7 @@ const OrderPage = () => {
               name: '二手 iPad Pro',
               price: 149.99,
               quantity: 1,
-              image: 'https://via.placeholder.com/80x80?text=iPad'
+              image: productImages.ipad
             }
           ]
         }

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { avatarImages } from '../../data/imageAssets';
 
 const UserPage = () => {
   const [user, setUser] = useState({
     id: '1',
     nickname: '张三',
-    avatar: 'https://via.placeholder.com/100x100?text=Avatar',
+    avatar: avatarImages.userDefault,
     email: 'zhangsan@example.com',
     phone: '13800138000',
     creditLevel: '钻石会员',

@@ -1,3 +1,5 @@
+import { avatarImages, productImages } from './imageAssets';
+
 // 模拟商品数据
 export const mockProducts = [
   // 电子产品
@@ -6,9 +8,9 @@ export const mockProducts = [
     name: "智能手机 Pro Max",
     description: "最新款智能手机，搭载强大处理器，高清摄像头，长续航电池",
     images: [
-      "https://via.placeholder.com/400x300?text=Smartphone+Pro+Max",
-      "https://via.placeholder.com/400x300?text=Smartphone+Back",
-      "https://via.placeholder.com/400x300?text=Smartphone+Side"
+      productImages.smartphone,
+      productImages.smartphoneBack,
+      productImages.smartphoneSide
     ],
     price: 5999,
     stock: 50,
@@ -18,7 +20,7 @@ export const mockProducts = [
     sellerId: 1,
     seller: {
       nickname: "科技数码店",
-      avatar: "https://via.placeholder.com/50x50?text=Seller1",
+      avatar: avatarImages.sellerTech,
       creditLevel: "钻石会员"
     },
     status: "在售",
@@ -32,8 +34,8 @@ export const mockProducts = [
     name: "无线蓝牙耳机",
     description: "高品质无线蓝牙耳机，主动降噪，持久续航",
     images: [
-      "https://via.placeholder.com/400x300?text=Wireless+Headphones",
-      "https://via.placeholder.com/400x300?text=Headphones+Case"
+      productImages.headphones,
+      productImages.headphonesCase
     ],
     price: 1299,
     stock: 100,
@@ -43,7 +45,7 @@ export const mockProducts = [
     sellerId: 1,
     seller: {
       nickname: "科技数码店",
-      avatar: "https://via.placeholder.com/50x50?text=Seller1",
+      avatar: avatarImages.sellerTech,
       creditLevel: "钻石会员"
     },
     status: "在售",
@@ -59,8 +61,8 @@ export const mockProducts = [
     name: "纯棉休闲T恤",
     description: "100%纯棉材质，舒适透气，多种颜色可选",
     images: [
-      "https://via.placeholder.com/400x300?text=Cotton+T-Shirt",
-      "https://via.placeholder.com/400x300?text=T-Shirt+Detail"
+      productImages.tshirt,
+      productImages.tshirtDetail
     ],
     price: 99,
     stock: 200,
@@ -70,7 +72,7 @@ export const mockProducts = [
     sellerId: 2,
     seller: {
       nickname: "潮流服饰店",
-      avatar: "https://via.placeholder.com/50x50?text=Seller2",
+      avatar: avatarImages.sellerFashion,
       creditLevel: "金牌会员"
     },
     status: "在售",
@@ -84,8 +86,8 @@ export const mockProducts = [
     name: "运动休闲鞋",
     description: "轻便透气，适合日常运动和休闲穿着",
     images: [
-      "https://via.placeholder.com/400x300?text=Sports+Shoes",
-      "https://via.placeholder.com/400x300?text=Shoes+Side"
+      productImages.shoes,
+      productImages.shoesSide
     ],
     price: 399,
     stock: 150,
@@ -95,7 +97,7 @@ export const mockProducts = [
     sellerId: 2,
     seller: {
       nickname: "潮流服饰店",
-      avatar: "https://via.placeholder.com/50x50?text=Seller2",
+      avatar: avatarImages.sellerFashion,
       creditLevel: "金牌会员"
     },
     status: "在售",
@@ -111,8 +113,8 @@ export const mockProducts = [
     name: "现代简约沙发",
     description: "舒适透气，现代简约设计，适合各种家居风格",
     images: [
-      "https://via.placeholder.com/400x300?text=Modern+Sofa",
-      "https://via.placeholder.com/400x300?text=Sofa+Detail"
+      productImages.sofa,
+      productImages.sofaDetail
     ],
     price: 2999,
     stock: 20,
@@ -122,7 +124,7 @@ export const mockProducts = [
     sellerId: 3,
     seller: {
       nickname: "家居生活馆",
-      avatar: "https://via.placeholder.com/50x50?text=Seller3",
+      avatar: avatarImages.sellerHome,
       creditLevel: "银牌会员"
     },
     status: "在售",
@@ -138,8 +140,8 @@ export const mockProducts = [
     name: "编程入门指南",
     description: "适合初学者的编程入门书籍，包含实战项目",
     images: [
-      "https://via.placeholder.com/400x300?text=Programming+Book",
-      "https://via.placeholder.com/400x300?text=Book+Cover"
+      productImages.book,
+      productImages.bookCover
     ],
     price: 59,
     stock: 100,
@@ -149,7 +151,7 @@ export const mockProducts = [
     sellerId: 4,
     seller: {
       nickname: "知识书屋",
-      avatar: "https://via.placeholder.com/50x50?text=Seller4",
+      avatar: avatarImages.sellerBook,
       creditLevel: "铜牌会员"
     },
     status: "在售",
@@ -165,8 +167,8 @@ export const mockProducts = [
     name: "二手笔记本电脑",
     description: "9成新，性能良好，适合办公和学习",
     images: [
-      "https://via.placeholder.com/400x300?text=Used+Laptop",
-      "https://via.placeholder.com/400x300?text=Laptop+Open"
+      productImages.usedLaptop,
+      productImages.laptopOpen
     ],
     price: 1999,
     stock: 1,
@@ -176,7 +178,7 @@ export const mockProducts = [
     sellerId: 5,
     seller: {
       nickname: "个人卖家",
-      avatar: "https://via.placeholder.com/50x50?text=Seller5",
+      avatar: avatarImages.sellerPersonal,
       creditLevel: "普通会员"
     },
     status: "在售",
@@ -193,8 +195,8 @@ export const mockProducts = [
     name: "二手吉他",
     description: "8成新，音色良好，适合初学者",
     images: [
-      "https://via.placeholder.com/400x300?text=Used+Guitar",
-      "https://via.placeholder.com/400x300?text=Guitar+Detail"
+      productImages.guitar,
+      productImages.guitarDetail
     ],
     price: 499,
     stock: 1,
@@ -204,7 +206,7 @@ export const mockProducts = [
     sellerId: 5,
     seller: {
       nickname: "个人卖家",
-      avatar: "https://via.placeholder.com/50x50?text=Seller5",
+      avatar: avatarImages.sellerPersonal,
       creditLevel: "普通会员"
     },
     status: "在售",

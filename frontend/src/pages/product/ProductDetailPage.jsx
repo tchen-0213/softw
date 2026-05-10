@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductDetail } from '../../store/productSlice';
 import EvaluationList from '../../components/evaluation/EvaluationList';
+import { fallbackImages } from '../../data/imageAssets';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -32,7 +33,7 @@ const ProductDetailPage = () => {
           <div className="product-detail-header">
             <div className="product-detail-images">
               <img
-                src={currentProduct.images?.[0] || 'https://via.placeholder.com/500x500?text=No+Image'}
+                src={currentProduct.images?.[0] || fallbackImages.product}
                 alt={currentProduct.name}
                 style={{ width: '100%', height: '500px', objectFit: 'contain' }}
               />
@@ -61,7 +62,7 @@ const ProductDetailPage = () => {
                 <h3>卖家信息</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
                   <img
-                    src={currentProduct.seller?.avatar || 'https://via.placeholder.com/50x50?text=Avatar'}
+                    src={currentProduct.seller?.avatar || fallbackImages.avatar}
                     alt={currentProduct.seller?.nickname}
                     style={{ width: '50px', height: '50px', borderRadius: '50%' }}
                   />

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { avatarImages, reviewImages } from '../../data/imageAssets';
 
 const EvaluationList = ({ productId }) => {
   const [evaluations, setEvaluations] = useState([]);
@@ -12,7 +13,7 @@ const EvaluationList = ({ productId }) => {
           id: '1',
           userId: '1',
           username: '张三',
-          avatar: 'https://via.placeholder.com/40x40?text=User1',
+          avatar: avatarImages.userOne,
           rating: 5,
           content: '商品质量很好，与描述一致，非常满意！',
           images: [],
@@ -22,7 +23,7 @@ const EvaluationList = ({ productId }) => {
           id: '2',
           userId: '2',
           username: '李四',
-          avatar: 'https://via.placeholder.com/40x40?text=User2',
+          avatar: avatarImages.userTwo,
           rating: 4,
           content: '商品还可以，就是物流有点慢。',
           images: [],
@@ -32,12 +33,12 @@ const EvaluationList = ({ productId }) => {
           id: '3',
           userId: '3',
           username: '王五',
-          avatar: 'https://via.placeholder.com/40x40?text=User3',
+          avatar: avatarImages.userThree,
           rating: 5,
           content: '二手商品，但成色很好，几乎全新，非常值得购买！',
           images: [
-            'https://via.placeholder.com/100x100?text=Image1',
-            'https://via.placeholder.com/100x100?text=Image2'
+            reviewImages.detailOne,
+            reviewImages.detailTwo
           ],
           createTime: '2026-03-25 09:00:00'
         }

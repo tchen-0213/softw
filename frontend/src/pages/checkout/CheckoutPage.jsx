@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
+import { fallbackImages } from '../../data/imageAssets';
 
 const CheckoutPage = () => {
   const { items } = useSelector((state) => state.cart);
@@ -104,7 +105,7 @@ const CheckoutPage = () => {
                 style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #e8e8e8' }}
               >
                 <img
-                  src={item.images?.[0] || 'https://via.placeholder.com/80x80?text=No+Image'}
+                  src={item.images?.[0] || fallbackImages.product}
                   alt={item.name}
                   style={{ width: '80px', height: '80px', objectFit: 'cover', marginRight: '16px' }}
                 />

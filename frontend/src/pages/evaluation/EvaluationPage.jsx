@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { productImages } from '../../data/imageAssets';
 
 const EvaluationPage = () => {
   const { orderId } = useParams();
@@ -10,7 +11,7 @@ const EvaluationPage = () => {
       id: '1',
       productId: '1',
       productName: '全新 iPhone 15 Pro',
-      productImage: 'https://via.placeholder.com/100x100?text=iPhone',
+      productImage: productImages.iphone,
       rating: 5,
       content: '',
       images: []
@@ -19,7 +20,7 @@ const EvaluationPage = () => {
       id: '2',
       productId: '2',
       productName: 'AirPods Pro 2',
-      productImage: 'https://via.placeholder.com/100x100?text=AirPods',
+      productImage: productImages.airpods,
       rating: 5,
       content: '',
       images: []

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { productImages, shopImages } from '../../data/imageAssets';
 
 const ShopPage = () => {
   const [shop, setShop] = useState({
     id: '1',
     name: '我的店铺',
     description: '这是一家经营各类商品的店铺，欢迎光临！',
-    logo: 'https://via.placeholder.com/100x100?text=Shop+Logo',
-    banner: 'https://via.placeholder.com/800x200?text=Shop+Banner',
+    logo: shopImages.logo,
+    banner: shopImages.banner,
     products: [
       {
         id: '1',
@@ -15,7 +16,7 @@ const ShopPage = () => {
         price: 199.99,
         stock: 10,
         sales: 5,
-        image: 'https://via.placeholder.com/100x100?text=iPhone'
+        image: productImages.iphone
       },
       {
         id: '2',
@@ -23,7 +24,7 @@ const ShopPage = () => {
         price: 599.99,
         stock: 5,
         sales: 2,
-        image: 'https://via.placeholder.com/100x100?text=MacBook'
+        image: productImages.macbook
       },
       {
         id: '3',
@@ -31,7 +32,7 @@ const ShopPage = () => {
         price: 99.99,
         stock: 20,
         sales: 10,
-        image: 'https://via.placeholder.com/100x100?text=AirPods'
+        image: productImages.airpods
       }
     ]
   });

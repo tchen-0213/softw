@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fallbackImages } from '../../data/imageAssets';
 
 const SearchResults = ({ results, loading, error }) => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const SearchResults = ({ results, loading, error }) => {
           onClick={() => handleProductClick(product.id)}
         >
           <img
-            src={product.images?.[0] || 'https://via.placeholder.com/280x200?text=No+Image'}
+            src={product.images?.[0] || fallbackImages.product}
             alt={product.name}
             className="product-image"
           />

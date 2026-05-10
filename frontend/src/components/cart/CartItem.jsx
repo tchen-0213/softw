@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { removeFromCart, updateQuantity } from '../../store/cartSlice';
+import { fallbackImages } from '../../data/imageAssets';
 
 const CartItem = ({ item }) => {
   const dispatch = useDispatch();
@@ -17,7 +18,7 @@ const CartItem = ({ item }) => {
   return (
     <div style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #e8e8e8', alignItems: 'center' }}>
       <img
-        src={item.images?.[0] || 'https://via.placeholder.com/100x100?text=No+Image'}
+        src={item.images?.[0] || fallbackImages.product}
         alt={item.name}
         style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '16px' }}
       />

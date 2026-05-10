@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRecommendedProducts, getProducts } from '../../store/productSlice';
 import { useNavigate } from 'react-router-dom';
+import { fallbackImages } from '../../data/imageAssets';
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -37,7 +38,7 @@ const HomePage = () => {
               onClick={() => handleProductClick(product.id)}
             >
               <img
-                src={product.images?.[0] || 'https://via.placeholder.com/280x200?text=No+Image'}
+                src={product.images?.[0] || fallbackImages.product}
                 alt={product.name}
                 className="product-image"
               />
@@ -63,7 +64,7 @@ const HomePage = () => {
               onClick={() => handleProductClick(product.id)}
             >
               <img
-                src={product.images?.[0] || 'https://via.placeholder.com/280x200?text=No+Image'}
+                src={product.images?.[0] || fallbackImages.product}
                 alt={product.name}
                 className="product-image"
               />
