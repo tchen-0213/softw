@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { productApi, secondhandApi } from '../../services/api';
+
+const conditionMap = {
+  1: '全新',
+  2: '9成新',
+  3: '8成新',
+  4: '7成新',
+  5: '6成新及以下'
+};
 
 const SellPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    stock: 1,
     description: '',
     images: [],
     category: '',
@@ -16,6 +26,7 @@ const SellPage = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -43,21 +54,49 @@ const SellPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!localStorage.getItem('token')) {
+      alert('请先登录后再发布商品');
+      navigate('/login');
+      return;
+    }
+
     setLoading(true);
-    // 模拟提交到服务器
-    setTimeout(() => {
-      setLoading(false);
+    setError('');
+
+    try {
+      const payload = {
+        name: formData.name,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        description: formData.description,
+        images: formData.images,
+        category: formData.category,
+        productType: formData.productType,
+        condition: conditionMap[formData.condition],
+        location: formData.location,
+        isSecondhand: formData.productType === 2
+      };
+
+      const response = formData.productType === 2
+        ? await secondhandApi.create(payload)
+        : await productApi.create(payload);
+
       alert('商品发布成功！');
-      navigate('/');
-    }, 1000);
+      navigate(`/product/${response.data.id}`);
+    } catch (err) {
+      setError(err.response?.data?.message || '商品发布失败，请检查信息后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={{ padding: '20px 0' }}>
       <div className="container">
         <h2 style={{ marginBottom: '20px' }}>发布商品</h2>
+        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>商品类型</label>
@@ -109,6 +148,20 @@ const SellPage = () => {
               required
               min="0"
               step="0.01"
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>库存数量</label>
+            <input
+              type="number"
+              name="stock"
+              value={formData.stock}
+              onChange={handleChange}
+              required
+              min="1"
+              step="1"
               style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
             />
           </div>

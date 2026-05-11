@@ -1,50 +1,68 @@
 import React, { useEffect, useState } from 'react';
 import { avatarImages, reviewImages } from '../../data/imageAssets';
+import { evaluationApi } from '../../services/api';
+
+const mockEvaluations = [
+  {
+    id: '1',
+    userId: '1',
+    username: '张三',
+    avatar: avatarImages.userOne,
+    rating: 5,
+    content: '商品质量很好，与描述一致，非常满意！',
+    images: [],
+    createTime: '2026-03-30 10:00:00'
+  },
+  {
+    id: '2',
+    userId: '2',
+    username: '李四',
+    avatar: avatarImages.userTwo,
+    rating: 4,
+    content: '商品还可以，就是物流有点慢。',
+    images: [],
+    createTime: '2026-03-28 15:30:00'
+  },
+  {
+    id: '3',
+    userId: '3',
+    username: '王五',
+    avatar: avatarImages.userThree,
+    rating: 5,
+    content: '二手商品，但成色很好，几乎全新，非常值得购买！',
+    images: [
+      reviewImages.detailOne,
+      reviewImages.detailTwo
+    ],
+    createTime: '2026-03-25 09:00:00'
+  }
+];
+
+const normalizeEvaluation = (evaluation) => ({
+  ...evaluation,
+  username: evaluation.username || evaluation.user?.nickname || evaluation.user?.username || '匿名用户',
+  avatar: evaluation.avatar || evaluation.user?.avatar || avatarImages.userOne,
+  createTime: evaluation.createTime || new Date(evaluation.createdAt).toLocaleString()
+});
 
 const EvaluationList = ({ productId }) => {
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 模拟获取评价数据
-    setTimeout(() => {
-      setEvaluations([
-        {
-          id: '1',
-          userId: '1',
-          username: '张三',
-          avatar: avatarImages.userOne,
-          rating: 5,
-          content: '商品质量很好，与描述一致，非常满意！',
-          images: [],
-          createTime: '2026-03-30 10:00:00'
-        },
-        {
-          id: '2',
-          userId: '2',
-          username: '李四',
-          avatar: avatarImages.userTwo,
-          rating: 4,
-          content: '商品还可以，就是物流有点慢。',
-          images: [],
-          createTime: '2026-03-28 15:30:00'
-        },
-        {
-          id: '3',
-          userId: '3',
-          username: '王五',
-          avatar: avatarImages.userThree,
-          rating: 5,
-          content: '二手商品，但成色很好，几乎全新，非常值得购买！',
-          images: [
-            reviewImages.detailOne,
-            reviewImages.detailTwo
-          ],
-          createTime: '2026-03-25 09:00:00'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const loadEvaluations = async () => {
+      try {
+        const response = await evaluationApi.getProductEvaluations({ productId });
+        const result = response.data.evaluations || [];
+        setEvaluations(result.length ? result.map(normalizeEvaluation) : mockEvaluations);
+      } catch (error) {
+        setEvaluations(mockEvaluations);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvaluations();
   }, [productId]);
 
   const renderStars = (rating) => {

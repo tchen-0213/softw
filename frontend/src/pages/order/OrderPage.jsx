@@ -1,80 +1,115 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productImages } from '../../data/imageAssets';
+import { orderApi } from '../../services/api';
+
+const mockOrders = [
+  {
+    id: '1',
+    createTime: '2026-04-01 12:00:00',
+    status: '待付款',
+    totalPrice: 199.99,
+    items: [
+      {
+        id: '1',
+        name: '全新 iPhone 15 Pro',
+        price: 199.99,
+        quantity: 1,
+        image: productImages.iphone
+      }
+    ]
+  },
+  {
+    id: '2',
+    createTime: '2026-03-28 15:30:00',
+    status: '待发货',
+    totalPrice: 599.99,
+    items: [
+      {
+        id: '2',
+        name: 'MacBook Pro 2026',
+        price: 599.99,
+        quantity: 1,
+        image: productImages.macbook
+      }
+    ]
+  }
+];
+
+const normalizeOrder = (order) => ({
+  ...order,
+  createTime: order.createTime || new Date(order.createdAt).toLocaleString(),
+  totalPrice: Number(order.totalPrice ?? order.totalAmount ?? 0),
+  items: (order.items || []).map(item => ({
+    ...item,
+    id: item.id || item.productId
+  }))
+});
 
 const OrderPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 模拟获取订单数据
-    setTimeout(() => {
-      setOrders([
-        {
-          id: '1',
-          createTime: '2026-04-01 12:00:00',
-          status: 1, // 待付款
-          totalPrice: 199.99,
-          items: [
-            {
-              id: '1',
-              name: '全新 iPhone 15 Pro',
-              price: 199.99,
-              quantity: 1,
-              image: productImages.iphone
-            }
-          ]
-        },
-        {
-          id: '2',
-          createTime: '2026-03-28 15:30:00',
-          status: 2, // 待发货
-          totalPrice: 599.99,
-          items: [
-            {
-              id: '2',
-              name: 'MacBook Pro 2026',
-              price: 599.99,
-              quantity: 1,
-              image: productImages.macbook
-            }
-          ]
-        },
-        {
-          id: '3',
-          createTime: '2026-03-20 10:00:00',
-          status: 3, // 待收货
-          totalPrice: 99.99,
-          items: [
-            {
-              id: '3',
-              name: 'AirPods Pro 2',
-              price: 99.99,
-              quantity: 1,
-              image: productImages.airpods
-            }
-          ]
-        },
-        {
-          id: '4',
-          createTime: '2026-03-15 09:00:00',
-          status: 4, // 已完成
-          totalPrice: 149.99,
-          items: [
-            {
-              id: '4',
-              name: '二手 iPad Pro',
-              price: 149.99,
-              quantity: 1,
-              image: productImages.ipad
-            }
-          ]
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const loadOrders = async () => {
+      if (!localStorage.getItem('token')) {
+        setOrders(mockOrders);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await orderApi.getList();
+        const result = response.data.orders || [];
+        setOrders(result.map(normalizeOrder));
+      } catch (err) {
+        setError(err.response?.data?.message || '订单加载失败，已显示演示数据');
+        setOrders(mockOrders);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
   }, []);
+
+  const refreshOrder = (updatedOrder) => {
+    setOrders(prev => prev.map(order => (
+      Number(order.id) === Number(updatedOrder.id) ? normalizeOrder(updatedOrder) : order
+    )));
+  };
+
+  const handleCancel = async (id) => {
+    try {
+      const response = await orderApi.cancel(id);
+      refreshOrder(response.data);
+    } catch (err) {
+      alert(err.response?.data?.message || '取消订单失败');
+    }
+  };
+
+  const handlePay = async (id) => {
+    try {
+      const response = await orderApi.pay(id);
+      refreshOrder(response.data);
+    } catch (err) {
+      alert(err.response?.data?.message || '支付失败');
+    }
+  };
+
+  const handleConfirm = async (id) => {
+    try {
+      const response = await orderApi.update(id, {
+        status: '已完成',
+        logisticsInfo: { status: '已签收' }
+      });
+      refreshOrder(response.data);
+    } catch (err) {
+      alert(err.response?.data?.message || '确认收货失败');
+    }
+  };
 
   const getStatusText = (status) => {
     const statusMap = {
@@ -84,7 +119,7 @@ const OrderPage = () => {
       4: '已完成',
       5: '已取消'
     };
-    return statusMap[status] || '未知状态';
+    return statusMap[status] || status || '未知状态';
   };
 
   if (loading) {
@@ -95,6 +130,7 @@ const OrderPage = () => {
     <div style={{ padding: '20px 0' }}>
       <div className="container">
         <h2 style={{ marginBottom: '20px' }}>我的订单</h2>
+        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         {orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '100px 0' }}>
             <p>暂无订单</p>
@@ -144,9 +180,10 @@ const OrderPage = () => {
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>总计: ¥{order.totalPrice.toFixed(2)}</div>
                 </div>
                 <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                  {order.status === 1 && (
+                  {(order.status === 1 || order.status === '待付款') && (
                     <>
                       <button
+                        onClick={() => handleCancel(order.id)}
                         style={{
                           padding: '6px 12px',
                           background: '#fff',
@@ -159,6 +196,7 @@ const OrderPage = () => {
                         取消订单
                       </button>
                       <button
+                        onClick={() => handlePay(order.id)}
                         style={{
                           padding: '6px 12px',
                           background: '#ff4d4f',
@@ -172,8 +210,9 @@ const OrderPage = () => {
                       </button>
                     </>
                   )}
-                  {order.status === 3 && (
+                  {order.status === 3 || order.status === '待收货' ? (
                     <button
+                      onClick={() => handleConfirm(order.id)}
                       style={{
                         padding: '6px 12px',
                         background: '#1890ff',
@@ -185,8 +224,8 @@ const OrderPage = () => {
                     >
                       确认收货
                     </button>
-                  )}
-                  {order.status === 4 && (
+                  ) : null}
+                  {order.status === 4 || order.status === '已完成' ? (
                     <button
                       onClick={() => navigate(`/evaluation/${order.id}`)}
                       style={{
@@ -200,7 +239,7 @@ const OrderPage = () => {
                     >
                       评价
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}

@@ -29,7 +29,7 @@ const Shop = sequelize.define('Shop', {
     defaultValue: ''
   },
   status: {
-    type: DataTypes.ENUM('营业中', '已关闭', '审核中'),
+    type: DataTypes.STRING,
     defaultValue: '审核中'
   },
   createdAt: {

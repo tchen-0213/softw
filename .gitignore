@@ -123,6 +123,7 @@ desktop.ini
 *.sqlite
 *.sqlite3
 *.sql
+.mysql-data/
 
 # =========================
 # Temporary files

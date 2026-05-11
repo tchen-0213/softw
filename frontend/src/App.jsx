@@ -10,6 +10,7 @@ import SellPage from './pages/sell/SellPage'
 import EvaluationPage from './pages/evaluation/EvaluationPage'
 import ShopPage from './pages/shop/ShopPage'
 import UserPage from './pages/user/UserPage'
+import AuthPage from './pages/auth/AuthPage'
 import Header from './components/Header'
 import Footer from './components/Footer'
 
@@ -28,6 +29,8 @@ function App() {
         <Route path="/evaluation/:orderId" element={<EvaluationPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/user" element={<UserPage />} />
+        <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/register" element={<AuthPage mode="register" />} />
       </Routes>
       <Footer />
     </Router>

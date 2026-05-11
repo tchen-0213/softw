@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductDetail } from '../../store/productSlice';
+import { addToCart } from '../../store/cartSlice';
 import EvaluationList from '../../components/evaluation/EvaluationList';
 import { fallbackImages } from '../../data/imageAssets';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentProduct, loading, error } = useSelector((state) => state.product);
 
@@ -25,6 +27,16 @@ const ProductDetailPage = () => {
   if (!currentProduct) {
     return <div className="empty">商品不存在</div>;
   }
+
+  const handleAddToCart = () => {
+    dispatch(addToCart({ ...currentProduct, quantity: 1 }));
+    alert('已加入购物车');
+  };
+
+  const handleBuyNow = () => {
+    dispatch(addToCart({ ...currentProduct, quantity: 1 }));
+    navigate('/checkout');
+  };
 
   return (
     <div className="product-detail">
@@ -75,8 +87,8 @@ const ProductDetailPage = () => {
                 </div>
               </div>
               <div className="product-detail-actions">
-                <button className="button button-secondary">加入购物车</button>
-                <button className="button button-primary">立即购买</button>
+                <button className="button button-secondary" onClick={handleAddToCart}>加入购物车</button>
+                <button className="button button-primary" onClick={handleBuyNow}>立即购买</button>
               </div>
             </div>
           </div>
@@ -86,7 +98,7 @@ const ProductDetailPage = () => {
               {currentProduct.description || '暂无描述'}
             </div>
           </div>
-          {currentProduct.productType === 2 && (
+          {(currentProduct.productType === 2 || currentProduct.isSecondhand) && (
             <div style={{ marginTop: '40px' }}>
               <h2>二手商品信息</h2>
               <div style={{ marginTop: '20px' }}>
@@ -107,6 +119,9 @@ const ProductDetailPage = () => {
 };
 
 const getConditionText = (condition) => {
+  if (typeof condition === 'string') {
+    return condition;
+  }
   const conditionMap = {
     1: '全新',
     2: '九成新',

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
+import { orderApi } from '../../services/api';
 
 const CheckoutPage = () => {
   const { items } = useSelector((state) => state.cart);
@@ -11,6 +12,8 @@ const CheckoutPage = () => {
 
   const [selectedAddress, setSelectedAddress] = useState('1');
   const [paymentMethod, setPaymentMethod] = useState('wechat');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -30,11 +33,36 @@ const CheckoutPage = () => {
     }
   ];
 
-  const handleSubmit = () => {
-    // 模拟提交订单
-    alert('订单提交成功！');
-    dispatch(clearCart());
-    navigate('/order');
+  const handleSubmit = async () => {
+    if (!localStorage.getItem('token')) {
+      alert('请先登录后再提交订单');
+      navigate('/login');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const address = addresses.find(item => item.id === selectedAddress);
+      const response = await orderApi.create({
+        items: items.map(item => ({
+          productId: item.id,
+          quantity: item.quantity
+        })),
+        shippingAddress: address,
+        paymentMethod
+      });
+
+      await orderApi.pay(response.data.id);
+      alert('订单提交并支付成功！');
+      dispatch(clearCart());
+      navigate('/order');
+    } catch (err) {
+      setError(err.response?.data?.message || '订单提交失败，请稍后重试');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -63,6 +91,7 @@ const CheckoutPage = () => {
     <div style={{ padding: '20px 0' }}>
       <div className="container">
         <h2 style={{ marginBottom: '20px' }}>结算</h2>
+        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         
         <div style={{ marginBottom: '30px' }}>
           <h3 style={{ marginBottom: '15px' }}>收货地址</h3>
@@ -177,17 +206,18 @@ const CheckoutPage = () => {
           </div>
           <button
             onClick={handleSubmit}
+            disabled={submitting}
             style={{
               padding: '12px 30px',
               background: '#ff4d4f',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer',
+              cursor: submitting ? 'not-allowed' : 'pointer',
               fontSize: '16px'
             }}
           >
-            提交订单
+            {submitting ? '提交中...' : '提交订单'}
           </button>
         </div>
       </div>

@@ -15,14 +15,14 @@ const router = express.Router();
 // 获取商品列表
 router.get('/', getProducts);
 
-// 获取商品详情
-router.get('/:id', getProductDetail);
-
 // 搜索商品
 router.get('/search', searchProducts);
 
 // 获取推荐商品
 router.get('/recommended', getRecommendedProducts);
+
+// 获取商品详情
+router.get('/:id', getProductDetail);
 
 // 创建商品（需要登录）
 router.post('/', protect, createProduct);

@@ -18,15 +18,15 @@ router.get('/', (req, res, next) => {
   next();
 }, getProducts);
 
-// 获取二手商品详情
-router.get('/:id', getProductDetail);
-
 // 搜索二手商品
 router.get('/search', (req, res, next) => {
   // 添加过滤条件，只搜索二手商品
   req.query.isSecondhand = true;
   next();
 }, searchProducts);
+
+// 获取二手商品详情
+router.get('/:id', getProductDetail);
 
 // 发布二手商品（需要登录）
 router.post('/', protect, (req, res, next) => {

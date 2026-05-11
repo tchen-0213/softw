@@ -57,7 +57,7 @@ const Evaluation = sequelize.define('Evaluation', {
     defaultValue: []
   },
   status: {
-    type: DataTypes.ENUM('待审核', '已发布', '已删除'),
+    type: DataTypes.STRING,
     defaultValue: '待审核'
   },
   reply: {

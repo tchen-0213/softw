@@ -7,11 +7,11 @@ const FilterPanel = ({ onFilterChange }) => {
 
   const categories = [
     { value: '', label: '全部分类' },
-    { value: '1', label: '电子产品' },
-    { value: '2', label: '服装鞋包' },
-    { value: '3', label: '家居生活' },
-    { value: '4', label: '运动户外' },
-    { value: '5', label: '图书音像' }
+    { value: 'electronics', label: '电子产品' },
+    { value: 'clothing', label: '服装鞋包' },
+    { value: 'home', label: '家居生活' },
+    { value: 'sports', label: '运动户外' },
+    { value: 'books', label: '图书音像' }
   ];
 
   const productTypes = [
@@ -22,8 +22,8 @@ const FilterPanel = ({ onFilterChange }) => {
 
   const handleFilterChange = () => {
     onFilterChange({
-      priceMin: priceRange.min,
-      priceMax: priceRange.max,
+      minPrice: priceRange.min,
+      maxPrice: priceRange.max,
       category,
       productType
     });

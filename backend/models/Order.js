@@ -26,14 +26,14 @@ const Order = sequelize.define('Order', {
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('待付款', '待发货', '待收货', '已完成', '已取消', '退款中', '已退款'),
+    type: DataTypes.STRING,
     defaultValue: '待付款'
   },
   paymentMethod: {
-    type: DataTypes.ENUM('支付宝', '微信支付', '银行卡')
+    type: DataTypes.STRING
   },
   paymentStatus: {
-    type: DataTypes.ENUM('未支付', '已支付', '支付失败'),
+    type: DataTypes.STRING,
     defaultValue: '未支付'
   },
   shippingAddress: {

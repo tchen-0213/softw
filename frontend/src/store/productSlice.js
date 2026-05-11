@@ -1,15 +1,80 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { productApi } from '../services/api';
 import { mockProducts, recommendedProducts, hotProducts } from '../data/mockProducts';
+
+const normalizeProduct = (product) => ({
+  ...product,
+  evaluationCount: product.evaluationCount ?? product.reviewCount ?? 0,
+  productType: product.productType ?? (product.isSecondhand ? 2 : 1)
+});
+
+const isDisplayableProduct = (product) => {
+  const name = product.name || '';
+  return name.trim().length > 0 && !/(\?{2,}|�)/.test(name);
+};
+
+const normalizeList = (data) => {
+  const products = Array.isArray(data) ? data : data.products || [];
+  return products.map(normalizeProduct).filter(isDisplayableProduct);
+};
+
+const buildApiParams = (params = {}) => {
+  const next = {
+    ...params,
+    limit: params.limit || params.size
+  };
+
+  if (params.priceMin) {
+    next.minPrice = params.priceMin;
+  }
+  if (params.priceMax) {
+    next.maxPrice = params.priceMax;
+  }
+  if (params.productType === '1' || params.productType === 1) {
+    next.isSecondhand = false;
+  }
+  if (params.productType === '2' || params.productType === 2) {
+    next.isSecondhand = true;
+  }
+
+  delete next.size;
+  delete next.priceMin;
+  delete next.priceMax;
+  delete next.productType;
+
+  return next;
+};
+
+const searchMockProducts = (params = {}) => {
+  const keyword = (params.keyword || '').toLowerCase();
+  const minPrice = Number(params.priceMin || params.minPrice || 0);
+  const maxPrice = Number(params.priceMax || params.maxPrice || Infinity);
+
+  return mockProducts
+    .filter(product => {
+      const matchesKeyword = !keyword ||
+        product.name.toLowerCase().includes(keyword) ||
+        product.description.toLowerCase().includes(keyword);
+      const matchesCategory = !params.category || params.category === 'all' || product.category === params.category;
+      const matchesType = !params.productType || Number(product.productType) === Number(params.productType);
+      const matchesPrice = Number(product.price) >= minPrice && Number(product.price) <= maxPrice;
+      return matchesKeyword && matchesCategory && matchesType && matchesPrice;
+    })
+    .map(normalizeProduct);
+};
 
 export const getProducts = createAsyncThunk(
   'product/getProducts',
   async (params, { rejectWithValue }) => {
     try {
-      // 模拟 API 延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return hotProducts;
+      const response = await productApi.getList(buildApiParams(params));
+      const products = normalizeList(response.data);
+      return products.length ? products : hotProducts.map(normalizeProduct);
     } catch (error) {
-      return rejectWithValue({ message: '获取商品失败' });
+      if (!error.response) {
+        return hotProducts.map(normalizeProduct);
+      }
+      return rejectWithValue(error.response.data || { message: '获取商品失败' });
     }
   }
 );
@@ -18,16 +83,14 @@ export const searchProducts = createAsyncThunk(
   'product/searchProducts',
   async (params, { rejectWithValue }) => {
     try {
-      // 模拟 API 延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // 模拟搜索结果
-      const results = mockProducts.filter(product => 
-        product.name.toLowerCase().includes(params.keyword.toLowerCase()) ||
-        product.description.toLowerCase().includes(params.keyword.toLowerCase())
-      );
-      return results;
+      const response = await productApi.search(buildApiParams(params));
+      const results = normalizeList(response.data);
+      return results.length ? results : searchMockProducts(params);
     } catch (error) {
-      return rejectWithValue({ message: '搜索失败' });
+      if (!error.response) {
+        return searchMockProducts(params);
+      }
+      return rejectWithValue(error.response.data || { message: '搜索失败' });
     }
   }
 );
@@ -36,16 +99,14 @@ export const getProductDetail = createAsyncThunk(
   'product/getProductDetail',
   async (id, { rejectWithValue }) => {
     try {
-      // 模拟 API 延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // 模拟商品详情
-      const product = mockProducts.find(p => p.id === parseInt(id));
-      if (!product) {
-        throw new Error('商品不存在');
-      }
-      return product;
+      const response = await productApi.getDetail(id);
+      return normalizeProduct(response.data);
     } catch (error) {
-      return rejectWithValue({ message: '获取商品详情失败' });
+      const product = mockProducts.find(p => p.id === parseInt(id));
+      if (product) {
+        return normalizeProduct(product);
+      }
+      return rejectWithValue(error.response?.data || { message: '获取商品详情失败' });
     }
   }
 );
@@ -54,11 +115,14 @@ export const getRecommendedProducts = createAsyncThunk(
   'product/getRecommendedProducts',
   async (_, { rejectWithValue }) => {
     try {
-      // 模拟 API 延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return recommendedProducts;
+      const response = await productApi.getRecommended();
+      const products = normalizeList(response.data);
+      return products.length ? products : recommendedProducts.map(normalizeProduct);
     } catch (error) {
-      return rejectWithValue({ message: '获取推荐商品失败' });
+      if (!error.response) {
+        return recommendedProducts.map(normalizeProduct);
+      }
+      return rejectWithValue(error.response.data || { message: '获取推荐商品失败' });
     }
   }
 );

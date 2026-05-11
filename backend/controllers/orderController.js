@@ -1,80 +1,119 @@
+const sequelize = require('../config/database');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 
+const paymentMethodMap = {
+  alipay: '支付宝',
+  wechat: '微信支付',
+  wechatpay: '微信支付',
+  bankcard: '银行卡',
+  creditcard: '银行卡'
+};
+
+const parsePaging = (query) => {
+  const page = Math.max(parseInt(query.page || '1', 10), 1);
+  const limit = Math.min(Math.max(parseInt(query.limit || '10', 10), 1), 100);
+  return { page, limit, offset: (page - 1) * limit };
+};
+
+const toOrderDto = (order) => {
+  const data = order.toJSON ? order.toJSON() : order;
+  return {
+    ...data,
+    logistics: data.logisticsInfo
+  };
+};
+
 // 创建订单
 exports.createOrder = async (req, res) => {
-  const { items, shippingAddress, paymentMethod } = req.body;
+  const { items = [], shippingAddress, paymentMethod } = req.body;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: '订单商品不能为空' });
+  }
+
+  const transaction = await sequelize.transaction();
 
   try {
     let totalAmount = 0;
     const orderItems = [];
 
-    // 验证商品库存并计算总金额
     for (const item of items) {
-      const product = await Product.findById(item.productId);
+      const productId = item.productId || item.id;
+      const quantity = Math.max(parseInt(item.quantity || '1', 10), 1);
+      const product = await Product.findByPk(productId, { transaction });
+
       if (!product) {
-        return res.status(404).json({ message: `商品 ${item.productId} 不存在` });
+        await transaction.rollback();
+        return res.status(404).json({ message: `商品 ${productId} 不存在` });
       }
 
-      if (product.stock < item.quantity) {
+      if (product.status !== '在售') {
+        await transaction.rollback();
+        return res.status(400).json({ message: `商品 ${product.name} 当前不可购买` });
+      }
+
+      if (product.stock < quantity) {
+        await transaction.rollback();
         return res.status(400).json({ message: `商品 ${product.name} 库存不足` });
       }
 
-      totalAmount += product.price * item.quantity;
+      const price = Number(product.price);
+      totalAmount += price * quantity;
       orderItems.push({
-        productId: product._id,
+        productId: product.id,
         name: product.name,
-        price: product.price,
-        quantity: item.quantity,
-        image: product.images[0]
+        price,
+        quantity,
+        image: product.images?.[0] || ''
       });
 
-      // 扣减库存
-      product.stock -= item.quantity;
-      product.sales += item.quantity;
-      await product.save();
+      await product.update({
+        stock: product.stock - quantity,
+        sales: product.sales + quantity
+      }, { transaction });
     }
 
-    // 创建订单
     const order = await Order.create({
-      userId: req.user._id,
+      userId: req.user.id,
       items: orderItems,
       totalAmount,
       shippingAddress,
-      paymentMethod
-    });
+      paymentMethod: paymentMethodMap[paymentMethod] || paymentMethod || '微信支付'
+    }, { transaction });
 
-    res.status(201).json(order);
+    await transaction.commit();
+    res.status(201).json(toOrderDto(order));
   } catch (error) {
+    await transaction.rollback();
     res.status(500).json({ message: '创建订单失败', error: error.message });
   }
 };
 
 // 获取用户订单列表
 exports.getUserOrders = async (req, res) => {
-  const { page = 1, limit = 10, status } = req.query;
+  const { page, limit, offset } = parsePaging(req.query);
 
   try {
-    const query = { userId: req.user._id };
-    if (status) {
-      query.status = status;
+    const where = { userId: req.user.id };
+    if (req.query.status) {
+      where.status = req.query.status;
     }
 
-    const skip = (page - 1) * limit;
-    const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-
-    const total = await Order.countDocuments(query);
+    const { rows, count } = await Order.findAndCountAll({
+      where,
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit
+    });
 
     res.json({
-      orders,
+      orders: rows.map(toOrderDto),
       pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
+        total: count,
+        page,
+        limit,
+        pages: Math.ceil(count / limit)
       }
     });
   } catch (error) {
@@ -84,20 +123,17 @@ exports.getUserOrders = async (req, res) => {
 
 // 获取订单详情
 exports.getOrderDetail = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const order = await Order.findById(id);
+    const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ message: '订单不存在' });
     }
 
-    // 检查是否是订单的所有者
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (Number(order.userId) !== Number(req.user.id)) {
       return res.status(403).json({ message: '无权查看此订单' });
     }
 
-    res.json(order);
+    res.json(toOrderDto(order));
   } catch (error) {
     res.status(500).json({ message: '获取订单详情失败', error: error.message });
   }
@@ -105,34 +141,24 @@ exports.getOrderDetail = async (req, res) => {
 
 // 更新订单状态
 exports.updateOrderStatus = async (req, res) => {
-  const { id } = req.params;
   const { status, logisticsInfo } = req.body;
 
   try {
-    const order = await Order.findById(id);
+    const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ message: '订单不存在' });
     }
 
-    // 检查是否是订单的所有者
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (Number(order.userId) !== Number(req.user.id)) {
       return res.status(403).json({ message: '无权修改此订单' });
     }
 
-    // 更新订单状态
-    if (status) {
-      order.status = status;
-    }
+    await order.update({
+      status: status || order.status,
+      logisticsInfo: logisticsInfo ? { ...(order.logisticsInfo || {}), ...logisticsInfo } : order.logisticsInfo
+    });
 
-    // 更新物流信息
-    if (logisticsInfo) {
-      order.logisticsInfo = { ...order.logisticsInfo, ...logisticsInfo };
-    }
-
-    order.updatedAt = Date.now();
-    const updatedOrder = await order.save();
-
-    res.json(updatedOrder);
+    res.json(toOrderDto(order));
   } catch (error) {
     res.status(500).json({ message: '更新订单状态失败', error: error.message });
   }
@@ -140,72 +166,67 @@ exports.updateOrderStatus = async (req, res) => {
 
 // 取消订单
 exports.cancelOrder = async (req, res) => {
-  const { id } = req.params;
+  const transaction = await sequelize.transaction();
 
   try {
-    const order = await Order.findById(id);
+    const order = await Order.findByPk(req.params.id, { transaction });
     if (!order) {
+      await transaction.rollback();
       return res.status(404).json({ message: '订单不存在' });
     }
 
-    // 检查是否是订单的所有者
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (Number(order.userId) !== Number(req.user.id)) {
+      await transaction.rollback();
       return res.status(403).json({ message: '无权取消此订单' });
     }
 
-    // 检查订单状态是否可以取消
     if (!['待付款', '待发货'].includes(order.status)) {
+      await transaction.rollback();
       return res.status(400).json({ message: '此订单状态无法取消' });
     }
 
-    // 恢复商品库存
-    for (const item of order.items) {
-      const product = await Product.findById(item.productId);
+    for (const item of order.items || []) {
+      const product = await Product.findByPk(item.productId, { transaction });
       if (product) {
-        product.stock += item.quantity;
-        product.sales -= item.quantity;
-        await product.save();
+        await product.update({
+          stock: product.stock + item.quantity,
+          sales: Math.max(product.sales - item.quantity, 0)
+        }, { transaction });
       }
     }
 
-    // 更新订单状态
-    order.status = '已取消';
-    order.updatedAt = Date.now();
-    const updatedOrder = await order.save();
+    await order.update({ status: '已取消' }, { transaction });
+    await transaction.commit();
 
-    res.json(updatedOrder);
+    res.json(toOrderDto(order));
   } catch (error) {
+    await transaction.rollback();
     res.status(500).json({ message: '取消订单失败', error: error.message });
   }
 };
 
 // 模拟支付
 exports.payOrder = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    const order = await Order.findById(id);
+    const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ message: '订单不存在' });
     }
 
-    // 检查是否是订单的所有者
-    if (order.userId.toString() !== req.user._id.toString()) {
+    if (Number(order.userId) !== Number(req.user.id)) {
       return res.status(403).json({ message: '无权支付此订单' });
     }
 
-    // 检查订单状态
     if (order.status !== '待付款') {
       return res.status(400).json({ message: '此订单状态无法支付' });
     }
 
-    // 模拟支付成功
-    order.status = '待发货';
-    order.paymentStatus = '已支付';
-    order.updatedAt = Date.now();
-    const updatedOrder = await order.save();
+    await order.update({
+      status: '待发货',
+      paymentStatus: '已支付'
+    });
 
-    res.json(updatedOrder);
+    res.json(toOrderDto(order));
   } catch (error) {
     res.status(500).json({ message: '支付失败', error: error.message });
   }

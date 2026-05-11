@@ -12,9 +12,16 @@ const SearchPage = () => {
   const { searchResults, searchLoading, searchError } = useSelector((state) => state.product);
   
   const [sortBy, setSortBy] = useState('default');
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState(() => ({
+    productType: searchParams.get('productType') || ''
+  }));
 
   const keyword = searchParams.get('keyword') || '';
+  const productType = searchParams.get('productType') || '';
+
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, productType }));
+  }, [productType]);
 
   useEffect(() => {
     dispatch(searchProducts({
@@ -36,7 +43,7 @@ const SearchPage = () => {
     <div className="search-page">
       <div className="container">
         <div className="search-header">
-          <h1>搜索结果: {keyword}</h1>
+          <h1>{productType === '2' ? '二手市场' : `搜索结果: ${keyword || '全部商品'}`}</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '20px' }}>

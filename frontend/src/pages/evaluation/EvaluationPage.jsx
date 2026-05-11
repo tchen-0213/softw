@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productImages } from '../../data/imageAssets';
+import { evaluationApi, orderApi } from '../../services/api';
 
 const EvaluationPage = () => {
   const { orderId } = useParams();
@@ -28,6 +29,35 @@ const EvaluationPage = () => {
   ]);
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadOrder = async () => {
+      if (!localStorage.getItem('token')) {
+        return;
+      }
+
+      try {
+        const response = await orderApi.getDetail(orderId);
+        const items = response.data.items || [];
+        if (items.length) {
+          setEvaluations(items.map(item => ({
+            id: item.productId,
+            productId: item.productId,
+            productName: item.name,
+            productImage: item.image || productImages.iphone,
+            rating: 5,
+            content: '',
+            images: []
+          })));
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || '订单信息加载失败，已显示演示数据');
+      }
+    };
+
+    loadOrder();
+  }, [orderId]);
 
   const handleRatingChange = (productId, rating) => {
     setEvaluations(prev => prev.map(item => 
@@ -57,15 +87,32 @@ const EvaluationPage = () => {
     ));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!localStorage.getItem('token')) {
+      alert('请先登录后再评价');
+      navigate('/login');
+      return;
+    }
+
     setLoading(true);
-    // 模拟提交评价
-    setTimeout(() => {
-      setLoading(false);
+    setError('');
+
+    try {
+      await Promise.all(evaluations.map(item => evaluationApi.create({
+        orderId,
+        productId: item.productId,
+        rating: item.rating,
+        content: item.content || '默认好评',
+        images: item.images
+      })));
       alert('评价提交成功！');
       navigate('/order');
-    }, 1000);
+    } catch (err) {
+      setError(err.response?.data?.message || '评价提交失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStars = (productId, currentRating) => {
@@ -88,6 +135,7 @@ const EvaluationPage = () => {
     <div style={{ padding: '20px 0' }}>
       <div className="container">
         <h2 style={{ marginBottom: '20px' }}>评价订单</h2>
+        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
           {evaluations.map((item) => (
             <div key={item.id} style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #e8e8e8' }}>

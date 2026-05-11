@@ -56,7 +56,7 @@ const Product = sequelize.define('Product', {
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('在售', '已售罄', '下架'),
+    type: DataTypes.STRING,
     defaultValue: '在售'
   },
   sales: {
@@ -80,7 +80,7 @@ const Product = sequelize.define('Product', {
     defaultValue: false
   },
   condition: {
-    type: DataTypes.ENUM('全新', '9成新', '8成新', '7成新', '6成新及以下')
+    type: DataTypes.STRING
   },
   location: {
     type: DataTypes.STRING
