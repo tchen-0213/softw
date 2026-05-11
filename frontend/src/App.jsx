@@ -13,6 +13,7 @@ import UserPage from './pages/user/UserPage'
 import AuthPage from './pages/auth/AuthPage'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import FloatingCart from './components/cart/FloatingCart'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
       </Routes>
+      <FloatingCart />
       <Footer />
     </Router>
   )

@@ -30,7 +30,6 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     dispatch(addToCart({ ...currentProduct, quantity: 1 }));
-    alert('已加入购物车');
   };
 
   const handleBuyNow = () => {

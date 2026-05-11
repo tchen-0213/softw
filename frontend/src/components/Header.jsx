@@ -88,20 +88,28 @@ const Header = () => {
     setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
   };
 
+  const getNavLinkClass = (path) => {
+    const isActive = path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(path);
+
+    return `nav-link${isActive ? ' active' : ''}`;
+  };
+
   return (
     <header className="header">
-      <div className="container">
+      <div className="container header-container">
         <div className="header-content">
           <Link to="/" className="logo">
             购物与二手交易平台
           </Link>
           <SearchBar />
           <nav className="nav">
-            <Link to="/" className="nav-link">首页</Link>
-            <Link to="/search?productType=2" className="nav-link">二手市场</Link>
-            <Link to="/shop" className="nav-link">店铺</Link>
-            <Link to="/sell" className="nav-link">发布商品</Link>
-            <Link to="/cart" className="nav-link">购物车</Link>
+            <Link to="/" className={getNavLinkClass('/')}>首页</Link>
+            <Link to="/search?productType=2" className={getNavLinkClass('/search')}>二手市场</Link>
+            <Link to="/shop" className={getNavLinkClass('/shop')}>店铺</Link>
+            <Link to="/sell" className={getNavLinkClass('/sell')}>发布商品</Link>
+            <Link to="/cart" className={getNavLinkClass('/cart')}>购物车</Link>
           </nav>
           <div className="header-actions">
             <button
@@ -121,12 +129,12 @@ const Header = () => {
             </button>
             {token ? (
               <>
-                <Link to="/user" className="nav-link">
+                <Link to="/user" className="user-link">
                   {user?.username || '个人中心'}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="nav-button"
+                  className="logout-button"
                 >
                   退出
                 </button>
