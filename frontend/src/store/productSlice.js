@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { productApi } from '../services/api';
-import { mockProducts, recommendedProducts, hotProducts } from '../data/mockProducts';
+import { mockProducts, recommendedProducts as mockRecommendedProducts, hotProducts } from '../data/mockProducts';
 
 const normalizeProduct = (product) => ({
   ...product,
@@ -65,16 +65,13 @@ const searchMockProducts = (params = {}) => {
 
 export const getProducts = createAsyncThunk(
   'product/getProducts',
-  async (params, { rejectWithValue }) => {
+  async (params) => {
     try {
       const response = await productApi.getList(buildApiParams(params));
       const products = normalizeList(response.data);
       return products.length ? products : hotProducts.map(normalizeProduct);
-    } catch (error) {
-      if (!error.response) {
-        return hotProducts.map(normalizeProduct);
-      }
-      return rejectWithValue(error.response.data || { message: '获取商品失败' });
+    } catch {
+      return hotProducts.map(normalizeProduct);
     }
   }
 );
@@ -113,16 +110,13 @@ export const getProductDetail = createAsyncThunk(
 
 export const getRecommendedProducts = createAsyncThunk(
   'product/getRecommendedProducts',
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
       const response = await productApi.getRecommended();
       const products = normalizeList(response.data);
-      return products.length ? products : recommendedProducts.map(normalizeProduct);
-    } catch (error) {
-      if (!error.response) {
-        return recommendedProducts.map(normalizeProduct);
-      }
-      return rejectWithValue(error.response.data || { message: '获取推荐商品失败' });
+      return products.length ? products : mockRecommendedProducts.map(normalizeProduct);
+    } catch {
+      return mockRecommendedProducts.map(normalizeProduct);
     }
   }
 );
@@ -130,8 +124,8 @@ export const getRecommendedProducts = createAsyncThunk(
 const productSlice = createSlice({
   name: 'product',
   initialState: {
-    products: [],
-    recommendedProducts: [],
+    products: hotProducts.map(normalizeProduct),
+    recommendedProducts: mockRecommendedProducts.map(normalizeProduct),
     currentProduct: null,
     loading: false,
     error: null,
@@ -148,7 +142,7 @@ const productSlice = createSlice({
     builder
       // getProducts
       .addCase(getProducts.pending, (state) => {
-        state.loading = true;
+        state.loading = state.products.length === 0;
         state.error = null;
       })
       .addCase(getProducts.fulfilled, (state, action) => {
@@ -187,7 +181,7 @@ const productSlice = createSlice({
       })
       // getRecommendedProducts
       .addCase(getRecommendedProducts.pending, (state) => {
-        state.loading = true;
+        state.loading = state.recommendedProducts.length === 0;
         state.error = null;
       })
       .addCase(getRecommendedProducts.fulfilled, (state, action) => {

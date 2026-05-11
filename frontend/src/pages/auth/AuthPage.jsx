@@ -123,7 +123,7 @@ const AuthPage = ({ mode }) => {
             {isRegister ? (
               <>已有账号？ <Link to="/login">去登录</Link></>
             ) : (
-              <>还没有账号？ <Link to="/register">去注册</Link></>
+              <>没有账号？ <Link to="/register">立即注册</Link></>
             )}
           </div>
         </div>
