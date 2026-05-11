@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { switchCartOwner } from '../../store/cartSlice';
 import { userApi } from '../../services/api';
 
 const AuthPage = ({ mode }) => {
   const isRegister = mode === 'register';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
@@ -32,12 +35,20 @@ const AuthPage = ({ mode }) => {
         ? await userApi.register(payload)
         : await userApi.login(payload);
 
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify({
+      const user = {
         id: response.data._id,
         username: response.data.username,
-        email: response.data.email
-      }));
+        nickname: response.data.nickname,
+        email: response.data.email,
+        phone: response.data.phone || formData.phone || '',
+        avatar: response.data.avatar,
+        creditLevel: response.data.creditLevel,
+        creditScore: response.data.creditScore
+      };
+
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(user));
+      dispatch(switchCartOwner(user));
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || '操作失败，请检查输入后重试');

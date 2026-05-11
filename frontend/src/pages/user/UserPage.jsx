@@ -1,16 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AddressManager from '../../components/user/AddressManager';
 import { avatarImages, productImages } from '../../data/imageAssets';
+import { userApi } from '../../services/api';
+import {
+  getStoredUser,
+  getUserKey,
+  getUserStorageKey,
+  isLoggedIn,
+  loadUserAddresses,
+  saveUserAddresses
+} from '../../utils/accountStorage';
 
-const defaultUser = {
-  id: '1',
-  nickname: '张三',
-  avatar: avatarImages.userDefault,
-  email: 'zhangsan@example.com',
-  phone: '13800138000',
-  creditLevel: '钻石会员',
-  creditScore: 95
-};
+const createDefaultUser = (authUser) => ({
+  id: getUserKey(authUser) || '',
+  nickname: authUser?.nickname || authUser?.username || '',
+  avatar: authUser?.avatar || avatarImages.userDefault,
+  email: authUser?.email || '',
+  phone: authUser?.phone || '',
+  creditLevel: authUser?.creditLevel || '普通',
+  creditScore: authUser?.creditScore ?? 100
+});
 
 const defaultOrders = [
   {
@@ -69,29 +79,71 @@ const defaultOrders = [
   }
 ];
 
-const loadUser = () => {
-  const savedProfile = JSON.parse(localStorage.getItem('profile') || 'null');
-  const authUser = JSON.parse(localStorage.getItem('user') || 'null');
-  return {
-    ...defaultUser,
-    ...(savedProfile || {}),
-    nickname: savedProfile?.nickname || authUser?.username || defaultUser.nickname,
-    email: savedProfile?.email || authUser?.email || defaultUser.email
-  };
+const loadUser = (authUser) => {
+  if (!authUser) {
+    return null;
+  }
+
+  try {
+    const storageKey = getUserStorageKey('profile', authUser);
+    const savedProfile = storageKey ? JSON.parse(localStorage.getItem(storageKey) || 'null') : null;
+    return {
+      ...createDefaultUser(authUser),
+      ...(savedProfile || {}),
+      id: getUserKey(authUser) || savedProfile?.id || '',
+      nickname: savedProfile?.nickname || authUser.nickname || authUser.username || '',
+      email: savedProfile?.email || authUser.email || '',
+      phone: savedProfile?.phone || authUser.phone || ''
+    };
+  } catch {
+    return createDefaultUser(authUser);
+  }
 };
 
 const UserPage = () => {
-  const [user, setUser] = useState(loadUser);
+  const [authUser] = useState(getStoredUser);
+  const [user, setUser] = useState(() => loadUser(getStoredUser()));
+  const [addresses, setAddresses] = useState(() => loadUserAddresses(getStoredUser()));
   const [orders] = useState(defaultOrders);
   const [activeTab, setActiveTab] = useState('profile');
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState(user);
+  const [profileForm, setProfileForm] = useState(() => loadUser(getStoredUser()) || createDefaultUser(getStoredUser()));
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.setItem('profile', JSON.stringify(user));
-  }, [user]);
+    if (authUser && user) {
+      const storageKey = getUserStorageKey('profile', authUser);
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(user));
+      }
+    }
+  }, [authUser, user]);
+
+  useEffect(() => {
+    saveUserAddresses(addresses, authUser);
+  }, [addresses, authUser]);
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      return;
+    }
+
+    userApi.getProfile()
+      .then((response) => {
+        const profile = response.data || {};
+        setUser(prev => ({
+          ...(prev || createDefaultUser(authUser)),
+          nickname: prev?.nickname || profile.nickname || profile.username || '',
+          avatar: prev?.avatar || profile.avatar || avatarImages.userDefault,
+          email: prev?.email || profile.email || '',
+          phone: prev?.phone || profile.phone || '',
+          creditLevel: profile.creditLevel || prev?.creditLevel || '普通',
+          creditScore: profile.creditScore ?? prev?.creditScore ?? 100
+        }));
+      })
+      .catch(() => {});
+  }, [authUser]);
 
   const handleEditProfile = () => {
     setProfileForm(user);
@@ -108,12 +160,24 @@ const UserPage = () => {
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
-    setUser(prev => ({
-      ...prev,
+    const nextUser = {
+      ...user,
       nickname: profileForm.nickname,
-      avatar: profileForm.avatar,
+      avatar: profileForm.avatar || avatarImages.userDefault,
       email: profileForm.email,
       phone: profileForm.phone
+    };
+    setUser(prev => ({
+      ...prev,
+      ...nextUser
+    }));
+    localStorage.setItem('user', JSON.stringify({
+      ...(authUser || {}),
+      username: authUser?.username,
+      nickname: nextUser.nickname,
+      email: nextUser.email,
+      phone: nextUser.phone,
+      avatar: nextUser.avatar
     }));
     setEditingProfile(false);
   };
@@ -177,6 +241,22 @@ const UserPage = () => {
     );
   };
 
+  if (!isLoggedIn() || !user) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>个人中心</h2>
+          <div className="shop-empty-panel">
+            <h3>请先登录后查看个人中心</h3>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '20px 0' }}>
       <div className="container">
@@ -197,6 +277,7 @@ const UserPage = () => {
             <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
               {[
                 ['profile', '个人信息'],
+                ['addresses', '收货地址'],
                 ['orders', '我的订单'],
                 ['logistics', '物流跟踪'],
                 ['shop', '店铺管理']
@@ -206,7 +287,7 @@ const UserPage = () => {
                   onClick={() => setActiveTab(key)}
                   style={{
                     padding: '12px 16px',
-                    borderBottom: index < 3 ? '1px solid #e8e8e8' : 'none',
+                    borderBottom: index < 4 ? '1px solid #e8e8e8' : 'none',
                     cursor: 'pointer',
                     background: activeTab === key ? '#f5f5f5' : '#fff'
                   }}
@@ -289,6 +370,15 @@ const UserPage = () => {
                     </button>
                   </>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'addresses' && (
+              <div>
+                <AddressManager
+                  addresses={addresses}
+                  onChange={setAddresses}
+                />
               </div>
             )}
 

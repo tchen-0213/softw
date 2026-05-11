@@ -1,42 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
 import { orderApi } from '../../services/api';
+import AddressManager from '../../components/user/AddressManager';
+import { getStoredUser, isLoggedIn, loadUserAddresses, saveUserAddresses } from '../../utils/accountStorage';
 
 const CheckoutPage = () => {
   const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const user = useMemo(() => getStoredUser(), []);
 
-  const [selectedAddress, setSelectedAddress] = useState('1');
+  const [addresses, setAddresses] = useState(() => loadUserAddresses(user));
+  const [selectedAddressId, setSelectedAddressId] = useState(() => {
+    const savedAddresses = loadUserAddresses(user);
+    return savedAddresses.find(address => address.isDefault)?.id || savedAddresses[0]?.id || '';
+  });
   const [paymentMethod, setPaymentMethod] = useState('wechat');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const addresses = [
-    {
-      id: '1',
-      name: '张三',
-      phone: '13800138000',
-      address: '北京市朝阳区某某街道某某小区1号楼1单元101室'
-    },
-    {
-      id: '2',
-      name: '李四',
-      phone: '13900139000',
-      address: '上海市浦东新区某某街道某某小区2号楼2单元202室'
+  useEffect(() => {
+    saveUserAddresses(addresses, user);
+    if (!selectedAddressId && addresses.length > 0) {
+      setSelectedAddressId(addresses.find(address => address.isDefault)?.id || addresses[0].id);
     }
-  ];
+    if (selectedAddressId && !addresses.some(address => address.id === selectedAddressId)) {
+      setSelectedAddressId(addresses[0]?.id || '');
+    }
+  }, [addresses, selectedAddressId, user]);
 
   const handleSubmit = async () => {
-    if (!localStorage.getItem('token')) {
-      alert('请先登录后再提交订单');
-      navigate('/login');
+    if (!isLoggedIn()) {
+      setError('请先登录后再提交订单');
+      return;
+    }
+
+    if (!selectedAddressId) {
+      setError('请先新增并选择收货地址');
       return;
     }
 
@@ -44,7 +49,7 @@ const CheckoutPage = () => {
     setError('');
 
     try {
-      const address = addresses.find(item => item.id === selectedAddress);
+      const address = addresses.find(item => item.id === selectedAddressId);
       const response = await orderApi.create({
         items: items.map(item => ({
           productId: item.id,
@@ -64,6 +69,22 @@ const CheckoutPage = () => {
       setSubmitting(false);
     }
   };
+
+  if (!isLoggedIn()) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>结算</h2>
+          <div className="shop-empty-panel">
+            <h3>请先登录后再结算</h3>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -94,35 +115,13 @@ const CheckoutPage = () => {
         {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '15px' }}>收货地址</h3>
-          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
-            {addresses.map((address) => (
-              <div
-                key={address.id}
-                style={{
-                  padding: '16px',
-                  borderBottom: '1px solid #e8e8e8',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                <input
-                  type="radio"
-                  name="address"
-                  value={address.id}
-                  checked={selectedAddress === address.id}
-                  onChange={() => setSelectedAddress(address.id)}
-                  style={{ marginRight: '16px' }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                    {address.name} {address.phone}
-                  </div>
-                  <div>{address.address}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AddressManager
+            addresses={addresses}
+            onChange={setAddresses}
+            selectedAddressId={selectedAddressId}
+            onSelect={setSelectedAddressId}
+            selectable
+          />
         </div>
 
         <div style={{ marginBottom: '30px' }}>

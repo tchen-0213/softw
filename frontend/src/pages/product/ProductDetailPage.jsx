@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductDetail } from '../../store/productSlice';
 import { addToCart } from '../../store/cartSlice';
 import EvaluationList from '../../components/evaluation/EvaluationList';
 import { fallbackImages } from '../../data/imageAssets';
+import { isLoggedIn } from '../../utils/accountStorage';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentProduct, loading, error } = useSelector((state) => state.product);
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     dispatch(getProductDetail(id));
@@ -29,10 +31,22 @@ const ProductDetailPage = () => {
   }
 
   const handleAddToCart = () => {
+    if (!isLoggedIn()) {
+      setNotice('请先登录后再加入购物车');
+      return;
+    }
+
+    setNotice('');
     dispatch(addToCart({ ...currentProduct, quantity: 1 }));
   };
 
   const handleBuyNow = () => {
+    if (!isLoggedIn()) {
+      setNotice('请先登录后再购买商品');
+      return;
+    }
+
+    setNotice('');
     dispatch(addToCart({ ...currentProduct, quantity: 1 }));
     navigate('/checkout');
   };
@@ -89,6 +103,12 @@ const ProductDetailPage = () => {
                 <button className="button button-secondary" onClick={handleAddToCart}>加入购物车</button>
                 <button className="button button-primary" onClick={handleBuyNow}>立即购买</button>
               </div>
+              {notice && (
+                <div className="inline-notice product-detail-notice">
+                  {notice}
+                  <button type="button" onClick={() => navigate('/login')}>去登录</button>
+                </div>
+              )}
             </div>
           </div>
           <div style={{ marginTop: '40px' }}>

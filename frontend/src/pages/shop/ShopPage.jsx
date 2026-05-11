@@ -2,53 +2,96 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productImages, shopImages } from '../../data/imageAssets';
 
-const defaultShop = {
-  id: '1',
-  name: '我的店铺',
+const defaultProducts = [
+  {
+    id: '1',
+    name: '全新 iPhone 15 Pro',
+    price: 199.99,
+    stock: 10,
+    sales: 5,
+    image: productImages.iphone
+  },
+  {
+    id: '2',
+    name: 'MacBook Pro 2026',
+    price: 599.99,
+    stock: 5,
+    sales: 2,
+    image: productImages.macbook
+  },
+  {
+    id: '3',
+    name: 'AirPods Pro 2',
+    price: 99.99,
+    stock: 20,
+    sales: 10,
+    image: productImages.airpods
+  }
+];
+
+const getCurrentUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+const getUserKey = (user) => user?.id || user?._id || user?.email || user?.username;
+
+const getShopStorageKey = (user) => `shopData:${getUserKey(user)}`;
+
+const createDefaultShop = (user) => ({
+  id: `shop-${getUserKey(user)}`,
+  ownerId: getUserKey(user),
+  name: `${user?.username || '我的'}的店铺`,
   description: '这是一家经营各类商品的店铺，欢迎光临！',
   logo: shopImages.logo,
   banner: shopImages.banner,
-  products: [
-    {
-      id: '1',
-      name: '全新 iPhone 15 Pro',
-      price: 199.99,
-      stock: 10,
-      sales: 5,
-      image: productImages.iphone
-    },
-    {
-      id: '2',
-      name: 'MacBook Pro 2026',
-      price: 599.99,
-      stock: 5,
-      sales: 2,
-      image: productImages.macbook
-    },
-    {
-      id: '3',
-      name: 'AirPods Pro 2',
-      price: 99.99,
-      stock: 20,
-      sales: 10,
-      image: productImages.airpods
-    }
-  ]
+  products: defaultProducts
+});
+
+const normalizeShop = (shop, user) => {
+  const fallback = createDefaultShop(user);
+  return {
+    ...fallback,
+    ...shop,
+    ownerId: getUserKey(user),
+    logo: shop?.logo || shopImages.logo,
+    banner: shop?.banner || shopImages.banner,
+    products: Array.isArray(shop?.products) ? shop.products : fallback.products
+  };
 };
 
-const loadShop = () => {
-  const saved = JSON.parse(localStorage.getItem('shopData') || 'null');
-  return saved || defaultShop;
+const loadShop = (user) => {
+  if (!user) {
+    return null;
+  }
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(getShopStorageKey(user)) || 'null');
+    return normalizeShop(saved, user);
+  } catch {
+    return createDefaultShop(user);
+  }
+};
+
+const toEditableImageValue = (value, fallback) => (value && value !== fallback ? value : '');
+
+const resolveImageValue = (value, fallback) => {
+  const nextValue = value.trim();
+  return nextValue || fallback;
 };
 
 const ShopPage = () => {
-  const [shop, setShop] = useState(loadShop);
+  const [user] = useState(getCurrentUser);
+  const [shop, setShop] = useState(() => loadShop(getCurrentUser()));
   const [editingShop, setEditingShop] = useState(false);
   const [shopForm, setShopForm] = useState({
-    name: shop.name,
-    description: shop.description,
-    logo: shop.logo,
-    banner: shop.banner
+    name: '',
+    description: '',
+    logo: '',
+    banner: ''
   });
   const [editingProductId, setEditingProductId] = useState(null);
   const [productForm, setProductForm] = useState({
@@ -61,32 +104,37 @@ const ShopPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.setItem('shopData', JSON.stringify(shop));
-  }, [shop]);
+    if (user && shop) {
+      localStorage.setItem(getShopStorageKey(user), JSON.stringify(shop));
+    }
+  }, [shop, user]);
 
   const handleEditShop = () => {
     setShopForm({
       name: shop.name,
       description: shop.description,
-      logo: shop.logo,
-      banner: shop.banner
+      logo: toEditableImageValue(shop.logo, shopImages.logo),
+      banner: toEditableImageValue(shop.banner, shopImages.banner)
     });
     setEditingShop(true);
   };
 
-  const handleShopFormChange = (e) => {
-    const { name, value } = e.target;
+  const handleShopFormChange = (event) => {
+    const { name, value } = event.target;
     setShopForm(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSaveShop = (e) => {
-    e.preventDefault();
+  const handleSaveShop = (event) => {
+    event.preventDefault();
     setShop(prev => ({
       ...prev,
-      ...shopForm
+      name: shopForm.name,
+      description: shopForm.description,
+      logo: resolveImageValue(shopForm.logo, shopImages.logo),
+      banner: resolveImageValue(shopForm.banner, shopImages.banner)
     }));
     setEditingShop(false);
   };
@@ -106,16 +154,16 @@ const ShopPage = () => {
     });
   };
 
-  const handleProductFormChange = (e) => {
-    const { name, value } = e.target;
+  const handleProductFormChange = (event) => {
+    const { name, value } = event.target;
     setProductForm(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSaveProduct = (e) => {
-    e.preventDefault();
+  const handleSaveProduct = (event) => {
+    event.preventDefault();
     setShop(prev => ({
       ...prev,
       products: prev.products.map(product => (
@@ -126,7 +174,7 @@ const ShopPage = () => {
               price: Number(productForm.price),
               stock: Number(productForm.stock),
               sales: Number(productForm.sales),
-              image: productForm.image
+              image: productForm.image || product.image
             }
           : product
       ))
@@ -146,10 +194,30 @@ const ShopPage = () => {
     }
   };
 
+  if (!user || !localStorage.getItem('token')) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+          <div className="shop-empty-panel">
+            <h3>请先登录后管理店铺</h3>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '20px 0' }}>
       <div className="container">
         <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+
+        <div className="shop-owner-note">
+          当前店铺归属：<strong>{user.username || user.email}</strong>
+        </div>
 
         <div style={{ marginBottom: '30px', border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
           <h3 style={{ marginBottom: '16px' }}>店铺信息</h3>
@@ -168,13 +236,17 @@ const ShopPage = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>店铺 Logo 地址</label>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                    店铺 Logo 图片链接（可选）
+                  </label>
                   <input
                     name="logo"
                     value={shopForm.logo}
                     onChange={handleShopFormChange}
+                    placeholder="留空使用默认 Logo，也可以粘贴图片 URL"
                     style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
                   />
+                  <div className="shop-field-hint">Logo 会显示在店铺信息左侧，类似店铺头像。</div>
                 </div>
               </div>
 
@@ -191,13 +263,40 @@ const ShopPage = () => {
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>店铺横幅地址</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  店铺横幅图片链接（可选）
+                </label>
                 <input
                   name="banner"
                   value={shopForm.banner}
                   onChange={handleShopFormChange}
+                  placeholder="留空使用默认横幅，也可以粘贴图片 URL"
                   style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
                 />
+                <div className="shop-field-hint">横幅是店铺顶部的大图，用来展示店铺风格或活动。</div>
+              </div>
+
+              <div className="shop-image-preview">
+                <div>
+                  <span>Logo 预览</span>
+                  <img
+                    src={resolveImageValue(shopForm.logo, shopImages.logo)}
+                    alt="店铺 Logo 预览"
+                    onError={(event) => {
+                      event.currentTarget.src = shopImages.logo;
+                    }}
+                  />
+                </div>
+                <div>
+                  <span>横幅预览</span>
+                  <img
+                    src={resolveImageValue(shopForm.banner, shopImages.banner)}
+                    alt="店铺横幅预览"
+                    onError={(event) => {
+                      event.currentTarget.src = shopImages.banner;
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -208,9 +307,12 @@ const ShopPage = () => {
           ) : (
             <div style={{ display: 'flex', marginBottom: '20px' }}>
               <img
-                src={shop.logo}
+                src={shop.logo || shopImages.logo}
                 alt={shop.name}
-                style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '20px' }}
+                onError={(event) => {
+                  event.currentTarget.src = shopImages.logo;
+                }}
+                style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '20px', borderRadius: '8px' }}
               />
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: '8px', fontSize: '18px', fontWeight: 'bold' }}>{shop.name}</div>
@@ -223,8 +325,11 @@ const ShopPage = () => {
           )}
 
           <img
-            src={shop.banner}
+            src={shop.banner || shopImages.banner}
             alt="店铺横幅"
+            onError={(event) => {
+              event.currentTarget.src = shopImages.banner;
+            }}
             style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px' }}
           />
         </div>
@@ -290,11 +395,12 @@ const ShopPage = () => {
                 </label>
               </div>
               <label>
-                <div style={{ marginBottom: '8px', color: '#666' }}>商品图片地址</div>
+                <div style={{ marginBottom: '8px', color: '#666' }}>商品图片链接（可选）</div>
                 <input
                   name="image"
                   value={productForm.image}
                   onChange={handleProductFormChange}
+                  placeholder="留空保留当前图片，也可以粘贴图片 URL"
                   style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', marginBottom: '12px' }}
                 />
               </label>
@@ -305,7 +411,7 @@ const ShopPage = () => {
             </form>
           )}
 
-          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f5f5f5' }}>
@@ -322,8 +428,11 @@ const ShopPage = () => {
                   <tr key={product.id}>
                     <td style={{ padding: '12px', borderBottom: '1px solid #e8e8e8' }}>
                       <img
-                        src={product.image}
+                        src={product.image || productImages.iphone}
                         alt={product.name}
+                        onError={(event) => {
+                          event.currentTarget.src = productImages.iphone;
+                        }}
                         style={{ width: '80px', height: '80px', objectFit: 'cover' }}
                       />
                     </td>

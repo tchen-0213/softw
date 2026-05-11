@@ -9,21 +9,22 @@ const store = configureStore({
   }
 });
 
-const CART_STORAGE_KEY = 'shopping-cart';
-let previousCartItems = store.getState().cart.items;
+const LEGACY_CART_STORAGE_KEY = 'shopping-cart';
+let previousCart = store.getState().cart;
 
 store.subscribe(() => {
   if (typeof window === 'undefined') {
     return;
   }
 
-  const cartItems = store.getState().cart.items;
-  if (cartItems === previousCartItems) {
+  const cart = store.getState().cart;
+  if (cart.items === previousCart.items && cart.storageKey === previousCart.storageKey) {
     return;
   }
 
-  previousCartItems = cartItems;
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  previousCart = cart;
+  window.localStorage.setItem(cart.storageKey, JSON.stringify(cart.items));
+  window.localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
 });
 
 export default store;

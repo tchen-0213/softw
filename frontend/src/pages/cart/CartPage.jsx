@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CartItem from '../../components/cart/CartItem';
 import { clearCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
+import { isLoggedIn } from '../../utils/accountStorage';
 
 const CartPage = () => {
   const { items } = useSelector((state) => state.cart);
@@ -20,6 +21,22 @@ const CartPage = () => {
     if (items.length === 0) return;
     navigate('/checkout');
   };
+
+  if (!isLoggedIn()) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>购物车</h2>
+          <div className="shop-empty-panel">
+            <h3>请先登录后查看购物车</h3>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '20px 0' }}>

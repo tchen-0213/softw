@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { switchCartOwner } from '../store/cartSlice';
 import SearchBar from './product/SearchBar';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [isDiscoMode, setIsDiscoMode] = useState(false);
@@ -61,6 +64,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    dispatch(switchCartOwner(null));
     setToken(null);
     navigate('/');
   };
@@ -130,7 +134,7 @@ const Header = () => {
             {token ? (
               <>
                 <Link to="/user" className="user-link">
-                  {user?.username || '个人中心'}
+                  {user?.nickname || user?.username || '个人中心'}
                 </Link>
                 <button
                   onClick={handleLogout}

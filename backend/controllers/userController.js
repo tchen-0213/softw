@@ -33,7 +33,12 @@ exports.register = async (req, res) => {
     res.status(201).json({
       _id: user.id,
       username: user.username,
+      nickname: user.nickname,
       email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      creditLevel: user.creditLevel,
+      creditScore: user.creditScore,
       token: generateToken(user.id)
     });
   } catch (error) {
@@ -59,7 +64,12 @@ exports.login = async (req, res) => {
     res.json({
       _id: user.id,
       username: user.username,
+      nickname: user.nickname,
       email: user.email,
+      phone: user.phone,
+      avatar: user.avatar,
+      creditLevel: user.creditLevel,
+      creditScore: user.creditScore,
       token: generateToken(user.id)
     });
   } catch (error) {

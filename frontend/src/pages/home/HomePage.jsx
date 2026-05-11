@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRecommendedProducts, getProducts } from '../../store/productSlice';
 import { addToCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
+import { isLoggedIn } from '../../utils/accountStorage';
 
 const HomePage = () => {
   const dispatch = useDispatch();
   const { recommendedProducts, products, loading, error } = useSelector((state) => state.product);
+  const [notice, setNotice] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +23,12 @@ const HomePage = () => {
 
   const handleAddToCart = (event, product) => {
     event.stopPropagation();
+    if (!isLoggedIn()) {
+      setNotice('请先登录后再加入购物车');
+      return;
+    }
+
+    setNotice('');
     dispatch(addToCart({ ...product, quantity: 1 }));
   };
 
@@ -65,6 +73,12 @@ const HomePage = () => {
   return (
     <div style={{ padding: '20px 0' }}>
       <div className="container">
+        {notice && (
+          <div className="inline-notice">
+            {notice}
+            <button type="button" onClick={() => navigate('/login')}>去登录</button>
+          </div>
+        )}
         <h2 style={{ marginBottom: '20px' }}>推荐商品</h2>
         <div className="product-list">
           {recommendedProducts.map(renderProductCard)}
