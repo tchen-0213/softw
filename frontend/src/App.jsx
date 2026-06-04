@@ -11,6 +11,10 @@ import EvaluationPage from './pages/evaluation/EvaluationPage'
 import ShopPage from './pages/shop/ShopPage'
 import UserPage from './pages/user/UserPage'
 import AuthPage from './pages/auth/AuthPage'
+import AboutPage from './pages/legal/AboutPage'
+import ContactPage from './pages/legal/ContactPage'
+import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage'
+import UserAgreementPage from './pages/legal/UserAgreementPage'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import FloatingCart from './components/cart/FloatingCart'
@@ -32,6 +36,10 @@ function App() {
         <Route path="/user" element={<UserPage />} />
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<UserAgreementPage />} />
       </Routes>
       <FloatingCart />
       <Footer />

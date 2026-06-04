@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
-import { orderApi } from '../../services/api';
+import { addressApi, orderApi } from '../../services/api';
 import AddressManager from '../../components/user/AddressManager';
 import { getStoredUser, isLoggedIn, loadUserAddresses, saveUserAddresses } from '../../utils/accountStorage';
 
@@ -34,6 +34,37 @@ const CheckoutPage = () => {
     }
   }, [addresses, selectedAddressId, user]);
 
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      return;
+    }
+
+    addressApi.getList()
+      .then((response) => {
+        const nextAddresses = response.data || [];
+        setAddresses(nextAddresses);
+        setSelectedAddressId(nextAddresses.find(address => address.isDefault)?.id || nextAddresses[0]?.id || '');
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleAddressesChange = async (nextAddresses) => {
+    setAddresses(nextAddresses);
+    saveUserAddresses(nextAddresses, user);
+
+    try {
+      const response = await addressApi.replaceAll(nextAddresses);
+      const savedAddresses = response.data || nextAddresses;
+      setAddresses(savedAddresses);
+      setError('');
+      if (selectedAddressId && !savedAddresses.some(address => address.id === selectedAddressId)) {
+        setSelectedAddressId(savedAddresses[0]?.id || '');
+      }
+    } catch {
+      setError('地址已临时保存到本地，连接后端后会再次同步');
+    }
+  };
+
   const handleSubmit = async () => {
     if (!isLoggedIn()) {
       setError('请先登录后再提交订单');
@@ -50,7 +81,7 @@ const CheckoutPage = () => {
 
     try {
       const address = addresses.find(item => item.id === selectedAddressId);
-      const response = await orderApi.create({
+      await orderApi.create({
         items: items.map(item => ({
           productId: item.id,
           quantity: item.quantity
@@ -59,8 +90,7 @@ const CheckoutPage = () => {
         paymentMethod
       });
 
-      await orderApi.pay(response.data.id);
-      alert('订单提交并支付成功！');
+      alert('订单提交成功，请在订单页完成支付。');
       dispatch(clearCart());
       navigate('/order');
     } catch (err) {
@@ -117,7 +147,7 @@ const CheckoutPage = () => {
         <div style={{ marginBottom: '30px' }}>
           <AddressManager
             addresses={addresses}
-            onChange={setAddresses}
+            onChange={handleAddressesChange}
             selectedAddressId={selectedAddressId}
             onSelect={setSelectedAddressId}
             selectable

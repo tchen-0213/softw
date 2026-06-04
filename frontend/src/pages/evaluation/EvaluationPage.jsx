@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { productImages } from '../../data/imageAssets';
-import { evaluationApi, orderApi } from '../../services/api';
+import { evaluationApi, orderApi, uploadApi } from '../../services/api';
 
 const EvaluationPage = () => {
   const { orderId } = useParams();
@@ -29,6 +29,7 @@ const EvaluationPage = () => {
   ]);
 
   const [loading, setLoading] = useState(false);
+  const [uploadingProductId, setUploadingProductId] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -39,6 +40,9 @@ const EvaluationPage = () => {
 
       try {
         const response = await orderApi.getDetail(orderId);
+        if (response.data.status !== '已完成') {
+          setError('订单完成后才能评价，请先确认收货。');
+        }
         const items = response.data.items || [];
         if (items.length) {
           setEvaluations(items.map(item => ({
@@ -71,12 +75,25 @@ const EvaluationPage = () => {
     ));
   };
 
-  const handleImageUpload = (productId, e) => {
+  const handleImageUpload = async (productId, e) => {
     const files = Array.from(e.target.files);
-    const imageUrls = files.map(file => URL.createObjectURL(file));
-    setEvaluations(prev => prev.map(item => 
-      item.productId === productId ? { ...item, images: [...item.images, ...imageUrls] } : item
-    ));
+    if (files.length === 0) {
+      return;
+    }
+
+    setUploadingProductId(productId);
+    try {
+      const response = await uploadApi.uploadImages(files);
+      const imageUrls = response.data.urls || [];
+      setEvaluations(prev => prev.map(item =>
+        item.productId === productId ? { ...item, images: [...item.images, ...imageUrls] } : item
+      ));
+    } catch (err) {
+      setError(err.response?.data?.message || '图片上传失败，请稍后重试');
+    } finally {
+      setUploadingProductId(null);
+      e.target.value = '';
+    }
   };
 
   const handleRemoveImage = (productId, index) => {
@@ -168,8 +185,12 @@ const EvaluationPage = () => {
                   multiple
                   accept="image/*"
                   onChange={(e) => handleImageUpload(item.productId, e)}
+                  disabled={uploadingProductId === item.productId}
                   style={{ marginBottom: '12px' }}
                 />
+                {uploadingProductId === item.productId && (
+                  <div style={{ color: '#666', marginBottom: '12px' }}>图片上传中...</div>
+                )}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {item.images.map((image, index) => (
                     <div key={index} style={{ position: 'relative' }}>

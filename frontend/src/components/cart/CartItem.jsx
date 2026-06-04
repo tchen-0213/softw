@@ -5,6 +5,9 @@ import { fallbackImages } from '../../data/imageAssets';
 
 const CartItem = ({ item }) => {
   const dispatch = useDispatch();
+  const stock = Number(item.stock);
+  const hasStockLimit = Number.isFinite(stock);
+  const isAtStockLimit = hasStockLimit && item.quantity >= stock;
 
   const handleRemove = () => {
     dispatch(removeFromCart(item.id));
@@ -26,6 +29,9 @@ const CartItem = ({ item }) => {
         <div style={{ fontSize: '16px', marginBottom: '8px' }}>{item.name}</div>
         <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
           卖家: {item.seller?.nickname || '未知卖家'}
+        </div>
+        <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+          库存: {hasStockLimit ? item.stock : '充足'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ff4d4f' }}>
@@ -56,15 +62,18 @@ const CartItem = ({ item }) => {
                 outline: 'none'
               }}
               min="1"
+              max={hasStockLimit ? item.stock : undefined}
             />
             <button
               onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+              disabled={isAtStockLimit}
               style={{
                 width: '32px',
                 height: '32px',
                 border: '1px solid #d9d9d9',
                 background: '#fff',
-                cursor: 'pointer'
+                cursor: isAtStockLimit ? 'not-allowed' : 'pointer',
+                color: isAtStockLimit ? '#999' : 'inherit'
               }}
             >
               +

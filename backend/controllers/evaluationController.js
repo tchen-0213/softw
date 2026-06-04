@@ -22,6 +22,23 @@ const toEvaluationDto = (evaluation) => {
   return data;
 };
 
+const getCreditLevel = (score) => {
+  if (score >= 180) return '钻石';
+  if (score >= 150) return '金牌';
+  if (score >= 120) return '银牌';
+  if (score >= 90) return '普通';
+  return '风险';
+};
+
+const getCreditDelta = (rating) => {
+  const value = Number(rating);
+  if (value >= 5) return 5;
+  if (value === 4) return 3;
+  if (value === 3) return 0;
+  if (value === 2) return -3;
+  return -5;
+};
+
 const updateProductRating = async (productId) => {
   const evaluations = await Evaluation.findAll({
     where: { productId, status: '已发布' },
@@ -39,6 +56,19 @@ const updateProductRating = async (productId) => {
   );
 };
 
+const updateSellerCredit = async (sellerId, rating) => {
+  const seller = await User.findByPk(sellerId);
+  if (!seller) {
+    return;
+  }
+
+  const nextScore = Math.max(0, Number(seller.creditScore || 0) + getCreditDelta(rating));
+  await seller.update({
+    creditScore: nextScore,
+    creditLevel: getCreditLevel(nextScore)
+  });
+};
+
 // 创建评价
 exports.createEvaluation = async (req, res) => {
   const { orderId, productId, rating, content, images = [] } = req.body;
@@ -52,6 +82,10 @@ exports.createEvaluation = async (req, res) => {
     const order = await Order.findByPk(orderId);
     if (!order || Number(order.userId) !== Number(req.user.id)) {
       return res.status(400).json({ message: '订单不存在或无权评价' });
+    }
+
+    if (order.status !== '已完成') {
+      return res.status(400).json({ message: '订单完成后才能评价' });
     }
 
     const purchased = (order.items || []).some((item) => Number(item.productId) === Number(productId));
@@ -82,6 +116,7 @@ exports.createEvaluation = async (req, res) => {
     });
 
     await updateProductRating(productId);
+    await updateSellerCredit(product.sellerId, rating);
     res.status(201).json(toEvaluationDto(evaluation));
   } catch (error) {
     res.status(500).json({ message: '创建评价失败', error: error.message });

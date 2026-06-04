@@ -176,39 +176,11 @@ const FloatingCart = () => {
 
           <div className="floating-cart-list">
             {items.map((item) => (
-              <div key={item.id} className="floating-cart-item">
-                <img
-                  src={item.images?.[0] || fallbackImages.product}
-                  alt={item.name}
-                  className="floating-cart-image"
-                />
-                <div className="floating-cart-info">
-                  <div className="floating-cart-name">{item.name}</div>
-                  <div className="floating-cart-price">¥{Number(item.price).toFixed(2)}</div>
-                  <div className="floating-cart-controls">
-                    <button
-                      type="button"
-                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-                    >
-                      -
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      className="floating-cart-remove"
-                      onClick={() => dispatch(removeFromCart(item.id))}
-                    >
-                      删除
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <FloatingCartItem
+                key={item.id}
+                item={item}
+                dispatch={dispatch}
+              />
             ))}
           </div>
 
@@ -224,6 +196,50 @@ const FloatingCart = () => {
         </div>
       )}
     </aside>
+  );
+};
+
+const FloatingCartItem = ({ item, dispatch }) => {
+  const stock = Number(item.stock);
+  const hasStockLimit = Number.isFinite(stock);
+  const isAtStockLimit = hasStockLimit && item.quantity >= stock;
+
+  return (
+    <div className="floating-cart-item">
+      <img
+        src={item.images?.[0] || fallbackImages.product}
+        alt={item.name}
+        className="floating-cart-image"
+      />
+      <div className="floating-cart-info">
+        <div className="floating-cart-name">{item.name}</div>
+        <div className="floating-cart-price">¥{Number(item.price).toFixed(2)}</div>
+        <div className="floating-cart-stock">库存: {hasStockLimit ? item.stock : '充足'}</div>
+        <div className="floating-cart-controls">
+          <button
+            type="button"
+            onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
+          >
+            -
+          </button>
+          <span>{item.quantity}</span>
+          <button
+            type="button"
+            onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+            disabled={isAtStockLimit}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="floating-cart-remove"
+            onClick={() => dispatch(removeFromCart(item.id))}
+          >
+            删除
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

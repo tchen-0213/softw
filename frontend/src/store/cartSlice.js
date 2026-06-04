@@ -34,6 +34,17 @@ const normalizeCartItems = (items) => (
     : []
 );
 
+const getStockLimit = (item) => {
+  const stock = Number(item?.stock);
+  return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : Infinity;
+};
+
+const clampQuantityByStock = (quantity, item) => {
+  const nextQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
+  const stockLimit = getStockLimit(item);
+  return Math.min(nextQuantity, stockLimit);
+};
+
 export const loadCartItems = (storageKey = getCartStorageKey()) => {
   if (typeof window === 'undefined') {
     return [];
@@ -73,13 +84,19 @@ const cartSlice = createSlice({
     },
     addToCart: (state, action) => {
       const quantity = Math.max(1, Number(action.payload.quantity) || 1);
+      const stockLimit = getStockLimit(action.payload);
+      if (stockLimit <= 0) {
+        return;
+      }
+
       const existingItem = state.items.find(item => item.id === action.payload.id);
       if (existingItem) {
-        existingItem.quantity += quantity;
+        existingItem.stock = action.payload.stock ?? existingItem.stock;
+        existingItem.quantity = clampQuantityByStock(existingItem.quantity + quantity, existingItem);
       } else {
         state.items.push({
           ...action.payload,
-          quantity
+          quantity: Math.min(quantity, stockLimit)
         });
       }
     },
@@ -100,7 +117,13 @@ const cartSlice = createSlice({
 
       const item = state.items.find(item => item.id === id);
       if (item) {
-        item.quantity = Math.max(1, Math.floor(nextQuantity));
+        const stockLimit = getStockLimit(item);
+        if (stockLimit <= 0) {
+          state.items = state.items.filter(cartItem => cartItem.id !== id);
+          return;
+        }
+
+        item.quantity = clampQuantityByStock(nextQuantity, item);
       }
     },
     clearCart: (state) => {

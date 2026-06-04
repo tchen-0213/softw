@@ -43,7 +43,8 @@ const AuthPage = ({ mode }) => {
         phone: response.data.phone || formData.phone || '',
         avatar: response.data.avatar,
         creditLevel: response.data.creditLevel,
-        creditScore: response.data.creditScore
+        creditScore: response.data.creditScore,
+        role: response.data.role
       };
 
       localStorage.setItem('token', response.data.token);

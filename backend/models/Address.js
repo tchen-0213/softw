@@ -2,10 +2,9 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const User = require('./User');
 
-const Shop = sequelize.define('Shop', {
+const Address = sequelize.define('Address', {
   id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.STRING,
     primaryKey: true
   },
   userId: {
@@ -20,21 +19,17 @@ const Shop = sequelize.define('Shop', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  avatar: {
+  phone: {
     type: DataTypes.STRING,
-    defaultValue: ''
+    allowNull: false
   },
-  banner: {
-    type: DataTypes.STRING,
-    defaultValue: ''
-  },
-  description: {
+  address: {
     type: DataTypes.TEXT,
-    defaultValue: ''
+    allowNull: false
   },
-  status: {
-    type: DataTypes.STRING,
-    defaultValue: '审核中'
+  isDefault: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   createdAt: {
     type: DataTypes.DATE,
@@ -46,7 +41,6 @@ const Shop = sequelize.define('Shop', {
   }
 });
 
-// 关联关系
-Shop.belongsTo(User, { foreignKey: 'userId' });
+Address.belongsTo(User, { foreignKey: 'userId' });
 
-module.exports = Shop;
+module.exports = Address;

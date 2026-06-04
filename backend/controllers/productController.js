@@ -20,6 +20,28 @@ const sortableFields = {
   price_desc: ['price', 'DESC']
 };
 
+const editableProductFields = [
+  'name',
+  'description',
+  'images',
+  'videos',
+  'price',
+  'stock',
+  'category',
+  'subCategory',
+  'brand',
+  'status',
+  'productType',
+  'isSecondhand',
+  'condition',
+  'usageTime',
+  'hasDefect',
+  'defectDescription',
+  'location'
+];
+
+const sellerStatuses = ['在售', '下架', '已预订', '已售出'];
+
 const parseBoolean = (value) => {
   if (value === undefined || value === null || value === '') {
     return undefined;
@@ -67,6 +89,8 @@ const buildWhere = (query) => {
 
   if (query.status) {
     where.status = query.status;
+  } else if (query.includeUnavailable !== 'true') {
+    where.status = '在售';
   }
 
   return where;
@@ -130,6 +154,40 @@ exports.getProducts = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: '获取商品列表失败', error: error.message });
+  }
+};
+
+// 获取当前卖家的商品列表
+exports.getMyProducts = async (req, res) => {
+  const { page, limit, offset } = parsePaging(req.query);
+  const where = {
+    ...buildWhere({
+      ...req.query,
+      includeUnavailable: 'true'
+    }),
+    sellerId: req.user.id
+  };
+
+  try {
+    const { rows, count } = await Product.findAndCountAll({
+      where,
+      include: [{ model: User, attributes: ['id', 'username', 'nickname', 'avatar', 'creditLevel', 'creditScore'] }],
+      order: getOrder(req.query),
+      offset,
+      limit
+    });
+
+    res.json({
+      products: rows.map(toProductDto),
+      pagination: {
+        total: count,
+        page,
+        limit,
+        pages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: '获取我的商品失败', error: error.message });
   }
 };
 
@@ -199,6 +257,9 @@ exports.createProduct = async (req, res) => {
     productType,
     isSecondhand,
     condition,
+    usageTime,
+    hasDefect = false,
+    defectDescription,
     location
   } = req.body;
 
@@ -218,8 +279,15 @@ exports.createProduct = async (req, res) => {
       sellerName: req.user.nickname || req.user.username,
       isSecondhand: secondhand,
       condition: conditionMap[condition] || condition || null,
+      usageTime,
+      hasDefect,
+      defectDescription,
       location
     });
+
+    if (req.user.role === 'user') {
+      await req.user.update({ role: 'seller' });
+    }
 
     const createdProduct = await Product.findByPk(product.id, {
       include: [{ model: User, attributes: ['id', 'username', 'nickname', 'avatar', 'creditLevel', 'creditScore'] }]
@@ -243,16 +311,29 @@ exports.updateProduct = async (req, res) => {
       return res.status(403).json({ message: '无权修改此商品' });
     }
 
-    const updates = { ...req.body };
+    const updates = {};
+    editableProductFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates[field] = req.body[field];
+      }
+    });
+
     if (updates.condition) {
       updates.condition = conditionMap[updates.condition] || updates.condition;
     }
     if (updates.productType !== undefined && updates.isSecondhand === undefined) {
       updates.isSecondhand = Number(updates.productType) === 2;
     }
+    if (updates.status && !sellerStatuses.includes(updates.status)) {
+      return res.status(400).json({ message: '商品状态不合法' });
+    }
     delete updates.productType;
     delete updates.sellerId;
     delete updates.sellerName;
+    delete updates.sales;
+    delete updates.views;
+    delete updates.rating;
+    delete updates.reviewCount;
 
     await product.update(updates);
     const updatedProduct = await Product.findByPk(product.id, {

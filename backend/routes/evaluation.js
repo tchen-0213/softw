@@ -6,7 +6,7 @@ const {
   replyEvaluation, 
   approveEvaluation 
 } = require('../controllers/evaluationController');
-const { protect } = require('../middleware/auth');
+const { protect, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -23,6 +23,6 @@ router.get('/user', protect, getUserEvaluations);
 router.put('/:id/reply', protect, replyEvaluation);
 
 // 审核评价（需要登录）
-router.put('/:id/approve', protect, approveEvaluation);
+router.put('/:id/approve', protect, authorizeRoles('admin'), approveEvaluation);
 
 module.exports = router;

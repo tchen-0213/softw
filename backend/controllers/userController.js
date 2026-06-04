@@ -39,6 +39,7 @@ exports.register = async (req, res) => {
       avatar: user.avatar,
       creditLevel: user.creditLevel,
       creditScore: user.creditScore,
+      role: user.role,
       token: generateToken(user.id)
     });
   } catch (error) {
@@ -70,6 +71,7 @@ exports.login = async (req, res) => {
       avatar: user.avatar,
       creditLevel: user.creditLevel,
       creditScore: user.creditScore,
+      role: user.role,
       token: generateToken(user.id)
     });
   } catch (error) {
@@ -95,15 +97,32 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: '用户不存在' });
     }
 
-    const { nickname, avatar, gender, birthday } = req.body;
+    const { nickname, avatar, gender, birthday, phone, email } = req.body;
+
+    if (email && email !== user.email) {
+      const emailExists = await User.findOne({
+        where: {
+          email,
+          id: { [Op.ne]: user.id }
+        }
+      });
+      if (emailExists) {
+        return res.status(400).json({ message: '邮箱已被使用' });
+      }
+    }
+
     await user.update({
       nickname: nickname || user.nickname,
       avatar: avatar || user.avatar,
       gender: gender || user.gender,
-      birthday: birthday || user.birthday
+      birthday: birthday || user.birthday,
+      phone: phone || user.phone,
+      email: email || user.email
     });
 
-    res.json(user);
+    const safeUser = user.toJSON();
+    delete safeUser.password;
+    res.json(safeUser);
   } catch (error) {
     res.status(500).json({ message: '更新用户信息失败', error: error.message });
   }

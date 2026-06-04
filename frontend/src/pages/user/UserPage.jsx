@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AddressManager from '../../components/user/AddressManager';
 import { avatarImages, productImages } from '../../data/imageAssets';
-import { userApi } from '../../services/api';
+import { addressApi, orderApi, userApi } from '../../services/api';
 import {
   getStoredUser,
   getUserKey,
@@ -79,6 +79,20 @@ const defaultOrders = [
   }
 ];
 
+const normalizeOrder = (order) => ({
+  ...order,
+  createTime: order.createTime || new Date(order.createdAt).toLocaleString(),
+  totalPrice: Number(order.totalPrice ?? order.totalAmount ?? 0),
+  address: order.address || order.shippingAddress?.address || '',
+  paymentMethod: order.paymentMethod || '未选择',
+  logistics: order.logistics || order.logisticsInfo,
+  items: (order.items || []).map(item => ({
+    ...item,
+    id: item.id || item.productId,
+    image: item.image || productImages.iphone
+  }))
+});
+
 const loadUser = (authUser) => {
   if (!authUser) {
     return null;
@@ -104,7 +118,7 @@ const UserPage = () => {
   const [authUser] = useState(getStoredUser);
   const [user, setUser] = useState(() => loadUser(getStoredUser()));
   const [addresses, setAddresses] = useState(() => loadUserAddresses(getStoredUser()));
-  const [orders] = useState(defaultOrders);
+  const [orders, setOrders] = useState(defaultOrders.map(normalizeOrder));
   const [activeTab, setActiveTab] = useState('profile');
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState(() => loadUser(getStoredUser()) || createDefaultUser(getStoredUser()));
@@ -143,6 +157,19 @@ const UserPage = () => {
         }));
       })
       .catch(() => {});
+
+    addressApi.getList()
+      .then((response) => {
+        setAddresses(response.data || []);
+      })
+      .catch(() => {});
+
+    orderApi.getList()
+      .then((response) => {
+        const result = response.data.orders || [];
+        setOrders(result.map(normalizeOrder));
+      })
+      .catch(() => {});
   }, [authUser]);
 
   const handleEditProfile = () => {
@@ -158,28 +185,51 @@ const UserPage = () => {
     }));
   };
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const nextUser = {
-      ...user,
-      nickname: profileForm.nickname,
-      avatar: profileForm.avatar || avatarImages.userDefault,
-      email: profileForm.email,
-      phone: profileForm.phone
-    };
-    setUser(prev => ({
-      ...prev,
-      ...nextUser
-    }));
-    localStorage.setItem('user', JSON.stringify({
-      ...(authUser || {}),
-      username: authUser?.username,
-      nickname: nextUser.nickname,
-      email: nextUser.email,
-      phone: nextUser.phone,
-      avatar: nextUser.avatar
-    }));
-    setEditingProfile(false);
+    try {
+      const response = await userApi.updateProfile({
+        nickname: profileForm.nickname,
+        avatar: profileForm.avatar || avatarImages.userDefault,
+        email: profileForm.email,
+        phone: profileForm.phone
+      });
+      const nextUser = {
+        ...user,
+        ...(response.data || {}),
+        avatar: response.data?.avatar || avatarImages.userDefault
+      };
+      setUser(prev => ({
+        ...prev,
+        ...nextUser
+      }));
+      localStorage.setItem('user', JSON.stringify({
+        ...(authUser || {}),
+        username: authUser?.username,
+        nickname: nextUser.nickname,
+        email: nextUser.email,
+        phone: nextUser.phone,
+        avatar: nextUser.avatar,
+        creditLevel: nextUser.creditLevel,
+        creditScore: nextUser.creditScore,
+        role: nextUser.role
+      }));
+      setEditingProfile(false);
+    } catch (err) {
+      alert(err.response?.data?.message || '个人信息保存失败');
+    }
+  };
+
+  const handleAddressesChange = async (nextAddresses) => {
+    setAddresses(nextAddresses);
+    saveUserAddresses(nextAddresses, authUser);
+
+    try {
+      const response = await addressApi.replaceAll(nextAddresses);
+      setAddresses(response.data || nextAddresses);
+    } catch {
+      // 后端不可用时仍保留本地地址，方便课堂演示不中断。
+    }
   };
 
   const handleViewOrder = (id) => {
@@ -377,7 +427,7 @@ const UserPage = () => {
               <div>
                 <AddressManager
                   addresses={addresses}
-                  onChange={setAddresses}
+                  onChange={handleAddressesChange}
                 />
               </div>
             )}

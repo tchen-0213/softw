@@ -82,6 +82,16 @@ const Product = sequelize.define('Product', {
   condition: {
     type: DataTypes.STRING
   },
+  usageTime: {
+    type: DataTypes.STRING
+  },
+  hasDefect: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  defectDescription: {
+    type: DataTypes.TEXT
+  },
   location: {
     type: DataTypes.STRING
   },

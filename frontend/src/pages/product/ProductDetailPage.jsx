@@ -12,6 +12,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentProduct, loading, error } = useSelector((state) => state.product);
+  const { items: cartItems } = useSelector((state) => state.cart);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -30,9 +31,37 @@ const ProductDetailPage = () => {
     return <div className="empty">商品不存在</div>;
   }
 
+  const isAvailable = !currentProduct.status || currentProduct.status === '在售';
+  const stock = Number(currentProduct.stock);
+  const hasStockLimit = Number.isFinite(stock);
+  const currentCartQuantity = cartItems.find(item => item.id === currentProduct.id)?.quantity || 0;
+
+  const canAddOneMore = () => {
+    if (hasStockLimit && stock <= 0) {
+      setNotice('该商品暂无库存，无法加入购物车');
+      return false;
+    }
+
+    if (hasStockLimit && currentCartQuantity >= stock) {
+      setNotice(`库存仅剩 ${stock} 件，购物车中已达到库存上限`);
+      return false;
+    }
+
+    return true;
+  };
+
   const handleAddToCart = () => {
+    if (!isAvailable) {
+      setNotice('该商品当前不可购买');
+      return;
+    }
+
     if (!isLoggedIn()) {
       setNotice('请先登录后再加入购物车');
+      return;
+    }
+
+    if (!canAddOneMore()) {
       return;
     }
 
@@ -41,8 +70,17 @@ const ProductDetailPage = () => {
   };
 
   const handleBuyNow = () => {
+    if (!isAvailable) {
+      setNotice('该商品当前不可购买');
+      return;
+    }
+
     if (!isLoggedIn()) {
       setNotice('请先登录后再购买商品');
+      return;
+    }
+
+    if (!canAddOneMore()) {
       return;
     }
 
@@ -81,7 +119,9 @@ const ProductDetailPage = () => {
               <div className="product-detail-stats">
                 <span>销量: {currentProduct.sales || 0}</span>
                 <span>评价: {currentProduct.evaluationCount || 0}</span>
+                <span>库存: {hasStockLimit ? currentProduct.stock : '充足'}</span>
                 <span>收藏: {currentProduct.favoriteCount || 0}</span>
+                <span>状态: {currentProduct.status || '在售'}</span>
               </div>
               <div className="product-detail-seller">
                 <h3>卖家信息</h3>
@@ -100,13 +140,15 @@ const ProductDetailPage = () => {
                 </div>
               </div>
               <div className="product-detail-actions">
-                <button className="button button-secondary" onClick={handleAddToCart}>加入购物车</button>
-                <button className="button button-primary" onClick={handleBuyNow}>立即购买</button>
+                <button className="button button-secondary" onClick={handleAddToCart} disabled={!isAvailable || (hasStockLimit && stock <= 0)}>加入购物车</button>
+                <button className="button button-primary" onClick={handleBuyNow} disabled={!isAvailable || (hasStockLimit && stock <= 0)}>立即购买</button>
               </div>
               {notice && (
                 <div className="inline-notice product-detail-notice">
                   {notice}
-                  <button type="button" onClick={() => navigate('/login')}>去登录</button>
+                  {notice.includes('登录') && (
+                    <button type="button" onClick={() => navigate('/login')}>去登录</button>
+                  )}
                 </div>
               )}
             </div>
@@ -117,12 +159,13 @@ const ProductDetailPage = () => {
               {currentProduct.description || '暂无描述'}
             </div>
           </div>
-          {(currentProduct.productType === 2 || currentProduct.isSecondhand) && (
+          {(Number(currentProduct.productType) === 2 || currentProduct.isSecondhand) && (
             <div style={{ marginTop: '40px' }}>
               <h2>二手商品信息</h2>
               <div style={{ marginTop: '20px' }}>
                 <p>成色: {getConditionText(currentProduct.condition)}</p>
                 <p>使用时间: {currentProduct.usageTime || '未知'}</p>
+                <p>交易地点: {currentProduct.location || '未填写'}</p>
                 <p>是否有瑕疵: {currentProduct.hasDefect ? '是' : '否'}</p>
                 {currentProduct.defectDescription && (
                   <p>瑕疵描述: {currentProduct.defectDescription}</p>

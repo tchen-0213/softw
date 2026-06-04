@@ -28,6 +28,7 @@ api.interceptors.request.use(
 // 商品相关API
 export const productApi = {
   getList: (params) => api.get('/products', { params }),
+  getMine: (params) => api.get('/products/mine', { params }),
   getDetail: (id) => api.get(`/products/${id}`),
   search: (params) => api.get('/products/search', { params }),
   getRecommended: () => api.get('/products/recommended'),
@@ -49,10 +50,13 @@ export const userApi = {
 export const orderApi = {
   create: (data) => api.post('/orders', data),
   getList: (params) => api.get('/orders', { params }),
+  getSellerList: (params) => api.get('/orders/seller', { params }),
   getDetail: (id) => api.get(`/orders/${id}`),
   update: (id, data) => api.put(`/orders/${id}`, data),
   cancel: (id) => api.post(`/orders/${id}/cancel`),
-  pay: (id) => api.post(`/orders/${id}/pay`)
+  pay: (id) => api.post(`/orders/${id}/pay`),
+  ship: (id, data) => api.post(`/orders/${id}/ship`, data),
+  confirm: (id) => api.post(`/orders/${id}/confirm`)
 };
 
 // 二手商品相关API
@@ -72,6 +76,33 @@ export const evaluationApi = {
   getUserEvaluations: (params) => api.get('/evaluations/user', { params }),
   reply: (id, data) => api.put(`/evaluations/${id}/reply`, data),
   approve: (id) => api.put(`/evaluations/${id}/approve`)
+};
+
+// 地址相关API
+export const addressApi = {
+  getList: () => api.get('/addresses'),
+  replaceAll: (addresses) => api.put('/addresses', { addresses })
+};
+
+// 店铺相关API
+export const shopApi = {
+  getMine: () => api.get('/shops/mine'),
+  updateMine: (data) => api.put('/shops/mine', data),
+  getDetail: (id) => api.get(`/shops/${id}`)
+};
+
+// 上传相关API
+export const uploadApi = {
+  uploadImages: (files) => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('images', file));
+    return api.post('/uploads/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 15000
+    });
+  }
 };
 
 export default api;

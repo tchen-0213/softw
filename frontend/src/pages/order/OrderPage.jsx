@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productImages } from '../../data/imageAssets';
+import { fallbackImages, productImages } from '../../data/imageAssets';
 import { orderApi } from '../../services/api';
+import { isLoggedIn } from '../../utils/accountStorage';
 
 const mockOrders = [
   {
@@ -54,8 +55,8 @@ const OrderPage = () => {
 
   useEffect(() => {
     const loadOrders = async () => {
-      if (!localStorage.getItem('token')) {
-        setOrders(mockOrders);
+      if (!isLoggedIn()) {
+        setOrders([]);
         setLoading(false);
         return;
       }
@@ -65,8 +66,8 @@ const OrderPage = () => {
         const result = response.data.orders || [];
         setOrders(result.map(normalizeOrder));
       } catch (err) {
-        setError(err.response?.data?.message || '订单加载失败，已显示演示数据');
-        setOrders(mockOrders);
+        setError(err.response?.data?.message || '订单加载失败，请稍后重试');
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -101,10 +102,7 @@ const OrderPage = () => {
 
   const handleConfirm = async (id) => {
     try {
-      const response = await orderApi.update(id, {
-        status: '已完成',
-        logisticsInfo: { status: '已签收' }
-      });
+      const response = await orderApi.confirm(id);
       refreshOrder(response.data);
     } catch (err) {
       alert(err.response?.data?.message || '确认收货失败');
@@ -124,6 +122,22 @@ const OrderPage = () => {
 
   if (loading) {
     return <div className="loading">加载中...</div>;
+  }
+
+  if (!isLoggedIn()) {
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>我的订单</h2>
+          <div className="shop-empty-panel">
+            <h3>请先登录后查看订单</h3>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -161,7 +175,7 @@ const OrderPage = () => {
                   {order.items.map((item) => (
                     <div key={item.id} style={{ display: 'flex', marginBottom: '16px', alignItems: 'center' }}>
                       <img
-                        src={item.image}
+                        src={item.image || fallbackImages.product}
                         alt={item.name}
                         style={{ width: '80px', height: '80px', objectFit: 'cover', marginRight: '16px' }}
                       />
@@ -179,6 +193,19 @@ const OrderPage = () => {
                   <div>下单时间: {order.createTime}</div>
                   <div style={{ fontSize: '16px', fontWeight: 'bold' }}>总计: ¥{order.totalPrice.toFixed(2)}</div>
                 </div>
+                {order.logistics && (
+                  <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', color: '#666' }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      物流：{order.logistics.company || '商家配送'} {order.logistics.trackingNumber || ''}
+                      <span style={{ marginLeft: '12px', color: '#1890ff' }}>{order.logistics.status || '运输中'}</span>
+                    </div>
+                    {(order.logistics.steps || []).slice(0, 3).map((step, index) => (
+                      <div key={index} style={{ fontSize: '14px', marginTop: '4px' }}>
+                        {step.time} - {step.description}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   {(order.status === 1 || order.status === '待付款') && (
                     <>

@@ -4,6 +4,7 @@ const {
   getProductDetail, 
   searchProducts, 
   getRecommendedProducts, 
+  getMyProducts,
   createProduct, 
   updateProduct, 
   deleteProduct 
@@ -20,6 +21,9 @@ router.get('/search', searchProducts);
 
 // 获取推荐商品
 router.get('/recommended', getRecommendedProducts);
+
+// 获取当前卖家的商品
+router.get('/mine', protect, getMyProducts);
 
 // 获取商品详情
 router.get('/:id', getProductDetail);

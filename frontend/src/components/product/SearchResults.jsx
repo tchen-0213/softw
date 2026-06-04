@@ -41,6 +41,7 @@ const SearchResults = ({ results, loading, error }) => {
             <div className="product-stats">
               <span>销量: {product.sales || 0}</span>
               <span>评价: {product.evaluationCount || 0}</span>
+              <span>库存: {Number.isFinite(Number(product.stock)) ? product.stock : '充足'}</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productApi, secondhandApi } from '../../services/api';
+import { productApi, secondhandApi, uploadApi } from '../../services/api';
 
 const conditionMap = {
   1: '全新',
@@ -21,11 +21,13 @@ const SellPage = () => {
     productType: 2, // 1: 新品, 2: 二手
     condition: 3, // 1: 全新, 2: 九成新, 3: 八成新, 4: 七成新, 5: 六成新及以下
     usageTime: '',
+    location: '',
     hasDefect: false,
     defectDescription: ''
   });
 
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -37,14 +39,33 @@ const SellPage = () => {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-    // 模拟图片上传，实际项目中应该上传到服务器
-    const imageUrls = files.map(file => URL.createObjectURL(file));
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...imageUrls]
-    }));
+    if (files.length === 0) {
+      return;
+    }
+
+    if (!localStorage.getItem('token')) {
+      setError('请先登录后再上传图片');
+      navigate('/login');
+      return;
+    }
+
+    setUploadingImages(true);
+    setError('');
+    try {
+      const response = await uploadApi.uploadImages(files);
+      const imageUrls = response.data.urls || [];
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...imageUrls]
+      }));
+    } catch (err) {
+      setError(err.response?.data?.message || '图片上传失败，请稍后重试');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
   };
 
   const handleRemoveImage = (index) => {
@@ -75,6 +96,9 @@ const SellPage = () => {
         category: formData.category,
         productType: formData.productType,
         condition: conditionMap[formData.condition],
+        usageTime: formData.usageTime,
+        hasDefect: formData.hasDefect,
+        defectDescription: formData.hasDefect ? formData.defectDescription : '',
         location: formData.location,
         isSecondhand: formData.productType === 2
       };
@@ -185,8 +209,10 @@ const SellPage = () => {
               multiple
               accept="image/*"
               onChange={handleImageUpload}
+              disabled={uploadingImages}
               style={{ marginBottom: '12px' }}
             />
+            {uploadingImages && <div style={{ color: '#666', marginBottom: '12px' }}>图片上传中...</div>}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {formData.images.map((image, index) => (
                 <div key={index} style={{ position: 'relative' }}>
@@ -238,6 +264,18 @@ const SellPage = () => {
               <option value="home">家居</option>
               <option value="other">其他</option>
             </select>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>交易/发货地点</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              placeholder="例如：上海市浦东新区"
+              style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+            />
           </div>
 
           {formData.productType === 2 && (
@@ -300,14 +338,14 @@ const SellPage = () => {
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingImages}
               style={{
                 padding: '10px 30px',
                 background: '#1890ff',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: loading || uploadingImages ? 'not-allowed' : 'pointer',
                 fontSize: '16px'
               }}
             >

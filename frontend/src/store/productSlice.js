@@ -68,8 +68,7 @@ export const getProducts = createAsyncThunk(
   async (params) => {
     try {
       const response = await productApi.getList(buildApiParams(params));
-      const products = normalizeList(response.data);
-      return products.length ? products : hotProducts.map(normalizeProduct);
+      return normalizeList(response.data);
     } catch {
       return hotProducts.map(normalizeProduct);
     }
@@ -81,8 +80,7 @@ export const searchProducts = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
       const response = await productApi.search(buildApiParams(params));
-      const results = normalizeList(response.data);
-      return results.length ? results : searchMockProducts(params);
+      return normalizeList(response.data);
     } catch (error) {
       if (!error.response) {
         return searchMockProducts(params);
@@ -113,8 +111,7 @@ export const getRecommendedProducts = createAsyncThunk(
   async () => {
     try {
       const response = await productApi.getRecommended();
-      const products = normalizeList(response.data);
-      return products.length ? products : mockRecommendedProducts.map(normalizeProduct);
+      return normalizeList(response.data);
     } catch {
       return mockRecommendedProducts.map(normalizeProduct);
     }
