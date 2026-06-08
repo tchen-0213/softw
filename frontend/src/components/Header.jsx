@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { MoonOutlined, SunOutlined } from '@ant-design/icons';
 import { switchCartOwner } from '../store/cartSlice';
 import SearchBar from './product/SearchBar';
 
@@ -128,7 +129,7 @@ const Header = () => {
               onClick={handleThemeButtonClick}
             >
               <span className="theme-toggle-icon" aria-hidden="true">
-                {theme === 'dark' ? '☀' : '☾'}
+                {theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
               </span>
             </button>
             {token ? (
