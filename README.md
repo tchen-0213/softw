@@ -179,12 +179,14 @@ CREATE DATABASE shopping_platform DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_
 PORT=3001
 
 DB_HOST=localhost
+DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=你的数据库密码
 DB_NAME=shopping_platform
 
 JWT_SECRET=请修改为自己的密钥
 JWT_EXPIRES_IN=30d
+CORS_ORIGIN=http://localhost:5173
 
 NODE_ENV=development
 ```
@@ -232,12 +234,116 @@ npm run dev
 前端默认运行地址：
 
 ```text
-http://localhost:3000
+http://localhost:5173
 ```
 
 ---
 
-## 八、API 接口概览
+## 八、上线部署
+
+推荐部署方式：
+
+- 前端：Railway 或 Vercel
+- 后端：Railway
+- 数据库：Railway MySQL 或其他云 MySQL
+
+当前 Railway 部署地址：
+
+```text
+前端：https://frontend-production-b71b.up.railway.app
+后端：https://backend-production-8506.up.railway.app
+健康检查：https://backend-production-8506.up.railway.app/api/health
+```
+
+### 1. 部署数据库
+
+在线上创建一个 MySQL 8.0 数据库，并记录以下信息：
+
+```text
+DB_HOST
+DB_PORT
+DB_USER
+DB_PASSWORD
+DB_NAME
+```
+
+数据库表会由 Sequelize 在后端启动时自动同步。
+
+### 2. 部署后端
+
+在 Railway 创建 Web Service，连接本仓库或使用 CLI 部署。
+
+后端服务配置：
+
+```text
+Root Directory: backend
+Build Command: npm install
+Start Command: npm start
+```
+
+后端环境变量：
+
+```env
+PORT=3001
+DB_HOST=你的线上数据库地址
+DB_PORT=3306
+DB_USER=你的线上数据库用户
+DB_PASSWORD=你的线上数据库密码
+DB_NAME=shopping_platform
+JWT_SECRET=请换成足够长的随机字符串
+JWT_EXPIRES_IN=30d
+CORS_ORIGIN=你的前端线上地址
+NODE_ENV=production
+```
+
+部署完成后，访问后端健康检查接口：
+
+```text
+https://你的后端域名/api/health
+```
+
+返回 `{"status":"ok"}` 表示后端已启动。
+
+项目已包含 `backend/railway.json`，可直接用于 Railway 后端部署。
+
+### 3. 部署前端
+
+在 Railway 或 Vercel 创建前端服务，连接本仓库。
+
+前端项目配置：
+
+```text
+Root Directory: frontend
+Framework Preset: Vite
+Build Command: npm run build
+Output Directory: dist
+```
+
+前端环境变量：
+
+```env
+VITE_API_BASE_URL=https://你的后端域名/api
+VITE_API_TIMEOUT=10000
+```
+
+项目已包含：
+
+- `frontend/railway.json`：用于 Railway 前端部署
+- `frontend/vercel.json`：用于 Vercel 上支持 React Router 页面刷新和直接访问子路由
+
+### 4. 回填跨域地址
+
+前端部署成功后，将 Vercel 生成的前端地址填回后端环境变量：
+
+```env
+CORS_ORIGIN=https://你的前端域名
+```
+
+然后重新部署后端。
+
+---
+
+## 九、API 接口概览
 
 ### 用户接口
 

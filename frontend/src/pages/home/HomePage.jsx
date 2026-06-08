@@ -15,7 +15,7 @@ const HomePage = () => {
 
   useEffect(() => {
     dispatch(getRecommendedProducts());
-    dispatch(getProducts({ page: 1, size: 10 }));
+    dispatch(getProducts({ page: 1, size: 12 }));
   }, [dispatch]);
 
   const handleProductClick = (id) => {
@@ -47,37 +47,64 @@ const HomePage = () => {
     dispatch(addToCart({ ...product, quantity: 1 }));
   };
 
-  const renderProductCard = (product) => (
+  const formatPrice = (price) => Number(price || 0).toLocaleString('zh-CN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+
+  const categories = [
+    { label: '数码家电', query: 'electronics' },
+    { label: '二手好物', path: '/search?productType=2' },
+    { label: '居家生活', query: 'home' },
+    { label: '图书教材', query: 'books' }
+  ];
+
+  const renderProductCard = (product) => {
+    const stock = Number(product.stock);
+    const isSoldOut = Number.isFinite(stock) && stock <= 0;
+    const isSecondhand = Number(product.productType) === 2 || product.isSecondhand;
+
+    return (
     <div
       key={product.id}
       className="product-card"
       onClick={() => handleProductClick(product.id)}
     >
-      <img
-        src={product.images?.[0] || fallbackImages.product}
-        alt={product.name}
-        className="product-image"
-      />
+      <div className="product-media">
+        <img
+          src={product.images?.[0] || fallbackImages.product}
+          alt={product.name}
+          className="product-image"
+          loading="lazy"
+        />
+        <span className={`product-badge ${isSecondhand ? 'secondhand' : ''}`}>
+          {isSecondhand ? '二手' : '新品'}
+        </span>
+      </div>
       <div className="product-info">
         <div className="product-title">{product.name}</div>
-        <div className="product-price">¥{product.price}</div>
-        <div className="product-seller">{product.seller?.nickname || '未知卖家'}</div>
+        <div className="product-meta-row">
+          <span className="product-seller">{product.seller?.nickname || '未知卖家'}</span>
+          <span>{product.location || product.subCategory || '平台优选'}</span>
+        </div>
+        <div className="product-price">¥{formatPrice(product.price)}</div>
         <div className="product-stats">
-          <span>销量: {product.sales || 0}</span>
-          <span>评价: {product.evaluationCount || 0}</span>
-          <span>库存: {Number.isFinite(Number(product.stock)) ? product.stock : '充足'}</span>
+          <span>销量 {product.sales || 0}</span>
+          <span>评价 {product.evaluationCount || 0}</span>
+          <span>{Number.isFinite(stock) ? `库存 ${stock}` : '库存充足'}</span>
         </div>
         <button
           type="button"
           className="product-add-button"
           onClick={(event) => handleAddToCart(event, product)}
-          disabled={Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0}
+          disabled={isSoldOut}
         >
-          {Number.isFinite(Number(product.stock)) && Number(product.stock) <= 0 ? '暂无库存' : '加入购物车'}
+          {isSoldOut ? '暂无库存' : '加入购物车'}
         </button>
       </div>
     </div>
-  );
+    );
+  };
 
   if (loading) {
     return <div className="loading">加载中...</div>;
@@ -88,8 +115,39 @@ const HomePage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <main className="home-page">
       <div className="container">
+        <section className="home-hero">
+          <div className="home-hero-copy">
+            <span className="home-kicker">校园新品与二手交易</span>
+            <h1>把常用好物放到眼前</h1>
+            <p>精选数码、教材、居家和二手闲置，浏览、下单、发布和管理都在一个页面节奏里完成。</p>
+          </div>
+          <div className="home-hero-panel">
+            <div>
+              <strong>{recommendedProducts.length || products.length}</strong>
+              <span>正在推荐</span>
+            </div>
+            <div>
+              <strong>{products.filter(item => item.isSecondhand || Number(item.productType) === 2).length}</strong>
+              <span>二手商品</span>
+            </div>
+            <button type="button" onClick={() => navigate('/sell')}>发布商品</button>
+          </div>
+        </section>
+
+        <div className="home-categories">
+          {categories.map(category => (
+            <button
+              type="button"
+              key={category.label}
+              onClick={() => navigate(category.path || `/search?category=${category.query}`)}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
+
         {notice && (
           <div className="inline-notice">
             {notice}
@@ -98,17 +156,29 @@ const HomePage = () => {
             )}
           </div>
         )}
-        <h2 style={{ marginBottom: '20px' }}>推荐商品</h2>
+
+        <div className="section-heading">
+          <div>
+            <span>Recommended</span>
+            <h2>推荐商品</h2>
+          </div>
+          <button type="button" onClick={() => navigate('/search')}>查看全部</button>
+        </div>
         <div className="product-list">
           {recommendedProducts.map(renderProductCard)}
         </div>
 
-        <h2 style={{ margin: '40px 0 20px' }}>热门商品</h2>
+        <div className="section-heading section-heading-spaced">
+          <div>
+            <span>Popular</span>
+            <h2>热门商品</h2>
+          </div>
+        </div>
         <div className="product-list">
           {products.map(renderProductCard)}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
