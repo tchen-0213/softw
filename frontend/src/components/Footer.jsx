@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container">
         <div className="footer-content">
           <div>
-            <p>© 2026 购物与二手交易平台. 保留所有权利.</p>
+            <p>© 2026 摸鱼. 保留所有权利.</p>
           </div>
           <div className="footer-links">
             <Link to="/about" className="footer-link">关于我们</Link>

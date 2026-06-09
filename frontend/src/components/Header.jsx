@@ -106,7 +106,8 @@ const Header = () => {
       <div className="container header-container">
         <div className="header-content">
           <Link to="/" className="logo">
-            购物与二手交易平台
+            <img src="/images/moyu-logo.png" alt="摸鱼" className="logo-image" />
+            <span className="logo-text">摸鱼</span>
           </Link>
           <SearchBar />
           <nav className="nav">

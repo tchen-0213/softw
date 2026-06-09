@@ -97,6 +97,19 @@ code {
   color: var(--primary-color);
   text-decoration: none;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-image {
+  height: 44px;
+  width: auto;
+  max-width: 44px;
+}
+
+.logo-text {
+  display: inline-block;
 }
 
 .search-container {
