@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import SearchPage from './pages/search/SearchPage'
 import ProductDetailPage from './pages/product/ProductDetailPage'
 import HomePage from './pages/home/HomePage'
@@ -12,7 +12,6 @@ import ShopPage from './pages/shop/ShopPage'
 import UserPage from './pages/user/UserPage'
 import AuthPage from './pages/auth/AuthPage'
 import AboutPage from './pages/legal/AboutPage'
-import ContactPage from './pages/legal/ContactPage'
 import PrivacyPolicyPage from './pages/legal/PrivacyPolicyPage'
 import UserAgreementPage from './pages/legal/UserAgreementPage'
 import Header from './components/Header'
@@ -37,7 +36,7 @@ function App() {
         <Route path="/login" element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/contact" element={<Navigate to="/about" replace />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<UserAgreementPage />} />
       </Routes>

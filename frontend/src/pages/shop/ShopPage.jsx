@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productImages, shopImages } from '../../data/imageAssets';
 import { orderApi, productApi, shopApi, uploadApi } from '../../services/api';
@@ -30,6 +30,58 @@ const defaultProducts = [
     image: productImages.airpods
   }
 ];
+
+const CUSTOM_COMPANY_VALUE = '__custom_company__';
+const CUSTOM_TRACKING_VALUE = '__custom_tracking__';
+
+const shippingCompanyOptions = [
+  { value: '中通快递', label: '中通' },
+  { value: '顺丰速运', label: '顺丰' },
+  { value: '京东物流', label: '京东' },
+  { value: '圆通速递', label: '圆通' },
+  { value: '申通快递', label: '申通' },
+  { value: '韵达快递', label: '韵达' },
+  { value: 'EMS', label: 'EMS' },
+  { value: CUSTOM_COMPANY_VALUE, label: '自定义物流' }
+];
+
+const trackingPrefixMap = {
+  中通快递: 'ZT',
+  顺丰速运: 'SF',
+  京东物流: 'JD',
+  圆通速递: 'YT',
+  申通快递: 'ST',
+  韵达快递: 'YD',
+  EMS: 'EMS'
+};
+
+const pendingSellerOrderStatuses = ['待付款', '待发货'];
+
+const createEmptyShippingForm = () => ({
+  company: '',
+  customCompany: '',
+  trackingNumber: '',
+  customTrackingNumber: ''
+});
+
+const getTrackingNumberOptions = (orderId, company) => {
+  if (!company || company === CUSTOM_COMPANY_VALUE) {
+    return [];
+  }
+
+  const prefix = trackingPrefixMap[company] || 'NO';
+  const normalizedOrderId = String(orderId || '0').replace(/\D/g, '') || '0';
+  const paddedOrderId = normalizedOrderId.padStart(6, '0');
+
+  return [
+    `${prefix}${paddedOrderId}01`,
+    `${prefix}${paddedOrderId}02`,
+    `${prefix}${paddedOrderId}03`
+  ].map(value => ({
+    value,
+    label: value
+  }));
+};
 
 const getCurrentUser = () => {
   try {
@@ -117,11 +169,16 @@ const ShopPage = () => {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [sellerOrders, setSellerOrders] = useState([]);
   const [shippingOrderId, setShippingOrderId] = useState(null);
-  const [shippingForm, setShippingForm] = useState({
-    company: '',
-    trackingNumber: ''
-  });
+  const [shippingForm, setShippingForm] = useState(createEmptyShippingForm);
   const navigate = useNavigate();
+
+  const pendingSellerOrders = useMemo(() => (
+    sellerOrders.filter(order => pendingSellerOrderStatuses.includes(order.status))
+  ), [sellerOrders]);
+
+  const waitingShipCount = useMemo(() => (
+    sellerOrders.filter(order => order.status === '待发货').length
+  ), [sellerOrders]);
 
   useEffect(() => {
     if (!user || !isLoggedIn()) {
@@ -327,18 +384,59 @@ const ShopPage = () => {
     const { name, value } = event.target;
     setShippingForm(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      ...(name === 'company'
+        ? {
+            customCompany: value === CUSTOM_COMPANY_VALUE ? prev.customCompany : '',
+            trackingNumber: '',
+            customTrackingNumber: ''
+          }
+        : {}),
+      ...(name === 'trackingNumber' && value !== CUSTOM_TRACKING_VALUE
+        ? { customTrackingNumber: '' }
+        : {})
     }));
+    setError('');
+  };
+
+  const handleStartShipping = (orderId) => {
+    setShippingOrderId(orderId);
+    setShippingForm(createEmptyShippingForm());
+    setError('');
+  };
+
+  const handleCancelShipping = () => {
+    setShippingOrderId(null);
+    setShippingForm(createEmptyShippingForm());
+    setError('');
+  };
+
+  const getShippingPayload = () => {
+    const company = shippingForm.company === CUSTOM_COMPANY_VALUE
+      ? shippingForm.customCompany.trim()
+      : shippingForm.company.trim();
+    const trackingNumber = shippingForm.trackingNumber === CUSTOM_TRACKING_VALUE
+      ? shippingForm.customTrackingNumber.trim()
+      : shippingForm.trackingNumber.trim();
+
+    return { company, trackingNumber };
   };
 
   const handleShipOrder = async (orderId) => {
+    const payload = getShippingPayload();
+
+    if (!payload.company || !payload.trackingNumber) {
+      setError('物流公司和物流单号不能为空，请填写完整后再发货');
+      return;
+    }
+
     try {
-      const response = await orderApi.ship(orderId, shippingForm);
+      const response = await orderApi.ship(orderId, payload);
       setSellerOrders(prev => prev.map(order => (
         Number(order.id) === Number(orderId) ? response.data : order
       )));
       setShippingOrderId(null);
-      setShippingForm({ company: '', trackingNumber: '' });
+      setShippingForm(createEmptyShippingForm());
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || '发货失败');
@@ -677,62 +775,109 @@ const ShopPage = () => {
 
         <div style={{ marginBottom: '30px' }}>
           <h3 style={{ marginBottom: '16px' }}>卖家订单与物流</h3>
+          {pendingSellerOrders.length > 0 && (
+            <div className="shop-order-alert">
+              <strong>有 {pendingSellerOrders.length} 笔卖家订单需要关注</strong>
+              <span>
+                {waitingShipCount > 0
+                  ? `其中 ${waitingShipCount} 笔待发货，请及时填写物流信息。`
+                  : '买家已下单，支付完成后即可安排发货。'}
+              </span>
+            </div>
+          )}
           {sellerOrders.length === 0 ? (
             <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px', color: '#666' }}>
               暂无卖家订单
             </div>
           ) : (
-            sellerOrders.map(order => (
-              <div key={order.id} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '16px', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <strong>订单号：{order.id}</strong>
-                  <span style={{ color: '#ff4d4f' }}>{order.status}</span>
-                </div>
-                {(order.items || []).map(item => (
-                  <div key={item.productId} style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '8px' }}>
-                    <span>{item.name} x {item.quantity}</span>
-                    <span>¥{Number(item.price).toFixed(2)}</span>
+            sellerOrders.map(order => {
+              const isAwaitingShipment = order.status === '待发货';
+              const isPendingOrder = pendingSellerOrderStatuses.includes(order.status);
+              const trackingOptions = getTrackingNumberOptions(order.id, shippingForm.company);
+
+              return (
+                <div
+                  key={order.id}
+                  className={`shop-order-card${isPendingOrder ? ' is-pending' : ''}${isAwaitingShipment ? ' is-awaiting-shipment' : ''}`}
+                >
+                  <div className="shop-order-header">
+                    <strong>订单号：{order.id}</strong>
+                    <span>{order.status}</span>
                   </div>
-                ))}
-                {order.shippingAddress && (
-                  <div style={{ color: '#666', marginBottom: '12px' }}>
-                    收货信息：{order.shippingAddress.name}，{order.shippingAddress.phone}，{order.shippingAddress.address}
-                  </div>
-                )}
-                {order.status === '待发货' && (
-                  shippingOrderId === order.id ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: '10px', alignItems: 'center' }}>
-                      <input
-                        name="company"
-                        value={shippingForm.company}
-                        onChange={handleShippingChange}
-                        placeholder="物流公司"
-                        style={{ padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                      />
-                      <input
-                        name="trackingNumber"
-                        value={shippingForm.trackingNumber}
-                        onChange={handleShippingChange}
-                        placeholder="物流单号"
-                        style={{ padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                      />
-                      <button className="button button-primary" type="button" onClick={() => handleShipOrder(order.id)}>确认发货</button>
-                      <button className="button button-secondary" type="button" onClick={() => setShippingOrderId(null)}>取消</button>
+                  {(order.items || []).map(item => (
+                    <div key={item.productId} className="shop-order-item">
+                      <span>{item.name} x {item.quantity}</span>
+                      <span>¥{Number(item.price).toFixed(2)}</span>
                     </div>
-                  ) : (
-                    <button className="button button-primary" type="button" onClick={() => setShippingOrderId(order.id)}>
-                      填写物流并发货
-                    </button>
-                  )
-                )}
-                {order.logistics && (
-                  <div style={{ color: '#666', marginTop: '10px' }}>
-                    物流：{order.logistics.company || '商家配送'} {order.logistics.trackingNumber || ''}，
-                    {order.logistics.status || '运输中'}
-                  </div>
-                )}
-              </div>
-            ))
+                  ))}
+                  {order.shippingAddress && (
+                    <div className="shop-order-address">
+                      收货信息：{order.shippingAddress.name}，{order.shippingAddress.phone}，{order.shippingAddress.address}
+                    </div>
+                  )}
+                  {isAwaitingShipment && (
+                    shippingOrderId === order.id ? (
+                      <div className="shipping-form-grid">
+                        <select
+                          name="company"
+                          value={shippingForm.company}
+                          onChange={handleShippingChange}
+                          required
+                        >
+                          <option value="">选择物流公司</option>
+                          {shippingCompanyOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                        {shippingForm.company === CUSTOM_COMPANY_VALUE && (
+                          <input
+                            name="customCompany"
+                            value={shippingForm.customCompany}
+                            onChange={handleShippingChange}
+                            placeholder="填写物流公司"
+                            required
+                          />
+                        )}
+                        <select
+                          name="trackingNumber"
+                          value={shippingForm.trackingNumber}
+                          onChange={handleShippingChange}
+                          disabled={!shippingForm.company}
+                          required
+                        >
+                          <option value="">选择物流单号</option>
+                          {trackingOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                          <option value={CUSTOM_TRACKING_VALUE}>自定义单号</option>
+                        </select>
+                        {shippingForm.trackingNumber === CUSTOM_TRACKING_VALUE && (
+                          <input
+                            name="customTrackingNumber"
+                            value={shippingForm.customTrackingNumber}
+                            onChange={handleShippingChange}
+                            placeholder="填写物流单号"
+                            required
+                          />
+                        )}
+                        <button className="button button-primary" type="button" onClick={() => handleShipOrder(order.id)}>确认发货</button>
+                        <button className="button button-secondary" type="button" onClick={handleCancelShipping}>取消</button>
+                      </div>
+                    ) : (
+                      <button className="button button-primary" type="button" onClick={() => handleStartShipping(order.id)}>
+                        填写物流并发货
+                      </button>
+                    )
+                  )}
+                  {order.logistics && (
+                    <div className="shop-order-logistics">
+                      物流：{order.logistics.company || '商家配送'} {order.logistics.trackingNumber || ''}，
+                      {order.logistics.status || '运输中'}
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>

@@ -13,7 +13,6 @@ const Footer = () => {
             <Link to="/about" className="footer-link">关于我们</Link>
             <Link to="/privacy" className="footer-link">隐私政策</Link>
             <Link to="/terms" className="footer-link">用户协议</Link>
-            <Link to="/contact" className="footer-link">联系我们</Link>
           </div>
         </div>
       </div>

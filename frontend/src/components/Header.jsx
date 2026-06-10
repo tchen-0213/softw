@@ -3,7 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { MoonOutlined, SunOutlined } from '@ant-design/icons';
 import { switchCartOwner } from '../store/cartSlice';
+import { orderApi } from '../services/api';
 import SearchBar from './product/SearchBar';
+
+const pendingSellerOrderStatuses = ['待付款', '待发货'];
 
 const Header = () => {
   const navigate = useNavigate();
@@ -12,6 +15,7 @@ const Header = () => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [isDiscoMode, setIsDiscoMode] = useState(false);
+  const [sellerPendingOrderCount, setSellerPendingOrderCount] = useState(0);
   const longPressTimerRef = useRef(null);
   const discoTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
@@ -21,6 +25,38 @@ const Header = () => {
   useEffect(() => {
     setToken(localStorage.getItem('token'));
   }, [location.pathname]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (!token) {
+      setSellerPendingOrderCount(0);
+      return undefined;
+    }
+
+    orderApi.getSellerList()
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        const orders = response.data.orders || [];
+        const pendingCount = orders.filter(order => (
+          pendingSellerOrderStatuses.includes(order.status)
+        )).length;
+
+        setSellerPendingOrderCount(pendingCount);
+      })
+      .catch(() => {
+        if (!ignore) {
+          setSellerPendingOrderCount(0);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [token, location.pathname]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -101,6 +137,10 @@ const Header = () => {
     return `nav-link${isActive ? ' active' : ''}`;
   };
 
+  const shopNavLinkClass = `${getNavLinkClass('/shop')} shop-nav-link${
+    sellerPendingOrderCount > 0 ? ' has-order-alert' : ''
+  }`;
+
   return (
     <header className="header">
       <div className="container header-container">
@@ -113,7 +153,17 @@ const Header = () => {
           <nav className="nav">
             <Link to="/" className={getNavLinkClass('/')}>首页</Link>
             <Link to="/search?productType=2" className={getNavLinkClass('/search')}>二手市场</Link>
-            <Link to="/shop" className={getNavLinkClass('/shop')}>店铺</Link>
+            <Link to="/shop" className={shopNavLinkClass}>
+              <span>店铺</span>
+              {sellerPendingOrderCount > 0 && (
+                <span
+                  className="nav-order-badge"
+                  title={`有 ${sellerPendingOrderCount} 笔卖家订单需要关注`}
+                >
+                  {sellerPendingOrderCount > 99 ? '99+' : sellerPendingOrderCount}
+                </span>
+              )}
+            </Link>
             <Link to="/sell" className={getNavLinkClass('/sell')}>发布商品</Link>
             <Link to="/cart" className={getNavLinkClass('/cart')}>购物车</Link>
           </nav>

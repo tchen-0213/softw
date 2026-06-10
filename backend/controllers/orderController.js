@@ -18,6 +18,8 @@ const orderFlow = {
   CANCELLED: '已取消'
 };
 
+const normalizeText = (value) => String(value || '').trim();
+
 const parsePaging = (query) => {
   const page = Math.max(parseInt(query.page || '1', 10), 1);
   const limit = Math.min(Math.max(parseInt(query.limit || '10', 10), 1), 100);
@@ -50,6 +52,31 @@ const appendLogisticsStep = (logisticsInfo, description) => {
     ]
   };
 };
+
+const mergeLogisticsInfo = (currentLogisticsInfo, nextLogisticsInfo) => {
+  if (!nextLogisticsInfo) {
+    return currentLogisticsInfo;
+  }
+
+  const merged = {
+    ...(currentLogisticsInfo || {}),
+    ...nextLogisticsInfo
+  };
+
+  if (Object.prototype.hasOwnProperty.call(nextLogisticsInfo, 'company')) {
+    merged.company = normalizeText(nextLogisticsInfo.company);
+  }
+
+  if (Object.prototype.hasOwnProperty.call(nextLogisticsInfo, 'trackingNumber')) {
+    merged.trackingNumber = normalizeText(nextLogisticsInfo.trackingNumber);
+  }
+
+  return merged;
+};
+
+const hasCompleteLogisticsInfo = (logisticsInfo) => Boolean(
+  normalizeText(logisticsInfo?.company) && normalizeText(logisticsInfo?.trackingNumber)
+);
 
 // 创建订单
 exports.createOrder = async (req, res) => {
@@ -221,9 +248,15 @@ exports.updateOrderStatus = async (req, res) => {
       }
     }
 
+    const nextLogisticsInfo = mergeLogisticsInfo(order.logisticsInfo, logisticsInfo);
+
+    if (status === orderFlow.WAITING_RECEIVE && !hasCompleteLogisticsInfo(nextLogisticsInfo)) {
+      return res.status(400).json({ message: '物流公司和物流单号不能为空，请填写完整后再发货' });
+    }
+
     await order.update({
       status: status || order.status,
-      logisticsInfo: logisticsInfo ? { ...(order.logisticsInfo || {}), ...logisticsInfo } : order.logisticsInfo
+      logisticsInfo: nextLogisticsInfo
     });
 
     res.json(toOrderDto(order));
@@ -307,6 +340,8 @@ exports.payOrder = async (req, res) => {
 // 卖家发货
 exports.shipOrder = async (req, res) => {
   const { company, trackingNumber, status = '运输中' } = req.body;
+  const shippingCompany = normalizeText(company);
+  const shippingTrackingNumber = normalizeText(trackingNumber);
 
   try {
     const order = await Order.findByPk(req.params.id);
@@ -322,11 +357,15 @@ exports.shipOrder = async (req, res) => {
       return res.status(400).json({ message: '此订单状态无法发货' });
     }
 
+    if (!shippingCompany || !shippingTrackingNumber) {
+      return res.status(400).json({ message: '物流公司和物流单号不能为空，请填写完整后再发货' });
+    }
+
     const baseLogistics = {
       ...(order.logisticsInfo || {}),
-      company: company || order.logisticsInfo?.company || '商家配送',
-      trackingNumber: trackingNumber || order.logisticsInfo?.trackingNumber || `NO${Date.now()}`,
-      status
+      company: shippingCompany,
+      trackingNumber: shippingTrackingNumber,
+      status: normalizeText(status) || '运输中'
     };
 
     await order.update({
