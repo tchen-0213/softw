@@ -4,7 +4,8 @@ import { getRecommendedProducts, getProducts } from '../../store/productSlice';
 import { addToCart } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
-import { isLoggedIn } from '../../utils/accountStorage';
+import { chatApi } from '../../services/api';
+import { getStoredUser, getUserKey, isLoggedIn } from '../../utils/accountStorage';
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -45,6 +46,41 @@ const HomePage = () => {
 
     setNotice('');
     dispatch(addToCart({ ...product, quantity: 1 }));
+  };
+
+  const handleBargain = async (event, product) => {
+    event.stopPropagation();
+
+    if (!isLoggedIn()) {
+      setNotice('请先登录后再议价');
+      return;
+    }
+
+    if (product.bargainEnabled === false) {
+      setNotice('该商品暂未开启议价功能');
+      return;
+    }
+
+    const sellerId = product.seller?.id || product.sellerId;
+    const currentUserId = getUserKey(getStoredUser());
+
+    if (!sellerId) {
+      setNotice('暂时无法获取商家信息');
+      return;
+    }
+
+    if (String(sellerId) === String(currentUserId)) {
+      setNotice('这是你自己的商品，无需向自己议价');
+      return;
+    }
+
+    setNotice('');
+    try {
+      const response = await chatApi.createConversation({ productId: product.id });
+      navigate(`/chat/${response.data.id}`);
+    } catch (err) {
+      setNotice(err.response?.data?.message || '议价入口打开失败，请稍后重试');
+    }
   };
 
   const formatPrice = (price) => Number(price || 0).toLocaleString('zh-CN', {
@@ -93,14 +129,24 @@ const HomePage = () => {
           <span>评价 {product.evaluationCount || 0}</span>
           <span>{Number.isFinite(stock) ? `库存 ${stock}` : '库存充足'}</span>
         </div>
-        <button
-          type="button"
-          className="product-add-button"
-          onClick={(event) => handleAddToCart(event, product)}
-          disabled={isSoldOut}
-        >
-          {isSoldOut ? '暂无库存' : '加入购物车'}
-        </button>
+        <div className="product-card-actions">
+          <button
+            type="button"
+            className="product-add-button"
+            onClick={(event) => handleAddToCart(event, product)}
+            disabled={isSoldOut}
+          >
+            {isSoldOut ? '暂无库存' : '加入购物车'}
+          </button>
+          <button
+            type="button"
+            className="product-bargain-button"
+            onClick={(event) => handleBargain(event, product)}
+            disabled={product.bargainEnabled === false}
+          >
+            {product.bargainEnabled === false ? '不可议价' : '议价'}
+          </button>
+        </div>
       </div>
     </div>
     );

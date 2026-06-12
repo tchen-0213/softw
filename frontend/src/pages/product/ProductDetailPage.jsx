@@ -6,7 +6,8 @@ import { getProductDetail } from '../../store/productSlice';
 import { addToCart } from '../../store/cartSlice';
 import EvaluationList from '../../components/evaluation/EvaluationList';
 import { fallbackImages } from '../../data/imageAssets';
-import { isLoggedIn } from '../../utils/accountStorage';
+import { chatApi } from '../../services/api';
+import { getStoredUser, getUserKey, isLoggedIn } from '../../utils/accountStorage';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const ProductDetailPage = () => {
   const { items: cartItems } = useSelector((state) => state.cart);
   const [notice, setNotice] = useState('');
   const [evaluationTotal, setEvaluationTotal] = useState(0);
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     dispatch(getProductDetail(id));
@@ -41,6 +43,9 @@ const ProductDetailPage = () => {
   const stock = Number(currentProduct.stock);
   const hasStockLimit = Number.isFinite(stock);
   const currentCartQuantity = cartItems.find(item => item.id === currentProduct.id)?.quantity || 0;
+  const sellerId = currentProduct.seller?.id || currentProduct.sellerId;
+  const currentUserId = getUserKey(getStoredUser());
+  const bargainEnabled = currentProduct.bargainEnabled !== false;
 
   const canAddOneMore = () => {
     if (hasStockLimit && stock <= 0) {
@@ -96,9 +101,36 @@ const ProductDetailPage = () => {
   };
 
   const handleGoToSellerShop = () => {
-    const sellerId = currentProduct.seller?.id || currentProduct.sellerId;
     if (sellerId) {
       navigate(`/shop/user/${sellerId}`);
+    }
+  };
+
+  const handleStartSellerChat = async () => {
+    if (!isLoggedIn()) {
+      setNotice('请先登录后再私聊商家');
+      return;
+    }
+
+    if (!sellerId) {
+      setNotice('暂时无法获取商家信息');
+      return;
+    }
+
+    if (String(sellerId) === String(currentUserId)) {
+      setNotice('这是你自己的商品，无需私聊自己');
+      return;
+    }
+
+    setStartingChat(true);
+    setNotice('');
+    try {
+      const response = await chatApi.createConversation({ productId: currentProduct.id });
+      navigate(`/chat/${response.data.id}`);
+    } catch (err) {
+      setNotice(err.response?.data?.message || '私聊创建失败，请稍后重试');
+    } finally {
+      setStartingChat(false);
     }
   };
 
@@ -135,6 +167,7 @@ const ProductDetailPage = () => {
                 <span>库存: {hasStockLimit ? currentProduct.stock : '充足'}</span>
                 <span>收藏: {currentProduct.favoriteCount || 0}</span>
                 <span>状态: {currentProduct.status || '在售'}</span>
+                <span>{bargainEnabled ? '支持议价' : '不支持议价'}</span>
               </div>
               <div className="product-detail-seller">
                 <h3>卖家信息</h3>
@@ -173,6 +206,9 @@ const ProductDetailPage = () => {
               </div>
               <div className="product-detail-actions">
                 <button className="button button-secondary" onClick={handleAddToCart} disabled={!isAvailable || (hasStockLimit && stock <= 0)}>加入购物车</button>
+                <button className="button button-secondary" onClick={handleStartSellerChat} disabled={startingChat || !sellerId}>
+                  {startingChat ? '进入中...' : '私聊商家'}
+                </button>
                 <button className="button button-primary" onClick={handleBuyNow} disabled={!isAvailable || (hasStockLimit && stock <= 0)}>立即购买</button>
               </div>
               {notice && (

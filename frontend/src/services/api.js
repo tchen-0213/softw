@@ -89,8 +89,18 @@ export const addressApi = {
 export const shopApi = {
   getMine: () => api.get('/shops/mine'),
   updateMine: (data) => api.put('/shops/mine', data),
+  submitVerification: (data) => api.post('/shops/mine/verification', data),
   getByUser: (userId) => api.get(`/shops/user/${userId}`),
   getDetail: (id) => api.get(`/shops/${id}`)
+};
+
+// 私聊与议价相关API
+export const chatApi = {
+  createConversation: (data) => api.post('/chats/conversations', data),
+  getConversations: (params) => api.get('/chats/conversations', { params }),
+  getMessages: (id) => api.get(`/chats/conversations/${id}`),
+  sendMessage: (id, data) => api.post(`/chats/conversations/${id}/messages`, data),
+  decideRequest: (messageId, data) => api.put(`/chats/messages/${messageId}/decision`, data)
 };
 
 // 上传相关API

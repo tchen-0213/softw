@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const FilterPanel = ({ onFilterChange }) => {
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [category, setCategory] = useState('');
-  const [productType, setProductType] = useState('');
+const FilterPanel = ({ filters = {}, onFilterChange }) => {
+  const [priceRange, setPriceRange] = useState({
+    min: filters.minPrice || '',
+    max: filters.maxPrice || ''
+  });
+  const [category, setCategory] = useState(filters.category || '');
+  const [productType, setProductType] = useState(filters.productType || '');
 
   const categories = [
     { value: '', label: '全部分类' },
@@ -19,6 +22,15 @@ const FilterPanel = ({ onFilterChange }) => {
     { value: '1', label: '新品' },
     { value: '2', label: '二手' }
   ];
+
+  useEffect(() => {
+    setPriceRange({
+      min: filters.minPrice || '',
+      max: filters.maxPrice || ''
+    });
+    setCategory(filters.category || '');
+    setProductType(filters.productType || '');
+  }, [filters.category, filters.maxPrice, filters.minPrice, filters.productType]);
 
   const handleFilterChange = () => {
     onFilterChange({

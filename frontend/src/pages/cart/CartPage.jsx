@@ -24,10 +24,10 @@ const CartPage = () => {
 
   if (!isLoggedIn()) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="page-shell page-shell-empty">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>购物车</h2>
-          <div className="shop-empty-panel">
+          <h2 className="page-title">购物车</h2>
+          <div className="shop-empty-panel page-empty-state">
             <h3>请先登录后查看购物车</h3>
             <button className="button button-primary" onClick={() => navigate('/login')}>
               去登录
@@ -39,23 +39,16 @@ const CartPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className={`page-shell${items.length === 0 ? ' page-shell-empty' : ''}`}>
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>购物车</h2>
+        <h2 className="page-title">购物车</h2>
         {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '100px 0' }}>
-            <p>购物车为空</p>
+          <div className="shop-empty-panel page-empty-state">
+            <h3>购物车为空</h3>
+            <p>先去挑几件喜欢的商品，再回来一起结算。</p>
             <button
+              className="button button-primary"
               onClick={() => navigate('/')}
-              style={{
-                marginTop: '20px',
-                padding: '8px 16px',
-                background: '#1890ff',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
             >
               去购物
             </button>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productApi, secondhandApi, uploadApi } from '../../services/api';
+import { productApi, secondhandApi, shopApi, uploadApi } from '../../services/api';
 
 const conditionMap = {
   1: '全新',
@@ -23,13 +23,42 @@ const SellPage = () => {
     usageTime: '',
     location: '',
     hasDefect: false,
-    defectDescription: ''
+    defectDescription: '',
+    bargainEnabled: true
   });
 
   const [loading, setLoading] = useState(false);
+  const [checkingShop, setCheckingShop] = useState(true);
+  const [shopVerified, setShopVerified] = useState(false);
+  const [shopCheckError, setShopCheckError] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkShopVerification = async () => {
+      if (!localStorage.getItem('token')) {
+        setCheckingShop(false);
+        setShopVerified(false);
+        return;
+      }
+
+      setCheckingShop(true);
+      try {
+        const response = await shopApi.getMine();
+        const shop = response.data || {};
+        setShopVerified(shop.verificationStatus === '已认证' || shop.status === '营业中');
+        setShopCheckError('');
+      } catch (err) {
+        setShopVerified(false);
+        setShopCheckError(err.response?.data?.message || '店铺验证状态加载失败');
+      } finally {
+        setCheckingShop(false);
+      }
+    };
+
+    checkShopVerification();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -83,6 +112,11 @@ const SellPage = () => {
       return;
     }
 
+    if (!shopVerified) {
+      setError('请先完成店铺验证后再发布商品');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -100,7 +134,8 @@ const SellPage = () => {
         hasDefect: formData.hasDefect,
         defectDescription: formData.hasDefect ? formData.defectDescription : '',
         location: formData.location,
-        isSecondhand: formData.productType === 2
+        isSecondhand: formData.productType === 2,
+        bargainEnabled: formData.bargainEnabled
       };
 
       const response = formData.productType === 2
@@ -117,9 +152,32 @@ const SellPage = () => {
   };
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className={`page-shell${!shopVerified ? ' page-shell-empty' : ''}`}>
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>发布商品</h2>
+        <h2 className="page-title">发布商品</h2>
+        {checkingShop ? (
+          <div className="shop-empty-panel page-empty-state">
+            <h3>正在检查店铺验证状态</h3>
+            <p>请稍候，马上就好。</p>
+          </div>
+        ) : !localStorage.getItem('token') ? (
+          <div className="shop-empty-panel page-empty-state">
+            <h3>请先登录后再发布商品</h3>
+            <p>登录后可完成店铺验证并发布商品。</p>
+            <button className="button button-primary" onClick={() => navigate('/login')}>
+              去登录
+            </button>
+          </div>
+        ) : !shopVerified ? (
+          <div className="shop-empty-panel page-empty-state">
+            <h3>请先完成店铺验证</h3>
+            <p>{shopCheckError || '发布商品前需要先提交营业执照、身份证和经营地址等资料。'}</p>
+            <button className="button button-primary" onClick={() => navigate('/shop')}>
+              去验证店铺
+            </button>
+          </div>
+        ) : (
+          <>
         {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
         <form onSubmit={handleSubmit} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
           <div style={{ marginBottom: '20px' }}>
@@ -174,6 +232,21 @@ const SellPage = () => {
               step="0.01"
               style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
             />
+          </div>
+
+          <div style={{ marginBottom: '20px', padding: '14px', border: '1px solid #e8e8e8', borderRadius: '4px', background: '#fafafa' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold' }}>
+              <input
+                type="checkbox"
+                name="bargainEnabled"
+                checked={formData.bargainEnabled}
+                onChange={handleChange}
+              />
+              开启议价功能
+            </label>
+            <div style={{ marginTop: '8px', color: '#666', fontSize: '13px' }}>
+              开启后买家可以在私聊中提交期望金额，由商家同意或拒绝。
+            </div>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
@@ -353,6 +426,8 @@ const SellPage = () => {
             </button>
           </div>
         </form>
+          </>
+        )}
       </div>
     </div>
   );

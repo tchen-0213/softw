@@ -13,15 +13,34 @@ const SearchPage = () => {
   
   const [sortBy, setSortBy] = useState('default');
   const [filters, setFilters] = useState(() => ({
-    productType: searchParams.get('productType') || ''
+    category: searchParams.get('category') || '',
+    productType: searchParams.get('productType') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || ''
   }));
 
   const keyword = searchParams.get('keyword') || '';
+  const category = searchParams.get('category') || '';
   const productType = searchParams.get('productType') || '';
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
+  const categoryLabels = {
+    electronics: '数码家电',
+    clothing: '服装鞋包',
+    home: '居家生活',
+    sports: '运动户外',
+    books: '图书教材'
+  };
 
   useEffect(() => {
-    setFilters(prev => ({ ...prev, productType }));
-  }, [productType]);
+    setFilters(prev => ({
+      ...prev,
+      category,
+      productType,
+      minPrice,
+      maxPrice
+    }));
+  }, [category, maxPrice, minPrice, productType]);
 
   useEffect(() => {
     dispatch(searchProducts({
@@ -37,18 +56,40 @@ const SearchPage = () => {
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
+
+    const nextParams = {};
+    if (keyword) {
+      nextParams.keyword = keyword;
+    }
+    if (newFilters.category) {
+      nextParams.category = newFilters.category;
+    }
+    if (newFilters.productType) {
+      nextParams.productType = newFilters.productType;
+    }
+    if (newFilters.minPrice) {
+      nextParams.minPrice = newFilters.minPrice;
+    }
+    if (newFilters.maxPrice) {
+      nextParams.maxPrice = newFilters.maxPrice;
+    }
+    setSearchParams(nextParams);
   };
+
+  const pageTitle = productType === '2'
+    ? '二手市场'
+    : (category ? categoryLabels[category] || '分类商品' : `搜索结果: ${keyword || '全部商品'}`);
 
   return (
     <div className="search-page">
       <div className="container">
         <div className="search-header">
-          <h1>{productType === '2' ? '二手市场' : `搜索结果: ${keyword || '全部商品'}`}</h1>
+          <h1>{pageTitle}</h1>
         </div>
 
         <div style={{ display: 'flex', gap: '20px' }}>
           <div style={{ flex: '0 0 200px' }}>
-            <FilterPanel onFilterChange={handleFilterChange} />
+            <FilterPanel filters={filters} onFilterChange={handleFilterChange} />
           </div>
           <div style={{ flex: 1 }}>
             <SortBar sortBy={sortBy} onSortChange={handleSortChange} />

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CreditBadge from '../../components/credit/CreditBadge';
 import { productImages, shopImages } from '../../data/imageAssets';
-import { evaluationApi, orderApi, productApi, shopApi, uploadApi } from '../../services/api';
+import { chatApi, evaluationApi, orderApi, productApi, shopApi, uploadApi } from '../../services/api';
 import { isLoggedIn } from '../../utils/accountStorage';
 
 const defaultProducts = [
@@ -105,6 +105,13 @@ const createDefaultShop = (user) => ({
   banner: shopImages.banner,
   creditLevel: user?.creditLevel || '普通',
   creditScore: user?.creditScore ?? 100,
+  status: '待认证',
+  verificationStatus: '未认证',
+  legalName: '',
+  idNumber: '',
+  verificationAddress: '',
+  businessLicenseImage: '',
+  idCardImage: '',
   products: defaultProducts
 });
 
@@ -118,6 +125,13 @@ const normalizeShop = (shop, user) => {
     banner: shop?.banner || shopImages.banner,
     creditLevel: shop?.creditLevel || shop?.owner?.creditLevel || user?.creditLevel || fallback.creditLevel,
     creditScore: shop?.creditScore ?? shop?.owner?.creditScore ?? user?.creditScore ?? fallback.creditScore,
+    status: shop?.status || fallback.status,
+    verificationStatus: shop?.verificationStatus || (shop?.status === '营业中' ? '已认证' : fallback.verificationStatus),
+    legalName: shop?.legalName || '',
+    idNumber: shop?.idNumber || '',
+    verificationAddress: shop?.verificationAddress || '',
+    businessLicenseImage: shop?.businessLicenseImage || '',
+    idCardImage: shop?.idCardImage || '',
     products: Array.isArray(shop?.products)
       ? shop.products.map(product => ({
           ...product,
@@ -204,19 +218,32 @@ const ShopPage = () => {
     stock: '',
     sales: '',
     image: '',
-    status: '在售'
+    status: '在售',
+    bargainEnabled: true
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingBusinessLicense, setUploadingBusinessLicense] = useState(false);
+  const [uploadingIdCard, setUploadingIdCard] = useState(false);
+  const [verifyingShop, setVerifyingShop] = useState(false);
+  const [verificationForm, setVerificationForm] = useState({
+    legalName: '',
+    idNumber: '',
+    verificationAddress: '',
+    businessLicenseImage: '',
+    idCardImage: ''
+  });
   const [sellerOrders, setSellerOrders] = useState([]);
   const [sellerEvaluations, setSellerEvaluations] = useState([]);
+  const [sellerConversations, setSellerConversations] = useState([]);
   const [replyDrafts, setReplyDrafts] = useState({});
   const [replyingEvaluationId, setReplyingEvaluationId] = useState(null);
   const [shippingOrderId, setShippingOrderId] = useState(null);
   const [shippingForm, setShippingForm] = useState(createEmptyShippingForm);
   const navigate = useNavigate();
+  const isShopVerified = shop?.verificationStatus === '已认证' || shop?.status === '营业中';
 
   const pendingSellerOrders = useMemo(() => (
     sellerOrders.filter(order => pendingSellerOrderStatuses.includes(order.status))
@@ -258,7 +285,27 @@ const ShopPage = () => {
         setSellerEvaluations((response.data.evaluations || []).map(normalizeSellerEvaluation));
       })
       .catch(() => {});
+
+    chatApi.getConversations({ role: 'seller' })
+      .then((response) => {
+        setSellerConversations(response.data.conversations || []);
+      })
+      .catch(() => {});
   }, [user]);
+
+  useEffect(() => {
+    if (!shop || isShopVerified) {
+      return;
+    }
+
+    setVerificationForm(prev => ({
+      legalName: prev.legalName || shop.legalName || '',
+      idNumber: prev.idNumber || shop.idNumber || '',
+      verificationAddress: prev.verificationAddress || shop.verificationAddress || '',
+      businessLicenseImage: prev.businessLicenseImage || shop.businessLicenseImage || '',
+      idCardImage: prev.idCardImage || shop.idCardImage || ''
+    }));
+  }, [isShopVerified, shop]);
 
   const handleEditShop = () => {
     setShopForm({
@@ -336,6 +383,76 @@ const ShopPage = () => {
     setError('');
   };
 
+  const handleVerificationChange = (event) => {
+    const { name, value } = event.target;
+    setVerificationForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError('');
+  };
+
+  const uploadVerificationImage = async (event, field, setUploading) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    try {
+      const response = await uploadApi.uploadImages([file]);
+      const imageUrl = response.data.urls?.[0];
+      if (imageUrl) {
+        setVerificationForm(prev => ({
+          ...prev,
+          [field]: imageUrl
+        }));
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || '认证图片上传失败，请稍后重试');
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleSubmitVerification = async (event) => {
+    event.preventDefault();
+    const requiredValues = [
+      verificationForm.legalName,
+      verificationForm.idNumber,
+      verificationForm.verificationAddress,
+      verificationForm.businessLicenseImage,
+      verificationForm.idCardImage
+    ];
+
+    if (requiredValues.some(value => !String(value || '').trim())) {
+      setError('请完整填写经营者姓名、身份证号、经营地址，并上传营业执照和身份证照片');
+      return;
+    }
+
+    setVerifyingShop(true);
+    setError('');
+    try {
+      const response = await shopApi.submitVerification(verificationForm);
+      const verifiedShop = normalizeShop(response.data, user);
+      setShop(verifiedShop);
+      localStorage.setItem(getShopStorageKey(user), JSON.stringify(verifiedShop));
+      setVerificationForm({
+        legalName: '',
+        idNumber: '',
+        verificationAddress: '',
+        businessLicenseImage: '',
+        idCardImage: ''
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || '店铺验证提交失败');
+    } finally {
+      setVerifyingShop(false);
+    }
+  };
+
   const handleSaveShop = async (event) => {
     event.preventDefault();
     const nextLogo = getStoredImageValue(shopForm.logo);
@@ -378,15 +495,16 @@ const ShopPage = () => {
       stock: product.stock,
       sales: product.sales,
       image: product.image || product.images?.[0] || '',
-      status: product.status || '在售'
+      status: product.status || '在售',
+      bargainEnabled: product.bargainEnabled !== false
     });
   };
 
   const handleProductFormChange = (event) => {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
     setProductForm(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -399,6 +517,7 @@ const ShopPage = () => {
         price: Number(productForm.price),
         stock: Number(productForm.stock),
         status: productForm.status,
+        bargainEnabled: productForm.bargainEnabled,
         images: productForm.image ? [productForm.image] : currentProduct?.images || []
       });
       const updatedProduct = {
@@ -546,6 +665,108 @@ const ShopPage = () => {
             <button className="button button-primary" onClick={() => navigate('/login')}>
               去登录
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (shop && !isShopVerified) {
+    const verificationBusy = uploadingBusinessLicense || uploadingIdCard || verifyingShop;
+
+    return (
+      <div style={{ padding: '20px 0' }}>
+        <div className="container">
+          <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+          {loading && <div className="loading">加载中...</div>}
+          {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
+
+          <div className="shop-owner-note">
+            当前店铺归属：<strong>{user.username || user.email}</strong>
+          </div>
+
+          <div className="shop-verification-panel">
+            <div className="shop-verification-header">
+              <div>
+                <h3>店铺验证</h3>
+                <p>开启个人店铺前，需要提交营业执照、身份证和经营地址等资料。</p>
+              </div>
+              <span>{shop.verificationStatus || '未认证'}</span>
+            </div>
+
+            <form onSubmit={handleSubmitVerification}>
+              <div className="shop-verification-grid">
+                <label>
+                  <span>经营者姓名</span>
+                  <input
+                    name="legalName"
+                    value={verificationForm.legalName}
+                    onChange={handleVerificationChange}
+                    placeholder="请输入营业执照或身份证上的姓名"
+                    required
+                  />
+                </label>
+                <label>
+                  <span>身份证号</span>
+                  <input
+                    name="idNumber"
+                    value={verificationForm.idNumber}
+                    onChange={handleVerificationChange}
+                    placeholder="请输入身份证号码"
+                    required
+                  />
+                </label>
+              </div>
+
+              <label className="shop-verification-address">
+                <span>经营地址</span>
+                <textarea
+                  name="verificationAddress"
+                  value={verificationForm.verificationAddress}
+                  onChange={handleVerificationChange}
+                  rows="3"
+                  placeholder="请输入详细经营地址"
+                  required
+                />
+              </label>
+
+              <div className="shop-verification-upload-grid">
+                <label className="shop-verification-upload">
+                  <span>营业执照</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => uploadVerificationImage(event, 'businessLicenseImage', setUploadingBusinessLicense)}
+                    disabled={verificationBusy}
+                  />
+                  {verificationForm.businessLicenseImage ? (
+                    <img src={verificationForm.businessLicenseImage} alt="营业执照预览" />
+                  ) : (
+                    <em>{uploadingBusinessLicense ? '上传中...' : '上传营业执照照片'}</em>
+                  )}
+                </label>
+                <label className="shop-verification-upload">
+                  <span>身份证照片</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => uploadVerificationImage(event, 'idCardImage', setUploadingIdCard)}
+                    disabled={verificationBusy}
+                  />
+                  {verificationForm.idCardImage ? (
+                    <img src={verificationForm.idCardImage} alt="身份证预览" />
+                  ) : (
+                    <em>{uploadingIdCard ? '上传中...' : '上传身份证正面照片'}</em>
+                  )}
+                </label>
+              </div>
+
+              <div className="shop-verification-actions">
+                <button type="submit" className="button button-primary" disabled={verificationBusy}>
+                  {verifyingShop ? '提交中...' : '提交验证并开启店铺'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -794,6 +1015,15 @@ const ShopPage = () => {
                   style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', marginBottom: '12px' }}
                 />
               </label>
+              <label className="shop-product-bargain-toggle">
+                <input
+                  type="checkbox"
+                  name="bargainEnabled"
+                  checked={productForm.bargainEnabled}
+                  onChange={handleProductFormChange}
+                />
+                <span>允许买家在私聊中发起议价</span>
+              </label>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="button button-primary">保存商品</button>
                 <button type="button" className="button button-secondary" onClick={() => setEditingProductId(null)}>取消</button>
@@ -810,6 +1040,7 @@ const ShopPage = () => {
                 <col style={{ width: '100px' }} />
                 <col style={{ width: '100px' }} />
                 <col style={{ width: '110px' }} />
+                <col style={{ width: '90px' }} />
                 <col style={{ width: '170px' }} />
               </colgroup>
               <thead>
@@ -820,6 +1051,7 @@ const ShopPage = () => {
                   <th>库存</th>
                   <th>销量</th>
                   <th>状态</th>
+                  <th>议价</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -841,6 +1073,7 @@ const ShopPage = () => {
                     <td>{product.stock}</td>
                     <td>{product.sales}</td>
                     <td>{product.status || '在售'}</td>
+                    <td>{product.bargainEnabled === false ? '关闭' : '开启'}</td>
                     <td>
                       <div className="shop-product-actions">
                       <button
@@ -871,6 +1104,54 @@ const ShopPage = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ marginBottom: '16px' }}>私聊与议价</h3>
+          {sellerConversations.length === 0 ? (
+            <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px', color: '#666' }}>
+              暂无买家私聊
+            </div>
+          ) : (
+            <div className="shop-chat-list">
+              {sellerConversations.map(conversation => {
+                const buyerName = conversation.buyer?.nickname || conversation.buyer?.username || '买家';
+                const latestMessage = conversation.latestMessage;
+                const pendingRequestCount = Number(conversation.pendingRequestCount || 0);
+
+                return (
+                  <div key={conversation.id} className={`shop-chat-card${pendingRequestCount > 0 ? ' has-pending-request' : ''}`}>
+                    <img
+                      src={conversation.product?.images?.[0] || productImages.iphone}
+                      alt={conversation.product?.name || '商品'}
+                      onError={(event) => {
+                        event.currentTarget.src = productImages.iphone;
+                      }}
+                    />
+                    <div className="shop-chat-main">
+                      <div className="shop-chat-title-row">
+                        <strong>{conversation.product?.name || '商品私聊'}</strong>
+                        {pendingRequestCount > 0 && <span>{pendingRequestCount} 个待处理申请</span>}
+                      </div>
+                      <div className="shop-chat-meta">
+                        {buyerName} · {formatReplyTime(conversation.lastMessageAt)}
+                      </div>
+                      <div className="shop-chat-preview">
+                        {latestMessage?.content || '买家已打开私聊，还没有发送消息。'}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="button button-primary"
+                      onClick={() => navigate(`/chat/${conversation.id}`)}
+                    >
+                      进入私聊
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: '30px' }}>
@@ -915,26 +1196,14 @@ const ShopPage = () => {
                       </div>
                       <div style={{ marginBottom: '12px', lineHeight: 1.6 }}>{evaluation.content}</div>
                       {evaluation.replies.length > 0 && (
-                        <div style={{ marginBottom: '12px' }}>
-                          {evaluation.replies.map((reply, index) => (
-                            <div
-                              key={reply.id}
-                              style={{
-                                marginLeft: `${Math.min(index, 5) * 16}px`,
-                                marginTop: '8px',
-                                borderLeft: `3px solid ${reply.role === 'seller' ? '#1890ff' : '#52c41a'}`,
-                                padding: '8px 12px',
-                                background: reply.role === 'seller' ? '#f5faff' : '#f6ffed',
-                                lineHeight: 1.6
-                              }}
-                            >
-                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                                <strong style={{ color: reply.role === 'seller' ? '#1890ff' : '#52c41a' }}>
-                                  {reply.role === 'seller' ? '卖家' : reply.username}：
-                                </strong>
-                                <span style={{ color: '#8c8c8c', fontSize: '13px' }}>{reply.createTime}</span>
+                        <div className="evaluation-reply-list">
+                          {evaluation.replies.map((reply) => (
+                            <div key={reply.id} className={`evaluation-reply evaluation-reply-${reply.role}`}>
+                              <div className="evaluation-reply-meta">
+                                <strong>{reply.role === 'seller' ? '卖家' : reply.username}：</strong>
+                                <span>{reply.createTime}</span>
                               </div>
-                              <div>{reply.content}</div>
+                              <div className="evaluation-reply-content">{reply.content}</div>
                             </div>
                           ))}
                         </div>

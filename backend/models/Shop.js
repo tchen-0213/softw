@@ -34,7 +34,34 @@ const Shop = sequelize.define('Shop', {
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: '审核中'
+    defaultValue: '待认证'
+  },
+  verificationStatus: {
+    type: DataTypes.STRING,
+    defaultValue: '未认证'
+  },
+  legalName: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  idNumber: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  verificationAddress: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  businessLicenseImage: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  idCardImage: {
+    type: DataTypes.STRING,
+    defaultValue: ''
+  },
+  verificationSubmittedAt: {
+    type: DataTypes.DATE
   },
   createdAt: {
     type: DataTypes.DATE,

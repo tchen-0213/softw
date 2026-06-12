@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const ensureSchema = require('./utils/ensureSchema');
 
 // 加载环境变量
 dotenv.config();
@@ -16,6 +17,8 @@ const Order = require('./models/Order');
 const Evaluation = require('./models/Evaluation');
 const Shop = require('./models/Shop');
 const Address = require('./models/Address');
+const ChatConversation = require('./models/ChatConversation');
+const ChatMessage = require('./models/ChatMessage');
 
 // 导入路由
 const userRoutes = require('./routes/user');
@@ -26,6 +29,7 @@ const evaluationRoutes = require('./routes/evaluation');
 const shopRoutes = require('./routes/shop');
 const addressRoutes = require('./routes/address');
 const uploadRoutes = require('./routes/upload');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 
@@ -50,6 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 数据库同步
 sequelize.sync()
+  .then(() => ensureSchema(sequelize))
   .then(() => console.log('Database synchronized'))
   .catch(err => console.error('Database sync error:', err));
 
@@ -62,6 +67,7 @@ app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/shops', shopRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/chats', chatRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

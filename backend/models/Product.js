@@ -95,6 +95,10 @@ const Product = sequelize.define('Product', {
   location: {
     type: DataTypes.STRING
   },
+  bargainEnabled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

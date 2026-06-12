@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const Product = require('../models/Product');
+const Shop = require('../models/Shop');
 const User = require('../models/User');
 
 const conditionMap = {
@@ -37,7 +38,8 @@ const editableProductFields = [
   'usageTime',
   'hasDefect',
   'defectDescription',
-  'location'
+  'location',
+  'bargainEnabled'
 ];
 
 const sellerStatuses = ['在售', '下架', '已预订', '已售出'];
@@ -126,6 +128,7 @@ const toProductDto = (product) => {
     videos: data.videos || [],
     seller,
     productType: data.isSecondhand ? 2 : 1,
+    bargainEnabled: data.bargainEnabled !== false,
     evaluationCount: data.reviewCount || 0
   };
 };
@@ -260,10 +263,16 @@ exports.createProduct = async (req, res) => {
     usageTime,
     hasDefect = false,
     defectDescription,
-    location
+    location,
+    bargainEnabled = true
   } = req.body;
 
   try {
+    const shop = await Shop.findOne({ where: { userId: req.user.id } });
+    if (!shop || shop.verificationStatus !== '已认证') {
+      return res.status(403).json({ message: '请先完成店铺验证后再发布商品' });
+    }
+
     const secondhand = isSecondhand === undefined ? Number(productType) === 2 : parseBoolean(isSecondhand);
     const product = await Product.create({
       name,
@@ -282,7 +291,8 @@ exports.createProduct = async (req, res) => {
       usageTime,
       hasDefect,
       defectDescription,
-      location
+      location,
+      bargainEnabled: parseBoolean(bargainEnabled) !== false
     });
 
     if (req.user.role === 'user') {
@@ -323,6 +333,9 @@ exports.updateProduct = async (req, res) => {
     }
     if (updates.productType !== undefined && updates.isSecondhand === undefined) {
       updates.isSecondhand = Number(updates.productType) === 2;
+    }
+    if (updates.bargainEnabled !== undefined) {
+      updates.bargainEnabled = parseBoolean(updates.bargainEnabled) !== false;
     }
     if (updates.status && !sellerStatuses.includes(updates.status)) {
       return res.status(400).json({ message: '商品状态不合法' });

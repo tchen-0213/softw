@@ -312,26 +312,14 @@ const EvaluationList = ({ productId, initialCount = 0, onCountChange }) => {
                 </div>
               )}
               {evaluation.replies.length > 0 && (
-                <div style={{ marginTop: '12px' }}>
-                  {evaluation.replies.map((reply, index) => (
-                    <div
-                      key={reply.id}
-                      style={{
-                        marginLeft: `${Math.min(index, 5) * 16}px`,
-                        marginTop: '8px',
-                        borderLeft: `3px solid ${reply.role === 'seller' ? '#1890ff' : '#52c41a'}`,
-                        padding: '8px 12px',
-                        background: reply.role === 'seller' ? '#f5faff' : '#f6ffed',
-                        color: '#333'
-                      }}
-                    >
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                        <strong style={{ color: reply.role === 'seller' ? '#1890ff' : '#52c41a' }}>
-                          {reply.role === 'seller' ? '卖家' : reply.username}：
-                        </strong>
-                        <span style={{ color: '#8c8c8c', fontSize: '13px' }}>{reply.createTime}</span>
+                <div className="evaluation-reply-list">
+                  {evaluation.replies.map((reply) => (
+                    <div key={reply.id} className={`evaluation-reply evaluation-reply-${reply.role}`}>
+                      <div className="evaluation-reply-meta">
+                        <strong>{reply.role === 'seller' ? '卖家' : reply.username}：</strong>
+                        <span>{reply.createTime}</span>
                       </div>
-                      <div>{reply.content}</div>
+                      <div className="evaluation-reply-content">{reply.content}</div>
                     </div>
                   ))}
                 </div>

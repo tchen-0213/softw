@@ -8,6 +8,7 @@ import CheckoutPage from './pages/checkout/CheckoutPage'
 import OrderPage from './pages/order/OrderPage'
 import SellPage from './pages/sell/SellPage'
 import EvaluationPage from './pages/evaluation/EvaluationPage'
+import ChatPage from './pages/chat/ChatPage'
 import ShopPage from './pages/shop/ShopPage'
 import PublicShopPage from './pages/shop/PublicShopPage'
 import UserPage from './pages/user/UserPage'
@@ -23,25 +24,28 @@ function App() {
   return (
     <Router>
       <Header />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/product/:id" element={<ProductDetailPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/order" element={<OrderPage />} />
-        <Route path="/sell" element={<SellPage />} />
-        <Route path="/evaluation/:orderId" element={<EvaluationPage />} />
-        <Route path="/shop/user/:userId" element={<PublicShopPage />} />
-        <Route path="/shop" element={<ShopPage />} />
-        <Route path="/user" element={<UserPage />} />
-        <Route path="/login" element={<AuthPage mode="login" />} />
-        <Route path="/register" element={<AuthPage mode="register" />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/contact" element={<Navigate to="/about" replace />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<UserAgreementPage />} />
-      </Routes>
+      <main className="app-main">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/order" element={<OrderPage />} />
+          <Route path="/sell" element={<SellPage />} />
+          <Route path="/evaluation/:orderId" element={<EvaluationPage />} />
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
+          <Route path="/shop/user/:userId" element={<PublicShopPage />} />
+          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/user" element={<UserPage />} />
+          <Route path="/login" element={<AuthPage mode="login" />} />
+          <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<Navigate to="/about" replace />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<UserAgreementPage />} />
+        </Routes>
+      </main>
       <FloatingCart />
       <Footer />
     </Router>

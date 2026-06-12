@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { MoonOutlined, SunOutlined } from '@ant-design/icons';
 import { switchCartOwner } from '../store/cartSlice';
-import { evaluationApi, orderApi } from '../services/api';
+import { chatApi, evaluationApi, orderApi } from '../services/api';
 import SearchBar from './product/SearchBar';
 
 const pendingSellerOrderStatuses = ['待付款', '待发货'];
@@ -17,6 +17,7 @@ const Header = () => {
   const [isDiscoMode, setIsDiscoMode] = useState(false);
   const [sellerPendingOrderCount, setSellerPendingOrderCount] = useState(0);
   const [sellerPendingReplyCount, setSellerPendingReplyCount] = useState(0);
+  const [sellerPendingChatCount, setSellerPendingChatCount] = useState(0);
   const longPressTimerRef = useRef(null);
   const discoTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
@@ -34,15 +35,17 @@ const Header = () => {
     if (!token) {
       setSellerPendingOrderCount(0);
       setSellerPendingReplyCount(0);
+      setSellerPendingChatCount(0);
       return undefined;
     }
 
     const loadSellerAlerts = () => {
       Promise.allSettled([
         orderApi.getSellerList(),
-        evaluationApi.getSellerEvaluations({ limit: 100 })
+        evaluationApi.getSellerEvaluations({ limit: 100 }),
+        chatApi.getConversations({ role: 'seller' })
       ])
-        .then(([orderResult, evaluationResult]) => {
+        .then(([orderResult, evaluationResult, chatResult]) => {
           if (ignore) {
             return;
           }
@@ -56,14 +59,21 @@ const Header = () => {
           const pendingReplyCount = evaluationResult.status === 'fulfilled'
             ? Number(evaluationResult.value.data.pendingReplyCount || 0)
             : 0;
+          const pendingChatCount = chatResult.status === 'fulfilled'
+            ? (chatResult.value.data.conversations || []).reduce((sum, conversation) => (
+                sum + Number(conversation.pendingRequestCount || 0)
+              ), 0)
+            : 0;
 
           setSellerPendingOrderCount(pendingCount);
           setSellerPendingReplyCount(pendingReplyCount);
+          setSellerPendingChatCount(pendingChatCount);
         })
         .catch(() => {
           if (!ignore) {
             setSellerPendingOrderCount(0);
             setSellerPendingReplyCount(0);
+            setSellerPendingChatCount(0);
           }
         });
     };
@@ -158,10 +168,11 @@ const Header = () => {
     return `nav-link${isActive ? ' active' : ''}`;
   };
 
-  const sellerAlertCount = sellerPendingOrderCount + sellerPendingReplyCount;
+  const sellerAlertCount = sellerPendingOrderCount + sellerPendingReplyCount + sellerPendingChatCount;
   const sellerAlertTitle = [
     sellerPendingOrderCount > 0 ? `${sellerPendingOrderCount} 笔卖家订单需要关注` : '',
-    sellerPendingReplyCount > 0 ? `${sellerPendingReplyCount} 条评价待回复` : ''
+    sellerPendingReplyCount > 0 ? `${sellerPendingReplyCount} 条评价待回复` : '',
+    sellerPendingChatCount > 0 ? `${sellerPendingChatCount} 个私聊申请待处理` : ''
   ].filter(Boolean).join('，');
 
   const shopNavLinkClass = `${getNavLinkClass('/shop')} shop-nav-link${
