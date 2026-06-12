@@ -49,7 +49,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 数据库同步
-sequelize.sync({ alter: true })
+sequelize.sync()
   .then(() => console.log('Database synchronized'))
   .catch(err => console.error('Database sync error:', err));
 

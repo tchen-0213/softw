@@ -6,18 +6,15 @@ const Shop = require('./models/Shop');
 
 dotenv.config();
 
-const createSvgDataUri = ({ title, subtitle, bg, fg, accent }) => {
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="680" viewBox="0 0 900 680">
-  <rect width="900" height="680" fill="${bg}"/>
-  <circle cx="710" cy="118" r="128" fill="${accent}" opacity="0.32"/>
-  <circle cx="168" cy="555" r="150" fill="${accent}" opacity="0.18"/>
-  <rect x="142" y="132" width="616" height="376" rx="34" fill="rgba(255,255,255,0.22)" stroke="rgba(255,255,255,0.45)" stroke-width="4"/>
-  <text x="450" y="300" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="54" font-weight="700" fill="${fg}">${title}</text>
-  <text x="450" y="366" text-anchor="middle" font-family="Arial, 'Microsoft YaHei', sans-serif" font-size="30" fill="${fg}" opacity="0.88">${subtitle}</text>
-</svg>`;
-
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+const realProductImages = {
+  matebook: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=80',
+  headphones: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+  ipad: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=900&q=80',
+  keyboard: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80',
+  lamp: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80',
+  book: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=80',
+  runBag: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80',
+  hoodie: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80'
 };
 
 const demoProducts = [
@@ -30,16 +27,8 @@ const demoProducts = [
     subCategory: '电脑',
     brand: 'DemoTech',
     sales: 36,
-    rating: 4.8,
-    reviewCount: 18,
     isSecondhand: false,
-    image: createSvgDataUri({
-      title: 'MateBook Air',
-      subtitle: '新品 · 12 件库存',
-      bg: '#2563eb',
-      fg: '#ffffff',
-      accent: '#93c5fd'
-    })
+    image: realProductImages.matebook
   },
   {
     name: '演示新品 降噪蓝牙耳机',
@@ -50,16 +39,8 @@ const demoProducts = [
     subCategory: '耳机',
     brand: 'SoundLab',
     sales: 82,
-    rating: 4.7,
-    reviewCount: 41,
     isSecondhand: false,
-    image: createSvgDataUri({
-      title: 'Noise Cancel',
-      subtitle: '新品 · 热门推荐',
-      bg: '#059669',
-      fg: '#ffffff',
-      accent: '#a7f3d0'
-    })
+    image: realProductImages.headphones
   },
   {
     name: '演示二手 iPad Pro 11',
@@ -70,21 +51,13 @@ const demoProducts = [
     subCategory: '平板',
     brand: 'Apple',
     sales: 5,
-    rating: 4.6,
-    reviewCount: 9,
     isSecondhand: true,
     condition: '9成新',
     usageTime: '约 10 个月',
     hasDefect: false,
     defectDescription: '',
     location: '上海市浦东新区',
-    image: createSvgDataUri({
-      title: 'iPad Pro',
-      subtitle: '二手 · 9成新 · 仅 1 件',
-      bg: '#7c3aed',
-      fg: '#ffffff',
-      accent: '#ddd6fe'
-    })
+    image: realProductImages.ipad
   },
   {
     name: '演示二手机械键盘',
@@ -95,21 +68,13 @@ const demoProducts = [
     subCategory: '外设',
     brand: 'KeyDemo',
     sales: 14,
-    rating: 4.2,
-    reviewCount: 7,
     isSecondhand: true,
     condition: '8成新',
     usageTime: '约 1 年',
     hasDefect: true,
     defectDescription: 'A、S 键帽有轻微磨损。',
     location: '杭州市西湖区',
-    image: createSvgDataUri({
-      title: 'Keyboard',
-      subtitle: '二手 · 有瑕疵说明',
-      bg: '#334155',
-      fg: '#ffffff',
-      accent: '#94a3b8'
-    })
+    image: realProductImages.keyboard
   },
   {
     name: '演示家居 护眼台灯',
@@ -120,16 +85,8 @@ const demoProducts = [
     subCategory: '照明',
     brand: 'LightHome',
     sales: 61,
-    rating: 4.5,
-    reviewCount: 24,
     isSecondhand: false,
-    image: createSvgDataUri({
-      title: 'Desk Lamp',
-      subtitle: '家居生活 · 新品',
-      bg: '#d97706',
-      fg: '#ffffff',
-      accent: '#fde68a'
-    })
+    image: realProductImages.lamp
   },
   {
     name: '演示图书 软件工程导论',
@@ -140,21 +97,13 @@ const demoProducts = [
     subCategory: '教材',
     brand: 'CoursePress',
     sales: 22,
-    rating: 4.4,
-    reviewCount: 11,
     isSecondhand: true,
     condition: '7成新',
     usageTime: '约 2 年',
     hasDefect: true,
     defectDescription: '封面有折痕，内页有少量标注。',
     location: '校园二手区',
-    image: createSvgDataUri({
-      title: 'SE Book',
-      subtitle: '二手教材 · 7成新',
-      bg: '#be123c',
-      fg: '#ffffff',
-      accent: '#fecdd3'
-    })
+    image: realProductImages.book
   },
   {
     name: '演示运动 跑步腰包',
@@ -165,16 +114,8 @@ const demoProducts = [
     subCategory: '运动配件',
     brand: 'RunGo',
     sales: 44,
-    rating: 4.3,
-    reviewCount: 17,
     isSecondhand: false,
-    image: createSvgDataUri({
-      title: 'Run Bag',
-      subtitle: '运动户外 · 新品',
-      bg: '#0f766e',
-      fg: '#ffffff',
-      accent: '#99f6e4'
-    })
+    image: realProductImages.runBag
   },
   {
     name: '演示限量 卫衣样衣',
@@ -185,22 +126,14 @@ const demoProducts = [
     subCategory: '服装',
     brand: 'CampusWear',
     sales: 30,
-    rating: 4.1,
-    reviewCount: 12,
     isSecondhand: false,
     status: '在售',
-    image: createSvgDataUri({
-      title: 'Hoodie',
-      subtitle: '库存 0 · 禁止加入购物车',
-      bg: '#475569',
-      fg: '#ffffff',
-      accent: '#cbd5e1'
-    })
+    image: realProductImages.hoodie
   }
 ];
 
 const seed = async () => {
-  await sequelize.sync({ alter: true });
+  await sequelize.sync();
 
   const [seller] = await User.findOrCreate({
     where: { email: 'demo-seller@example.com' },
@@ -253,8 +186,6 @@ const seed = async () => {
       status: item.status || '在售',
       sales: item.sales,
       views: 0,
-      rating: item.rating,
-      reviewCount: item.reviewCount,
       isSecondhand: item.isSecondhand,
       condition: item.condition || null,
       usageTime: item.usageTime || null,

@@ -122,7 +122,7 @@ const UserPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState(() => loadUser(getStoredUser()) || createDefaultUser(getStoredUser()));
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -232,8 +232,26 @@ const UserPage = () => {
     }
   };
 
+  const isSameOrder = (left, right) => String(left) === String(right);
+
+  const refreshOrder = (updatedOrder) => {
+    const nextOrder = normalizeOrder(updatedOrder);
+    setOrders(prev => prev.map(order => (
+      isSameOrder(order.id, nextOrder.id) ? nextOrder : order
+    )));
+  };
+
   const handleViewOrder = (id) => {
-    setSelectedOrder(orders.find(order => order.id === id));
+    setSelectedOrderId(prev => (isSameOrder(prev, id) ? null : id));
+  };
+
+  const handleConfirmReceipt = async (id) => {
+    try {
+      const response = await orderApi.confirm(id);
+      refreshOrder(response.data);
+    } catch (err) {
+      alert(err.response?.data?.message || '确认收货失败');
+    }
   };
 
   const getStatusText = (status) => {
@@ -247,17 +265,26 @@ const UserPage = () => {
     return statusMap[status] || status || '未知状态';
   };
 
-  const renderOrderDetail = () => {
-    if (!selectedOrder) {
-      return null;
+  const isWaitingReceive = (status) => status === 3 || status === '待收货';
+
+  const isCompletedOrder = (status) => status === 4 || status === '已完成';
+
+  const handleEvaluateOrder = (order) => {
+    if (!isCompletedOrder(order.status)) {
+      alert('订单完成后才能评价，请先确认收货。');
+      return;
     }
 
+    navigate(`/evaluation/${order.id}`);
+  };
+
+  const renderOrderDetail = (selectedOrder) => {
     return (
       <div style={{ marginTop: '20px', border: '1px solid #e8e8e8', borderRadius: '4px', padding: '16px', background: '#fafafa' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h4>订单详情 #{selectedOrder.id}</h4>
           <button
-            onClick={() => setSelectedOrder(null)}
+            onClick={() => setSelectedOrderId(null)}
             style={{ border: 'none', background: 'transparent', color: '#666', cursor: 'pointer' }}
           >
             关闭
@@ -271,7 +298,24 @@ const UserPage = () => {
         </div>
         <div>
           {selectedOrder.items.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleEvaluateOrder(selectedOrder)}
+              title={isCompletedOrder(selectedOrder.status) ? '评价该订单' : '确认收货后可评价'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                marginBottom: '12px',
+                padding: 0,
+                border: 'none',
+                background: 'transparent',
+                color: 'inherit',
+                textAlign: 'left',
+                cursor: 'pointer'
+              }}
+            >
               <img
                 src={item.image}
                 alt={item.name}
@@ -281,7 +325,7 @@ const UserPage = () => {
                 <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>{item.name}</div>
                 <div style={{ color: '#666' }}>¥{Number(item.price).toFixed(2)} x {item.quantity}</div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
         <div style={{ textAlign: 'right', fontWeight: 'bold', color: '#ff4d4f' }}>
@@ -446,54 +490,71 @@ const UserPage = () => {
                       <div style={{ fontWeight: 'bold' }}>总计: ¥{order.totalPrice.toFixed(2)}</div>
                     </div>
                     <button onClick={() => handleViewOrder(order.id)} className="button button-primary" style={{ padding: '6px 12px', fontSize: '14px' }}>
-                      查看详情
+                      {isSameOrder(selectedOrderId, order.id) ? '收起详情' : '查看详情'}
                     </button>
+                    {isSameOrder(selectedOrderId, order.id) && renderOrderDetail(order)}
                   </div>
                 ))}
-                {renderOrderDetail()}
               </div>
             )}
 
             {activeTab === 'logistics' && (
               <div>
                 <h3 style={{ marginBottom: '20px' }}>物流跟踪</h3>
-                {orders.filter(order => order.logistics).map(order => (
-                  <div key={order.id} style={{ borderBottom: '1px solid #e8e8e8', padding: '16px 0' }}>
-                    <div style={{ marginBottom: '12px' }}>
-                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>订单号: {order.id}</div>
-                      <div>物流公司: {order.logistics.company}</div>
-                      <div>物流单号: {order.logistics.trackingNumber}</div>
-                      <div style={{ color: '#1890ff', marginBottom: '12px' }}>物流状态: {order.logistics.status}</div>
-                    </div>
-                    <div style={{ position: 'relative', paddingLeft: '20px' }}>
-                      {order.logistics.steps.map((step, index) => (
-                        <div key={index} style={{ marginBottom: '16px', position: 'relative' }}>
-                          <div style={{
-                            position: 'absolute',
-                            left: '-20px',
-                            top: '0',
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
-                            background: index === 0 ? '#1890ff' : '#ddd'
-                          }}></div>
-                          {index < order.logistics.steps.length - 1 && (
+                {orders.filter(order => order.logistics).length === 0 ? (
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#666' }}>暂无物流信息</div>
+                ) : (
+                  orders.filter(order => order.logistics).map(order => (
+                    <div key={order.id} style={{ borderBottom: '1px solid #e8e8e8', padding: '16px 0' }}>
+                      <div style={{ marginBottom: '12px' }}>
+                        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>订单号: {order.id}</div>
+                        <div>订单状态: {getStatusText(order.status)}</div>
+                        <div>物流公司: {order.logistics.company}</div>
+                        <div>物流单号: {order.logistics.trackingNumber}</div>
+                        <div style={{ color: order.logistics.status === '已签收' ? '#52c41a' : '#1890ff', marginBottom: '12px' }}>
+                          物流状态: {order.logistics.status || '运输中'}
+                        </div>
+                        {isWaitingReceive(order.status) && (
+                          <button
+                            className="button button-primary"
+                            type="button"
+                            onClick={() => handleConfirmReceipt(order.id)}
+                            style={{ padding: '6px 12px', fontSize: '14px' }}
+                          >
+                            确认收货
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ position: 'relative', paddingLeft: '20px' }}>
+                        {(order.logistics.steps || []).map((step, index) => (
+                          <div key={index} style={{ marginBottom: '16px', position: 'relative' }}>
                             <div style={{
                               position: 'absolute',
-                              left: '-15px',
-                              top: '10px',
-                              width: '1px',
-                              height: '32px',
-                              background: '#ddd'
+                              left: '-20px',
+                              top: '0',
+                              width: '10px',
+                              height: '10px',
+                              borderRadius: '50%',
+                              background: index === 0 ? '#1890ff' : '#ddd'
                             }}></div>
-                          )}
-                          <div style={{ fontWeight: index === 0 ? 'bold' : 'normal' }}>{step.description}</div>
-                          <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>{step.time}</div>
-                        </div>
-                      ))}
+                            {index < (order.logistics.steps || []).length - 1 && (
+                              <div style={{
+                                position: 'absolute',
+                                left: '-15px',
+                                top: '10px',
+                                width: '1px',
+                                height: '32px',
+                                background: '#ddd'
+                              }}></div>
+                            )}
+                            <div style={{ fontWeight: index === 0 ? 'bold' : 'normal' }}>{step.description}</div>
+                            <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>{step.time}</div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
 

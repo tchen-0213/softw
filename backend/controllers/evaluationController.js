@@ -9,6 +9,53 @@ const parsePaging = (query) => {
   return { page, limit, offset: (page - 1) * limit };
 };
 
+const normalizeReplyItem = (item, index, data) => {
+  const role = item.role === 'buyer' ? 'buyer' : 'seller';
+  return {
+    id: item.id || `${data.id || 'reply'}-${index}`,
+    role,
+    userId: item.userId || (role === 'seller' ? data.sellerId : data.userId),
+    username: item.username || (role === 'seller' ? '卖家' : '买家'),
+    avatar: item.avatar || '',
+    content: String(item.content || '').trim(),
+    createdAt: item.createdAt || data.updatedAt || data.createdAt
+  };
+};
+
+const parseReplyThread = (reply, data = {}) => {
+  const rawReply = String(reply || '').trim();
+  if (!rawReply) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawReply);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((item, index) => normalizeReplyItem(item || {}, index, data))
+        .filter(item => item.content);
+    }
+  } catch {
+    // 兼容旧数据：原 reply 字段里如果是普通文本，就视为一条卖家回复。
+  }
+
+  return [normalizeReplyItem({
+    role: 'seller',
+    userId: data.sellerId,
+    username: '卖家',
+    content: rawReply
+  }, 0, data)];
+};
+
+const getLatestSellerReply = (replies) => {
+  const latest = [...replies].reverse().find(item => item.role === 'seller');
+  return latest?.content || '';
+};
+
+const isPendingSellerReply = (replies) => (
+  replies.length === 0 || replies[replies.length - 1].role !== 'seller'
+);
+
 const toEvaluationDto = (evaluation) => {
   const data = evaluation.toJSON ? evaluation.toJSON() : evaluation;
   if (data.user) {
@@ -19,6 +66,18 @@ const toEvaluationDto = (evaluation) => {
       avatar: data.user.avatar
     };
   }
+  if (data.Product) {
+    data.product = {
+      id: data.Product.id,
+      name: data.Product.name,
+      images: data.Product.images || []
+    };
+    delete data.Product;
+  }
+  const replies = parseReplyThread(data.reply, data);
+  data.replies = replies;
+  data.reply = getLatestSellerReply(replies);
+  data.pendingSellerReply = isPendingSellerReply(replies);
   return data;
 };
 
@@ -184,21 +243,88 @@ exports.getUserEvaluations = async (req, res) => {
   }
 };
 
-// 回复评价（卖家功能）
+// 获取卖家收到的评价
+exports.getSellerEvaluations = async (req, res) => {
+  const { page, limit, offset } = parsePaging(req.query);
+
+  try {
+    const { rows, count } = await Evaluation.findAndCountAll({
+      where: {
+        sellerId: req.user.id,
+        status: '已发布'
+      },
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username', 'nickname', 'avatar'] },
+        { model: Product, attributes: ['id', 'name', 'images'] }
+      ],
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit
+    });
+
+    const evaluations = rows.map(toEvaluationDto);
+    const pendingReplyCount = evaluations.filter(item => item.pendingSellerReply).length;
+
+    res.json({
+      evaluations,
+      pendingReplyCount,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        pages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: '获取卖家评价失败', error: error.message });
+  }
+};
+
+// 回复评价（卖家或原买家都可继续跟帖）
 exports.replyEvaluation = async (req, res) => {
   const { reply } = req.body;
 
+  if (!String(reply || '').trim()) {
+    return res.status(400).json({ message: '回复内容不能为空' });
+  }
+
   try {
-    const evaluation = await Evaluation.findByPk(req.params.id);
+    const evaluation = await Evaluation.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username', 'nickname', 'avatar'] },
+        { model: Product, attributes: ['id', 'name', 'images'] }
+      ]
+    });
     if (!evaluation) {
       return res.status(404).json({ message: '评价不存在' });
     }
 
-    if (Number(evaluation.sellerId) !== Number(req.user.id)) {
+    const isSeller = Number(evaluation.sellerId) === Number(req.user.id);
+    const isBuyer = Number(evaluation.userId) === Number(req.user.id);
+
+    if (!isSeller && !isBuyer) {
       return res.status(403).json({ message: '无权回复此评价' });
     }
 
-    await evaluation.update({ reply });
+    const currentData = evaluation.toJSON ? evaluation.toJSON() : evaluation;
+    const replies = parseReplyThread(evaluation.reply, currentData);
+    replies.push({
+      id: `${evaluation.id}-${Date.now()}`,
+      role: isSeller ? 'seller' : 'buyer',
+      userId: req.user.id,
+      username: req.user.nickname || req.user.username,
+      avatar: req.user.avatar || '',
+      content: String(reply).trim(),
+      createdAt: new Date().toISOString()
+    });
+
+    await evaluation.update({ reply: JSON.stringify(replies) });
+    await evaluation.reload({
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username', 'nickname', 'avatar'] },
+        { model: Product, attributes: ['id', 'name', 'images'] }
+      ]
+    });
     res.json(toEvaluationDto(evaluation));
   } catch (error) {
     res.status(500).json({ message: '回复评价失败', error: error.message });

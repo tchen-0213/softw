@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
+const User = require('../models/User');
 
 const toProductDto = (product) => {
   const data = product.toJSON ? product.toJSON() : product;
@@ -84,5 +85,19 @@ exports.getShopDetail = async (req, res) => {
     res.json(await toShopDto(shop));
   } catch (error) {
     res.status(500).json({ message: '获取店铺详情失败', error: error.message });
+  }
+};
+
+exports.getShopByUserId = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    const shop = await getOrCreateShop(user);
+    res.json(await toShopDto(shop));
+  } catch (error) {
+    res.status(500).json({ message: '获取用户店铺失败', error: error.message });
   }
 };

@@ -120,6 +120,17 @@ const OrderPage = () => {
     return statusMap[status] || status || '未知状态';
   };
 
+  const isCompletedOrder = (status) => status === 4 || status === '已完成';
+
+  const handleEvaluateOrder = (order) => {
+    if (!isCompletedOrder(order.status)) {
+      alert('订单完成后才能评价，请先确认收货。');
+      return;
+    }
+
+    navigate(`/evaluation/${order.id}`);
+  };
+
   if (loading) {
     return <div className="loading">加载中...</div>;
   }
@@ -173,7 +184,24 @@ const OrderPage = () => {
                 </div>
                 <div style={{ padding: '16px' }}>
                   {order.items.map((item) => (
-                    <div key={item.id} style={{ display: 'flex', marginBottom: '16px', alignItems: 'center' }}>
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleEvaluateOrder(order)}
+                      title={isCompletedOrder(order.status) ? '评价该订单' : '确认收货后可评价'}
+                      style={{
+                        display: 'flex',
+                        width: '100%',
+                        marginBottom: '16px',
+                        padding: 0,
+                        alignItems: 'center',
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'inherit',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                    >
                       <img
                         src={item.image || fallbackImages.product}
                         alt={item.name}
@@ -186,7 +214,7 @@ const OrderPage = () => {
                           <div>x{item.quantity}</div>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
                 <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -14,10 +14,15 @@ const ProductDetailPage = () => {
   const { currentProduct, loading, error } = useSelector((state) => state.product);
   const { items: cartItems } = useSelector((state) => state.cart);
   const [notice, setNotice] = useState('');
+  const [evaluationTotal, setEvaluationTotal] = useState(0);
 
   useEffect(() => {
     dispatch(getProductDetail(id));
   }, [dispatch, id]);
+
+  useEffect(() => {
+    setEvaluationTotal(currentProduct?.evaluationCount || 0);
+  }, [currentProduct?.id, currentProduct?.evaluationCount]);
 
   if (loading) {
     return <div className="loading">加载中...</div>;
@@ -89,6 +94,13 @@ const ProductDetailPage = () => {
     navigate('/checkout');
   };
 
+  const handleGoToSellerShop = () => {
+    const sellerId = currentProduct.seller?.id || currentProduct.sellerId;
+    if (sellerId) {
+      navigate(`/shop/user/${sellerId}`);
+    }
+  };
+
   return (
     <div className="product-detail">
       <div className="container">
@@ -118,7 +130,7 @@ const ProductDetailPage = () => {
               <div className="product-detail-price">¥{currentProduct.price}</div>
               <div className="product-detail-stats">
                 <span>销量: {currentProduct.sales || 0}</span>
-                <span>评价: {currentProduct.evaluationCount || 0}</span>
+                <span>评价: {evaluationTotal || 0}</span>
                 <span>库存: {hasStockLimit ? currentProduct.stock : '充足'}</span>
                 <span>收藏: {currentProduct.favoriteCount || 0}</span>
                 <span>状态: {currentProduct.status || '在售'}</span>
@@ -126,13 +138,28 @@ const ProductDetailPage = () => {
               <div className="product-detail-seller">
                 <h3>卖家信息</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
-                  <img
-                    src={currentProduct.seller?.avatar || fallbackImages.avatar}
-                    alt={currentProduct.seller?.nickname}
-                    style={{ width: '50px', height: '50px', borderRadius: '50%' }}
-                  />
+                  <button
+                    type="button"
+                    onClick={handleGoToSellerShop}
+                    disabled={!(currentProduct.seller?.id || currentProduct.sellerId)}
+                    title="进入店铺"
+                    style={{ border: 'none', background: 'transparent', padding: 0, cursor: currentProduct.seller?.id || currentProduct.sellerId ? 'pointer' : 'default' }}
+                  >
+                    <img
+                      src={currentProduct.seller?.avatar || fallbackImages.avatar}
+                      alt={currentProduct.seller?.nickname}
+                      style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  </button>
                   <div>
-                    <div>{currentProduct.seller?.nickname || '未知卖家'}</div>
+                    <button
+                      type="button"
+                      onClick={handleGoToSellerShop}
+                      disabled={!(currentProduct.seller?.id || currentProduct.sellerId)}
+                      style={{ border: 'none', background: 'transparent', padding: 0, cursor: currentProduct.seller?.id || currentProduct.sellerId ? 'pointer' : 'default' }}
+                    >
+                      {currentProduct.seller?.nickname || '未知卖家'}
+                    </button>
                     <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
                       信用等级: {currentProduct.seller?.creditLevel || '普通会员'}
                     </div>
@@ -173,7 +200,11 @@ const ProductDetailPage = () => {
               </div>
             </div>
           )}
-          <EvaluationList productId={id} />
+          <EvaluationList
+            productId={id}
+            initialCount={currentProduct.evaluationCount || 0}
+            onCountChange={setEvaluationTotal}
+          />
         </div>
       </div>
     </div>

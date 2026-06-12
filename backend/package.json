@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "seed": "node seedDemoProducts.js"
+    "seed": "node seedDemoProducts.js",
+    "seed:scenario": "node seedDemoScenario.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productImages, shopImages } from '../../data/imageAssets';
-import { orderApi, productApi, shopApi, uploadApi } from '../../services/api';
+import { evaluationApi, orderApi, productApi, shopApi, uploadApi } from '../../services/api';
 import { isLoggedIn } from '../../utils/accountStorage';
 
 const defaultProducts = [
@@ -144,6 +144,44 @@ const resolveImageValue = (value, fallback) => {
 
 const getStoredImageValue = (value) => String(value || '').trim();
 
+const formatReplyTime = (value) => {
+  if (!value) {
+    return '';
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+};
+
+const normalizeReply = (reply, index) => ({
+  ...reply,
+  id: reply.id || `${reply.role || 'reply'}-${index}`,
+  role: reply.role === 'seller' ? 'seller' : 'buyer',
+  username: reply.username || (reply.role === 'seller' ? '卖家' : '买家'),
+  content: reply.content || '',
+  createTime: reply.createTime || formatReplyTime(reply.createdAt)
+});
+
+const normalizeSellerEvaluation = (evaluation) => ({
+  ...evaluation,
+  username: evaluation.user?.nickname || evaluation.user?.username || '匿名用户',
+  avatar: evaluation.user?.avatar || '/images/moyu-logo.png',
+  productName: evaluation.product?.name || '未知商品',
+  productImage: evaluation.product?.images?.[0] || productImages.iphone,
+  createTime: evaluation.createTime || new Date(evaluation.createdAt).toLocaleString(),
+  pendingSellerReply: Boolean(evaluation.pendingSellerReply),
+  replies: Array.isArray(evaluation.replies)
+    ? evaluation.replies.map(normalizeReply)
+    : (evaluation.reply ? [normalizeReply({ role: 'seller', username: '卖家', content: evaluation.reply, createdAt: evaluation.updatedAt }, 0)] : [])
+});
+
+const renderStars = (rating) => (
+  Array(5).fill(0).map((_, index) => (
+    <span key={index} style={{ color: index < Number(rating || 0) ? '#ffd700' : '#ddd' }}>
+      ★
+    </span>
+  ))
+);
+
 const ShopPage = () => {
   const [user] = useState(getCurrentUser);
   const [shop, setShop] = useState(() => loadShop(getCurrentUser()));
@@ -168,6 +206,9 @@ const ShopPage = () => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [sellerOrders, setSellerOrders] = useState([]);
+  const [sellerEvaluations, setSellerEvaluations] = useState([]);
+  const [replyDrafts, setReplyDrafts] = useState({});
+  const [replyingEvaluationId, setReplyingEvaluationId] = useState(null);
   const [shippingOrderId, setShippingOrderId] = useState(null);
   const [shippingForm, setShippingForm] = useState(createEmptyShippingForm);
   const navigate = useNavigate();
@@ -179,6 +220,10 @@ const ShopPage = () => {
   const waitingShipCount = useMemo(() => (
     sellerOrders.filter(order => order.status === '待发货').length
   ), [sellerOrders]);
+
+  const pendingReplyEvaluations = useMemo(() => (
+    sellerEvaluations.filter(evaluation => evaluation.pendingSellerReply)
+  ), [sellerEvaluations]);
 
   useEffect(() => {
     if (!user || !isLoggedIn()) {
@@ -200,6 +245,12 @@ const ShopPage = () => {
     orderApi.getSellerList()
       .then((response) => {
         setSellerOrders(response.data.orders || []);
+      })
+      .catch(() => {});
+
+    evaluationApi.getSellerEvaluations({ limit: 100 })
+      .then((response) => {
+        setSellerEvaluations((response.data.evaluations || []).map(normalizeSellerEvaluation));
       })
       .catch(() => {});
   }, [user]);
@@ -437,9 +488,46 @@ const ShopPage = () => {
       )));
       setShippingOrderId(null);
       setShippingForm(createEmptyShippingForm());
+      window.dispatchEvent(new Event('seller-alerts-refresh'));
       setError('');
     } catch (err) {
       setError(err.response?.data?.message || '发货失败');
+    }
+  };
+
+  const handleReplyDraftChange = (evaluationId, value) => {
+    setReplyDrafts(prev => ({
+      ...prev,
+      [evaluationId]: value
+    }));
+    setError('');
+  };
+
+  const handleReplyEvaluation = async (evaluationId) => {
+    const reply = String(replyDrafts[evaluationId] || '').trim();
+
+    if (!reply) {
+      setError('回复内容不能为空');
+      return;
+    }
+
+    setReplyingEvaluationId(evaluationId);
+    try {
+      const response = await evaluationApi.reply(evaluationId, { reply });
+      const updatedEvaluation = normalizeSellerEvaluation(response.data);
+      setSellerEvaluations(prev => prev.map(evaluation => (
+        Number(evaluation.id) === Number(evaluationId) ? updatedEvaluation : evaluation
+      )));
+      setReplyDrafts(prev => ({
+        ...prev,
+        [evaluationId]: ''
+      }));
+      window.dispatchEvent(new Event('seller-alerts-refresh'));
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.message || '回复评价失败');
+    } finally {
+      setReplyingEvaluationId(null);
     }
   };
 
@@ -771,6 +859,106 @@ const ShopPage = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ marginBottom: '16px' }}>收到的评价</h3>
+          {pendingReplyEvaluations.length > 0 && (
+            <div className="shop-order-alert">
+              <strong>有 {pendingReplyEvaluations.length} 条新评价待回复</strong>
+              <span>及时回复买家评论，可以让商品详情页展示更完整的售后沟通。</span>
+            </div>
+          )}
+          {sellerEvaluations.length === 0 ? (
+            <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px', color: '#666' }}>
+              暂无收到的评价
+            </div>
+          ) : (
+            sellerEvaluations.map(evaluation => {
+              const needsReply = evaluation.pendingSellerReply;
+
+              return (
+                <div
+                  key={evaluation.id}
+                  className={`shop-order-card${needsReply ? ' is-pending is-awaiting-shipment' : ''}`}
+                >
+                  <div className="shop-order-header">
+                    <strong>{evaluation.productName}</strong>
+                    <span>{needsReply ? '待回复' : '可继续回复'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                    <img
+                      src={evaluation.avatar}
+                      alt={evaluation.username}
+                      onError={(event) => {
+                        event.currentTarget.src = '/images/moyu-logo.png';
+                      }}
+                      style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                        <strong>{evaluation.username}</strong>
+                        <span>{renderStars(evaluation.rating)}</span>
+                        <span style={{ color: '#8c8c8c', fontSize: '14px' }}>{evaluation.createTime}</span>
+                      </div>
+                      <div style={{ marginBottom: '12px', lineHeight: 1.6 }}>{evaluation.content}</div>
+                      {evaluation.replies.length > 0 && (
+                        <div style={{ marginBottom: '12px' }}>
+                          {evaluation.replies.map((reply, index) => (
+                            <div
+                              key={reply.id}
+                              style={{
+                                marginLeft: `${Math.min(index, 5) * 16}px`,
+                                marginTop: '8px',
+                                borderLeft: `3px solid ${reply.role === 'seller' ? '#1890ff' : '#52c41a'}`,
+                                padding: '8px 12px',
+                                background: reply.role === 'seller' ? '#f5faff' : '#f6ffed',
+                                lineHeight: 1.6
+                              }}
+                            >
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                                <strong style={{ color: reply.role === 'seller' ? '#1890ff' : '#52c41a' }}>
+                                  {reply.role === 'seller' ? '卖家' : reply.username}：
+                                </strong>
+                                <span style={{ color: '#8c8c8c', fontSize: '13px' }}>{reply.createTime}</span>
+                              </div>
+                              <div>{reply.content}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div>
+                        <textarea
+                          value={replyDrafts[evaluation.id] || ''}
+                          onChange={(event) => handleReplyDraftChange(evaluation.id, event.target.value)}
+                          rows="3"
+                          placeholder="继续回复这条评价"
+                          style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', resize: 'vertical', marginBottom: '10px' }}
+                        />
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          onClick={() => handleReplyEvaluation(evaluation.id)}
+                          disabled={replyingEvaluationId === evaluation.id}
+                          style={{ padding: '7px 14px', fontSize: '14px' }}
+                        >
+                          {replyingEvaluationId === evaluation.id ? '回复中...' : '回复评价'}
+                        </button>
+                      </div>
+                    </div>
+                    <img
+                      src={evaluation.productImage}
+                      alt={evaluation.productName}
+                      onError={(event) => {
+                        event.currentTarget.src = productImages.iphone;
+                      }}
+                      style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '4px' }}
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div style={{ marginBottom: '30px' }}>

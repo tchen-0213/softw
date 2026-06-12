@@ -74,6 +74,7 @@ export const evaluationApi = {
   create: (data) => api.post('/evaluations', data),
   getProductEvaluations: (params) => api.get('/evaluations/product', { params }),
   getUserEvaluations: (params) => api.get('/evaluations/user', { params }),
+  getSellerEvaluations: (params) => api.get('/evaluations/seller', { params }),
   reply: (id, data) => api.put(`/evaluations/${id}/reply`, data),
   approve: (id) => api.put(`/evaluations/${id}/approve`)
 };
@@ -88,6 +89,7 @@ export const addressApi = {
 export const shopApi = {
   getMine: () => api.get('/shops/mine'),
   updateMine: (data) => api.put('/shops/mine', data),
+  getByUser: (userId) => api.get(`/shops/user/${userId}`),
   getDetail: (id) => api.get(`/shops/${id}`)
 };
 

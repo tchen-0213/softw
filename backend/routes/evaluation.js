@@ -2,7 +2,8 @@ const express = require('express');
 const { 
   createEvaluation, 
   getProductEvaluations, 
-  getUserEvaluations, 
+  getUserEvaluations,
+  getSellerEvaluations,
   replyEvaluation, 
   approveEvaluation 
 } = require('../controllers/evaluationController');
@@ -18,6 +19,9 @@ router.get('/product', getProductEvaluations);
 
 // 获取用户的评价历史（需要登录）
 router.get('/user', protect, getUserEvaluations);
+
+// 获取卖家收到的评价（需要登录）
+router.get('/seller', protect, getSellerEvaluations);
 
 // 回复评价（需要登录）
 router.put('/:id/reply', protect, replyEvaluation);

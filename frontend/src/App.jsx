@@ -9,6 +9,7 @@ import OrderPage from './pages/order/OrderPage'
 import SellPage from './pages/sell/SellPage'
 import EvaluationPage from './pages/evaluation/EvaluationPage'
 import ShopPage from './pages/shop/ShopPage'
+import PublicShopPage from './pages/shop/PublicShopPage'
 import UserPage from './pages/user/UserPage'
 import AuthPage from './pages/auth/AuthPage'
 import AboutPage from './pages/legal/AboutPage'
@@ -31,6 +32,7 @@ function App() {
         <Route path="/order" element={<OrderPage />} />
         <Route path="/sell" element={<SellPage />} />
         <Route path="/evaluation/:orderId" element={<EvaluationPage />} />
+        <Route path="/shop/user/:userId" element={<PublicShopPage />} />
         <Route path="/shop" element={<ShopPage />} />
         <Route path="/user" element={<UserPage />} />
         <Route path="/login" element={<AuthPage mode="login" />} />

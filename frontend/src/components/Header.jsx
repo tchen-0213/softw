@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { MoonOutlined, SunOutlined } from '@ant-design/icons';
 import { switchCartOwner } from '../store/cartSlice';
-import { orderApi } from '../services/api';
+import { evaluationApi, orderApi } from '../services/api';
 import SearchBar from './product/SearchBar';
 
 const pendingSellerOrderStatuses = ['待付款', '待发货'];
@@ -16,6 +16,7 @@ const Header = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [isDiscoMode, setIsDiscoMode] = useState(false);
   const [sellerPendingOrderCount, setSellerPendingOrderCount] = useState(0);
+  const [sellerPendingReplyCount, setSellerPendingReplyCount] = useState(0);
   const longPressTimerRef = useRef(null);
   const discoTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
@@ -28,33 +29,53 @@ const Header = () => {
 
   useEffect(() => {
     let ignore = false;
+    let refreshTimer = null;
 
     if (!token) {
       setSellerPendingOrderCount(0);
+      setSellerPendingReplyCount(0);
       return undefined;
     }
 
-    orderApi.getSellerList()
-      .then((response) => {
-        if (ignore) {
-          return;
-        }
+    const loadSellerAlerts = () => {
+      Promise.allSettled([
+        orderApi.getSellerList(),
+        evaluationApi.getSellerEvaluations({ limit: 100 })
+      ])
+        .then(([orderResult, evaluationResult]) => {
+          if (ignore) {
+            return;
+          }
 
-        const orders = response.data.orders || [];
-        const pendingCount = orders.filter(order => (
-          pendingSellerOrderStatuses.includes(order.status)
-        )).length;
+          const orders = orderResult.status === 'fulfilled'
+            ? orderResult.value.data.orders || []
+            : [];
+          const pendingCount = orders.filter(order => (
+            pendingSellerOrderStatuses.includes(order.status)
+          )).length;
+          const pendingReplyCount = evaluationResult.status === 'fulfilled'
+            ? Number(evaluationResult.value.data.pendingReplyCount || 0)
+            : 0;
 
-        setSellerPendingOrderCount(pendingCount);
-      })
-      .catch(() => {
-        if (!ignore) {
-          setSellerPendingOrderCount(0);
-        }
-      });
+          setSellerPendingOrderCount(pendingCount);
+          setSellerPendingReplyCount(pendingReplyCount);
+        })
+        .catch(() => {
+          if (!ignore) {
+            setSellerPendingOrderCount(0);
+            setSellerPendingReplyCount(0);
+          }
+        });
+    };
+
+    loadSellerAlerts();
+    refreshTimer = window.setInterval(loadSellerAlerts, 30000);
+    window.addEventListener('seller-alerts-refresh', loadSellerAlerts);
 
     return () => {
       ignore = true;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener('seller-alerts-refresh', loadSellerAlerts);
     };
   }, [token, location.pathname]);
 
@@ -137,8 +158,14 @@ const Header = () => {
     return `nav-link${isActive ? ' active' : ''}`;
   };
 
+  const sellerAlertCount = sellerPendingOrderCount + sellerPendingReplyCount;
+  const sellerAlertTitle = [
+    sellerPendingOrderCount > 0 ? `${sellerPendingOrderCount} 笔卖家订单需要关注` : '',
+    sellerPendingReplyCount > 0 ? `${sellerPendingReplyCount} 条评价待回复` : ''
+  ].filter(Boolean).join('，');
+
   const shopNavLinkClass = `${getNavLinkClass('/shop')} shop-nav-link${
-    sellerPendingOrderCount > 0 ? ' has-order-alert' : ''
+    sellerAlertCount > 0 ? ' has-order-alert' : ''
   }`;
 
   return (
@@ -155,12 +182,12 @@ const Header = () => {
             <Link to="/search?productType=2" className={getNavLinkClass('/search')}>二手市场</Link>
             <Link to="/shop" className={shopNavLinkClass}>
               <span>店铺</span>
-              {sellerPendingOrderCount > 0 && (
+              {sellerAlertCount > 0 && (
                 <span
                   className="nav-order-badge"
-                  title={`有 ${sellerPendingOrderCount} 笔卖家订单需要关注`}
+                  title={sellerAlertTitle}
                 >
-                  {sellerPendingOrderCount > 99 ? '99+' : sellerPendingOrderCount}
+                  {sellerAlertCount > 99 ? '99+' : sellerAlertCount}
                 </span>
               )}
             </Link>
