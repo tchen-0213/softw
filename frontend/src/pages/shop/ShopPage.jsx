@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CreditBadge from '../../components/credit/CreditBadge';
 import { productImages, shopImages } from '../../data/imageAssets';
 import { evaluationApi, orderApi, productApi, shopApi, uploadApi } from '../../services/api';
 import { isLoggedIn } from '../../utils/accountStorage';
@@ -102,6 +103,8 @@ const createDefaultShop = (user) => ({
   description: '这是一家经营各类商品的店铺，欢迎光临！',
   logo: shopImages.logo,
   banner: shopImages.banner,
+  creditLevel: user?.creditLevel || '普通',
+  creditScore: user?.creditScore ?? 100,
   products: defaultProducts
 });
 
@@ -113,6 +116,8 @@ const normalizeShop = (shop, user) => {
     ownerId: getUserKey(user),
     logo: shop?.logo || shop?.avatar || shopImages.logo,
     banner: shop?.banner || shopImages.banner,
+    creditLevel: shop?.creditLevel || shop?.owner?.creditLevel || user?.creditLevel || fallback.creditLevel,
+    creditScore: shop?.creditScore ?? shop?.owner?.creditScore ?? user?.creditScore ?? fallback.creditScore,
     products: Array.isArray(shop?.products)
       ? shop.products.map(product => ({
           ...product,
@@ -680,6 +685,13 @@ const ShopPage = () => {
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: '8px', fontSize: '18px', fontWeight: 'bold' }}>{shop.name}</div>
                 <div style={{ marginBottom: '16px' }}>{shop.description}</div>
+                <div style={{ marginBottom: '16px' }}>
+                  <CreditBadge
+                    compact
+                    level={shop.creditLevel || user.creditLevel}
+                    score={shop.creditScore ?? user.creditScore}
+                  />
+                </div>
                 <button onClick={handleEditShop} className="button button-primary" style={{ padding: '8px 16px' }}>
                   编辑店铺信息
                 </button>

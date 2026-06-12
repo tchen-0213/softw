@@ -1,6 +1,13 @@
 const sequelize = require('../config/database');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
+const {
+  SELLER_CANCEL_NON_SHIPMENT_DELTA,
+  applyCreditDelta,
+  getShippingCreditDelta,
+  isOverdueShipmentCancellation
+} = require('../utils/creditRules');
 
 const paymentMethodMap = {
   alipay: '支付宝',
@@ -37,6 +44,31 @@ const toOrderDto = (order) => {
 const hasSellerItem = (order, userId) => (
   (order.items || []).some(item => Number(item.sellerId) === Number(userId))
 );
+
+const getOrderSellerIds = (order) => ([
+  ...new Set(
+    (order.items || [])
+      .map(item => Number(item.sellerId))
+      .filter(id => Number.isFinite(id))
+  )
+]);
+
+const getWritableSellerIds = (order, user) => {
+  const sellerIds = getOrderSellerIds(order);
+
+  if (user.role === 'admin') {
+    return sellerIds;
+  }
+
+  return sellerIds.filter(id => Number(id) === Number(user.id));
+};
+
+const applyCreditDeltaToSellers = async (sellerIds, delta, options = {}) => {
+  for (const sellerId of sellerIds) {
+    const seller = await User.findByPk(sellerId, options.transaction ? { transaction: options.transaction } : {});
+    await applyCreditDelta(seller, delta, options.transaction ? { transaction: options.transaction } : {});
+  }
+};
 
 const appendLogisticsStep = (logisticsInfo, description) => {
   const now = new Date().toLocaleString('zh-CN', { hour12: false });
@@ -300,6 +332,17 @@ exports.cancelOrder = async (req, res) => {
       }
     }
 
+    if (
+      order.status === orderFlow.WAITING_SHIP &&
+      isOverdueShipmentCancellation(order.updatedAt)
+    ) {
+      await applyCreditDeltaToSellers(
+        getOrderSellerIds(order),
+        SELLER_CANCEL_NON_SHIPMENT_DELTA,
+        { transaction }
+      );
+    }
+
     await order.update({ status: orderFlow.CANCELLED }, { transaction });
     await transaction.commit();
 
@@ -361,6 +404,8 @@ exports.shipOrder = async (req, res) => {
       return res.status(400).json({ message: '物流公司和物流单号不能为空，请填写完整后再发货' });
     }
 
+    const shippedAt = new Date();
+    const shippingCreditDelta = getShippingCreditDelta(order.updatedAt, shippedAt);
     const baseLogistics = {
       ...(order.logisticsInfo || {}),
       company: shippingCompany,
@@ -372,6 +417,10 @@ exports.shipOrder = async (req, res) => {
       status: orderFlow.WAITING_RECEIVE,
       logisticsInfo: appendLogisticsStep(baseLogistics, '卖家已发货，包裹开始运输')
     });
+    await applyCreditDeltaToSellers(
+      getWritableSellerIds(order, req.user),
+      shippingCreditDelta
+    );
 
     res.json(toOrderDto(order));
   } catch (error) {

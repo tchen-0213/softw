@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CreditBadge from '../../components/credit/CreditBadge';
 import AddressManager from '../../components/user/AddressManager';
 import { avatarImages, productImages } from '../../data/imageAssets';
 import { addressApi, orderApi, userApi } from '../../services/api';
@@ -365,8 +366,7 @@ const UserPage = () => {
                 style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '12px' }}
               />
               <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>{user.nickname}</div>
-              <div style={{ color: '#ffd700', marginBottom: '8px' }}>{user.creditLevel}</div>
-              <div style={{ fontSize: '14px', color: '#666' }}>信用分: {user.creditScore}</div>
+              <CreditBadge compact level={user.creditLevel} score={user.creditScore} />
             </div>
             <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
               {[
@@ -450,15 +450,17 @@ const UserPage = () => {
                     {[
                       ['昵称', user.nickname],
                       ['邮箱', user.email],
-                      ['手机号', user.phone],
-                      ['信用等级', user.creditLevel],
-                      ['信用分', user.creditScore]
+                      ['手机号', user.phone]
                     ].map(([label, value]) => (
                       <div key={label} style={{ marginBottom: '16px' }}>
                         <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666' }}>{label}</div>
                         <div style={{ padding: '8px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>{value}</div>
                       </div>
                     ))}
+                    <div style={{ marginBottom: '16px' }}>
+                      <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666' }}>信用等级</div>
+                      <CreditBadge level={user.creditLevel} score={user.creditScore} />
+                    </div>
                     <button onClick={handleEditProfile} className="button button-primary">
                       编辑个人信息
                     </button>

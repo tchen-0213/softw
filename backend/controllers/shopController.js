@@ -29,16 +29,32 @@ const getOrCreateShop = async (user) => {
   return shop;
 };
 
-const toShopDto = async (shop) => {
+const toOwnerCreditDto = (user) => ({
+  id: user?.id,
+  username: user?.username,
+  nickname: user?.nickname || user?.username,
+  avatar: user?.avatar || '',
+  creditLevel: user?.creditLevel || '普通',
+  creditScore: user?.creditScore ?? 100
+});
+
+const toShopDto = async (shop, owner) => {
   const data = shop.toJSON ? shop.toJSON() : shop;
+  const shopOwner = owner || await User.findByPk(data.userId, {
+    attributes: ['id', 'username', 'nickname', 'avatar', 'creditLevel', 'creditScore']
+  });
   const products = await Product.findAll({
     where: { sellerId: data.userId },
     order: [['updatedAt', 'DESC']]
   });
+  const ownerCredit = toOwnerCreditDto(shopOwner);
 
   return {
     ...data,
     logo: data.avatar,
+    owner: ownerCredit,
+    creditLevel: ownerCredit.creditLevel,
+    creditScore: ownerCredit.creditScore,
     products: products.map(toProductDto)
   };
 };
@@ -46,7 +62,7 @@ const toShopDto = async (shop) => {
 exports.getMyShop = async (req, res) => {
   try {
     const shop = await getOrCreateShop(req.user);
-    res.json(await toShopDto(shop));
+    res.json(await toShopDto(shop, req.user));
   } catch (error) {
     res.status(500).json({ message: '获取店铺失败', error: error.message });
   }
@@ -69,7 +85,7 @@ exports.updateMyShop = async (req, res) => {
       banner: hasField('banner') ? banner : shop.banner
     });
 
-    res.json(await toShopDto(shop));
+    res.json(await toShopDto(shop, req.user));
   } catch (error) {
     res.status(500).json({ message: '更新店铺失败', error: error.message });
   }
@@ -96,7 +112,7 @@ exports.getShopByUserId = async (req, res) => {
     }
 
     const shop = await getOrCreateShop(user);
-    res.json(await toShopDto(shop));
+    res.json(await toShopDto(shop, user));
   } catch (error) {
     res.status(500).json({ message: '获取用户店铺失败', error: error.message });
   }

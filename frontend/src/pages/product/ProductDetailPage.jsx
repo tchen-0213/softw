@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import CreditBadge from '../../components/credit/CreditBadge';
 import { getProductDetail } from '../../store/productSlice';
 import { addToCart } from '../../store/cartSlice';
 import EvaluationList from '../../components/evaluation/EvaluationList';
@@ -160,8 +161,12 @@ const ProductDetailPage = () => {
                     >
                       {currentProduct.seller?.nickname || '未知卖家'}
                     </button>
-                    <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
-                      信用等级: {currentProduct.seller?.creditLevel || '普通会员'}
+                    <div style={{ marginTop: '8px' }}>
+                      <CreditBadge
+                        compact
+                        level={currentProduct.seller?.creditLevel || '普通'}
+                        score={currentProduct.seller?.creditScore ?? 100}
+                      />
                     </div>
                   </div>
                 </div>

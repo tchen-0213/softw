@@ -2,6 +2,11 @@ const Evaluation = require('../models/Evaluation');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const {
+  applyCreditDelta,
+  getCreditDeltaByRating,
+  getLowRatingPenalty
+} = require('../utils/creditRules');
 
 const parsePaging = (query) => {
   const page = Math.max(parseInt(query.page || '1', 10), 1);
@@ -81,23 +86,6 @@ const toEvaluationDto = (evaluation) => {
   return data;
 };
 
-const getCreditLevel = (score) => {
-  if (score >= 180) return '钻石';
-  if (score >= 150) return '金牌';
-  if (score >= 120) return '银牌';
-  if (score >= 90) return '普通';
-  return '风险';
-};
-
-const getCreditDelta = (rating) => {
-  const value = Number(rating);
-  if (value >= 5) return 5;
-  if (value === 4) return 3;
-  if (value === 3) return 0;
-  if (value === 2) return -3;
-  return -5;
-};
-
 const updateProductRating = async (productId) => {
   const evaluations = await Evaluation.findAll({
     where: { productId, status: '已发布' },
@@ -115,17 +103,26 @@ const updateProductRating = async (productId) => {
   );
 };
 
-const updateSellerCredit = async (sellerId, rating) => {
+const getSellerLowRatingPenalty = async (sellerId) => {
+  const evaluations = await Evaluation.findAll({
+    where: { sellerId, status: '已发布' },
+    attributes: ['rating']
+  });
+
+  return getLowRatingPenalty(evaluations.map(item => item.rating));
+};
+
+const updateSellerCredit = async (sellerId, rating, previousLowRatingPenalty = 0) => {
   const seller = await User.findByPk(sellerId);
   if (!seller) {
     return;
   }
 
-  const nextScore = Math.max(0, Number(seller.creditScore || 0) + getCreditDelta(rating));
-  await seller.update({
-    creditScore: nextScore,
-    creditLevel: getCreditLevel(nextScore)
-  });
+  const currentLowRatingPenalty = await getSellerLowRatingPenalty(sellerId);
+  const lowRatingPenaltyDelta = currentLowRatingPenalty - previousLowRatingPenalty;
+  const creditDelta = getCreditDeltaByRating(rating) + lowRatingPenaltyDelta;
+
+  await applyCreditDelta(seller, creditDelta);
 };
 
 // 创建评价
@@ -163,6 +160,7 @@ exports.createEvaluation = async (req, res) => {
       return res.status(400).json({ message: '已经评价过此商品' });
     }
 
+    const previousLowRatingPenalty = await getSellerLowRatingPenalty(product.sellerId);
     const evaluation = await Evaluation.create({
       orderId,
       userId: req.user.id,
@@ -175,7 +173,7 @@ exports.createEvaluation = async (req, res) => {
     });
 
     await updateProductRating(productId);
-    await updateSellerCredit(product.sellerId, rating);
+    await updateSellerCredit(product.sellerId, rating, previousLowRatingPenalty);
     res.status(201).json(toEvaluationDto(evaluation));
   } catch (error) {
     res.status(500).json({ message: '创建评价失败', error: error.message });

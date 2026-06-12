@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import CreditBadge from '../../components/credit/CreditBadge';
 import { fallbackImages, shopImages } from '../../data/imageAssets';
 import { shopApi } from '../../services/api';
 
@@ -7,6 +8,8 @@ const normalizeShop = (shop) => ({
   ...shop,
   logo: shop?.logo || shop?.avatar || shopImages.logo,
   banner: shop?.banner || shopImages.banner,
+  creditLevel: shop?.creditLevel || shop?.owner?.creditLevel || '普通',
+  creditScore: shop?.creditScore ?? shop?.owner?.creditScore ?? 100,
   products: Array.isArray(shop?.products)
     ? shop.products.map(product => ({
         ...product,
@@ -78,7 +81,10 @@ const PublicShopPage = () => {
             <div style={{ flex: 1 }}>
               <h2 style={{ marginBottom: '8px' }}>{shop.name}</h2>
               <div style={{ color: '#666', lineHeight: 1.6 }}>{shop.description || '店主暂未填写简介'}</div>
-              <div style={{ marginTop: '12px', color: '#1890ff' }}>在售商品 {shop.products.length} 件</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginTop: '12px' }}>
+                <div style={{ color: '#1890ff' }}>在售商品 {shop.products.length} 件</div>
+                <CreditBadge compact level={shop.creditLevel} score={shop.creditScore} />
+              </div>
             </div>
           </div>
         </div>
