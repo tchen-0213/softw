@@ -1,0 +1,16 @@
+{
+  "name": "automation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "codearts": "node scripts/codearts-safari.js",
+    "safari": "node scripts/codearts-safari.js",
+    "create-tasks": "node scripts/create-codearts-tasks.js",
+    "screenshots": "node scripts/codearts-safari.js screenshots"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

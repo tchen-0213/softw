@@ -3,9 +3,16 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const ensureSchema = require('./utils/ensureSchema');
+const {
+  createRateLimiter,
+  requestId,
+  requireProductionSecrets,
+  securityHeaders
+} = require('./middleware/security');
 
 // 加载环境变量
 dotenv.config();
+requireProductionSecrets();
 
 // 导入数据库配置
 const sequelize = require('./config/database');
@@ -34,6 +41,13 @@ const chatRoutes = require('./routes/chat');
 const app = express();
 
 // 中间件
+app.use(requestId);
+app.use(securityHeaders);
+app.use(createRateLimiter({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60 * 1000),
+  max: Number(process.env.RATE_LIMIT_MAX || 120)
+}));
+
 const allowedOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map(origin => origin.trim())
@@ -70,8 +84,40 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/chats', chatRoutes);
 
 // 健康检查
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get('/api/health', async (req, res) => {
+  const startedAt = Date.now();
+
+  try {
+    await sequelize.authenticate();
+    res.json({
+      status: 'ok',
+      database: 'ok',
+      uptime: process.uptime(),
+      responseTimeMs: Date.now() - startedAt,
+      requestId: req.requestId
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'degraded',
+      database: 'error',
+      responseTimeMs: Date.now() - startedAt,
+      requestId: req.requestId
+    });
+  }
+});
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status = err.status || err.statusCode || 500;
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  return res.status(status).json({
+    message: status >= 500 && isProduction ? '服务器内部错误' : err.message,
+    requestId: req.requestId
+  });
 });
 
 const PORT = process.env.PORT || 3001;

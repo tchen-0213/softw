@@ -6,6 +6,13 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 const uploadDir = path.join(__dirname, '..', 'uploads');
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+]);
+const allowedExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -24,8 +31,10 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('只支持上传图片文件'));
+    const ext = path.extname(file.originalname || '').toLowerCase();
+
+    if (!allowedMimeTypes.has(file.mimetype) || !allowedExtensions.has(ext)) {
+      return cb(new Error('只支持上传 jpg、png、gif、webp 图片文件'));
     }
 
     return cb(null, true);

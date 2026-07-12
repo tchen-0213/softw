@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { Op, Sequelize } = require('sequelize');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
@@ -38,6 +39,14 @@ const toOrderDto = (order) => {
   return {
     ...data,
     logistics: data.logisticsInfo
+  };
+};
+
+const toSellerOrderDto = (order, sellerId) => {
+  const data = toOrderDto(order);
+  return {
+    ...data,
+    items: (data.items || []).filter(item => Number(item.sellerId) === Number(sellerId))
   };
 };
 
@@ -214,25 +223,44 @@ exports.getUserOrders = async (req, res) => {
 
 // 获取卖家相关订单
 exports.getSellerOrders = async (req, res) => {
+  const sellerId = Number(req.user.id);
+  const { page, limit, offset } = parsePaging(req.query);
+
+  if (!Number.isFinite(sellerId)) {
+    return res.status(401).json({ message: '用户身份无效' });
+  }
+
   try {
-    const orders = await Order.findAll({
-      order: [['createdAt', 'DESC']]
+    const { rows, count } = await Order.findAndCountAll({
+      where: {
+        [Op.and]: [
+          Sequelize.literal(`JSON_CONTAINS(JSON_EXTRACT(items, '$[*].sellerId'), '${sellerId}')`)
+        ]
+      },
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit
     });
 
-    const sellerOrders = orders
-      .filter(order => hasSellerItem(order, req.user.id))
-      .map(order => {
-        const data = toOrderDto(order);
-        return {
-          ...data,
-          items: (data.items || []).filter(item => Number(item.sellerId) === Number(req.user.id))
-        };
-      });
+    const sellerOrders = rows.map(order => toSellerOrderDto(order, sellerId));
 
-    res.json({ orders: sellerOrders });
+    res.json({
+      orders: sellerOrders,
+      pagination: {
+        total: count,
+        page,
+        limit,
+        pages: Math.ceil(count / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: '获取卖家订单失败', error: error.message });
   }
+};
+
+exports._internal = {
+  toOrderDto,
+  toSellerOrderDto
 };
 
 // 获取订单详情

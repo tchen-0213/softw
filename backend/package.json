@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "test": "NODE_ENV=test node --test",
     "seed": "node seedDemoProducts.js",
     "seed:scenario": "node seedDemoScenario.js"
   },

@@ -1,17 +1,41 @@
 const User = require('../models/User');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../middleware/auth');
 
 // 生成JWT令牌
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'your-secret-key', {
-    expiresIn: '30d'
+  return jwt.sign({ id }, getJwtSecret(), {
+    expiresIn: process.env.JWT_EXPIRES_IN || '30d'
   });
+};
+
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
+
+const validateRegisterPayload = ({ username, password, phone, email }) => {
+  if (!String(username || '').trim()) {
+    return '用户名不能为空';
+  }
+  if (!isValidEmail(email)) {
+    return '邮箱格式不正确';
+  }
+  if (!String(phone || '').trim()) {
+    return '手机号不能为空';
+  }
+  if (String(password || '').length < 6) {
+    return '密码长度不能少于6位';
+  }
+  return null;
 };
 
 // 用户注册
 exports.register = async (req, res) => {
   const { username, password, phone, email } = req.body;
+  const validationError = validateRegisterPayload(req.body);
+
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
 
   try {
     const userExists = await User.findOne({
@@ -51,6 +75,10 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
+  if (!isValidEmail(email) || !password) {
+    return res.status(400).json({ message: '邮箱或密码格式不正确' });
+  }
+
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -77,6 +105,11 @@ exports.login = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: '登录失败', error: error.message });
   }
+};
+
+exports._internal = {
+  isValidEmail,
+  validateRegisterPayload
 };
 
 // 获取用户信息
