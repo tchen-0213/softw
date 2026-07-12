@@ -174,6 +174,46 @@ cd frontend && npm ci && npm run build
 
 5. 保留失败截图和后续成功截图，说明失败原因不是业务代码，而是 checkout 执行环境问题。
 
+### 2.8 当前平台配置记录
+
+截至 2026 年 7 月 12 日，CodeArts 平台侧已完成以下配置：
+
+- 已创建 Scrum 项目 `购物与二手交易平台小学期重构`。
+- 已导入 CodeArts Repo 仓库 `softw`。
+- 已在 CodeArts SSH 密钥中添加本机公钥 `ply-01 mac ssh`。
+- 已将本地最新提交推送到 GitHub 和 CodeArts Repo：
+
+```text
+d5bde57 完善小学期CodeArts与非功能优化
+```
+
+- 已创建两个 Sprint：
+
+| Sprint | 时间 | 工作项 |
+| --- | --- | --- |
+| Sprint 1 准备阶段 | 2026-08-25 - 2026-08-29 | CA-01 至 CA-09，共 9 项 |
+| Sprint 2 重构优化阶段 | 2026-08-31 - 2026-09-04 | CA-10 至 CA-20，共 11 项 |
+
+- 已执行流水线 `softw-ci` 第 4 次运行，运行提交为：
+
+```text
+d5bde57d
+```
+
+当前流水线仍失败在 CodeArts 自带的 `official_checkout` 步骤，错误为：
+
+```text
+exit status 126
+```
+
+已处理过的排查项：
+
+- CodeArts Repo 已同步到最新提交。
+- `official_checkout` 的仓库地址已从 GitHub 地址调整为 CodeArts Repo 地址。
+- 本地后端测试和前端构建已通过，可证明当前业务代码本身能够完成基础验证。
+
+因此，当前失败记录应归类为 CodeArts checkout 插件或执行节点问题。小学期汇报时可同时展示 CodeArts 失败截图和本地验证结果。
+
 ## 3. CodeArts 验收证据
 
 最终汇报建议保留以下截图或记录：
@@ -182,9 +222,16 @@ cd frontend && npm ci && npm run build
 - CodeArts Repo 仓库页面。
 - Scrum Sprint 或看板页面。
 - 工作项分配页面。
-- 流水线执行成功页面。
+- 流水线执行页面。如果 CodeArts checkout 插件仍失败，保留失败页面并说明已完成本地等价验证。
 - 代码提交记录。
 - 缺陷或任务关闭记录。
+
+当前仓库已保存的关键截图包括：
+
+- `CodeArts截图/08-CodeArts-Sprint1工作项.png`
+- `CodeArts截图/09-CodeArts-Sprint2工作项.png`
+- `CodeArts截图/10-CodeArts-SSH密钥页.png`
+- `CodeArts截图/13-CodeArts流水线第4次最新提交checkout失败详情.png`
 
 ## 4. 注意事项
 
