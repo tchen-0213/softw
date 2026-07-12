@@ -184,7 +184,7 @@ cd frontend && npm ci && npm run build
 - 已将本地最新提交推送到 GitHub 和 CodeArts Repo：
 
 ```text
-d5bde57 完善小学期CodeArts与非功能优化
+6bc984e 记录CodeArts最新流水线排查结果
 ```
 
 - 已创建两个 Sprint：
@@ -194,10 +194,10 @@ d5bde57 完善小学期CodeArts与非功能优化
 | Sprint 1 准备阶段 | 2026-08-25 - 2026-08-29 | CA-01 至 CA-09，共 9 项 |
 | Sprint 2 重构优化阶段 | 2026-08-31 - 2026-09-04 | CA-10 至 CA-20，共 11 项 |
 
-- 已执行流水线 `softw-ci` 第 4 次运行，运行提交为：
+- 已执行流水线 `softw-ci` 第 5 次运行，运行提交为：
 
 ```text
-d5bde57d
+6bc984e6
 ```
 
 当前流水线仍失败在 CodeArts 自带的 `official_checkout` 步骤，错误为：
@@ -231,7 +231,7 @@ exit status 126
 - `CodeArts截图/08-CodeArts-Sprint1工作项.png`
 - `CodeArts截图/09-CodeArts-Sprint2工作项.png`
 - `CodeArts截图/10-CodeArts-SSH密钥页.png`
-- `CodeArts截图/13-CodeArts流水线第4次最新提交checkout失败详情.png`
+- `CodeArts截图/14-CodeArts流水线第5次最新提交checkout失败详情.png`
 
 ## 4. 注意事项
 
