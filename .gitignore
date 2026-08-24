@@ -69,6 +69,8 @@ vite.config.ts.timestamp-*
 coverage/
 *.lcov
 .nyc_output/
+frontend/test-results/
+reports/playwright-html/
 
 # =========================
 # TypeScript / ESLint / Stylelint cache
@@ -124,6 +126,8 @@ desktop.ini
 *.sqlite3
 *.sql
 .mysql-data/
+!database/
+!database/**/*.sql
 
 # =========================
 # Temporary files

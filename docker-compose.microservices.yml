@@ -1,0 +1,49 @@
+services:
+  user-service:
+    build:
+      context: ./services
+      dockerfile: user-service/Dockerfile
+    environment:
+      PORT: 3101
+      SERVICE_NAME: user-service
+    ports:
+      - "3101:3101"
+
+  product-service:
+    build:
+      context: ./services
+      dockerfile: product-service/Dockerfile
+    environment:
+      PORT: 3102
+      SERVICE_NAME: product-service
+    ports:
+      - "3102:3102"
+
+  order-service:
+    build:
+      context: ./services
+      dockerfile: order-service/Dockerfile
+    environment:
+      PORT: 3103
+      SERVICE_NAME: order-service
+      PRODUCT_SERVICE_URL: http://product-service:3102
+    ports:
+      - "3103:3103"
+    depends_on:
+      - product-service
+
+  api-gateway:
+    build:
+      context: ./services
+      dockerfile: api-gateway/Dockerfile
+    environment:
+      PORT: 8080
+      USER_SERVICE_URL: http://user-service:3101
+      PRODUCT_SERVICE_URL: http://product-service:3102
+      ORDER_SERVICE_URL: http://order-service:3103
+    ports:
+      - "8081:8080"
+    depends_on:
+      - user-service
+      - product-service
+      - order-service

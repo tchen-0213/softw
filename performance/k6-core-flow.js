@@ -16,6 +16,7 @@ export const options = {
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3001';
+const HEALTH_PATH = __ENV.HEALTH_PATH || '/api/health';
 
 export default function () {
   const listRes = http.get(`${BASE_URL}/api/products?page=1&limit=20`);
@@ -24,12 +25,11 @@ export default function () {
     'product list has body': (res) => res.body && res.body.length > 0
   });
 
-  const healthRes = http.get(`${BASE_URL}/api/health`);
+  const healthRes = http.get(`${BASE_URL}${HEALTH_PATH}`);
   check(healthRes, {
     'health endpoint is reachable': (res) => [200, 503].includes(res.status),
-    'health returns request id': (res) => res.body && res.body.includes('requestId')
+    'health returns body': (res) => res.body && res.body.length > 0
   });
 
   sleep(1);
 }
-

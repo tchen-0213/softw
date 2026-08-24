@@ -1,0 +1,19 @@
+{
+  "name": "shopping-platform-practice",
+  "version": "1.0.0",
+  "private": true,
+  "description": "软件工程基础实践交付脚本入口",
+  "scripts": {
+    "test": "npm --prefix backend test",
+    "test:api": "npm --prefix backend run test:api",
+    "test:services": "npm --prefix services/user-service test && npm --prefix services/product-service test && npm --prefix services/order-service test && npm --prefix services/api-gateway test",
+    "test:e2e": "npm --prefix frontend run test:e2e",
+    "build": "npm --prefix frontend run build",
+    "verify": "npm run test && npm run test:services && npm run build",
+    "compose:up": "docker compose up --build",
+    "compose:down": "docker compose down -v",
+    "k8s:monolith": "kubectl apply -f k8s/monolith",
+    "k8s:microservices": "kubectl apply -f k8s/microservices",
+    "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} performance/k6-core-flow.js"
+  }
+}

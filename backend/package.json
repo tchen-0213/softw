@@ -7,6 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "NODE_ENV=test node --test",
+    "test:api": "RUN_API_E2E=1 node --test tests/api-flow.test.js",
     "seed": "node seedDemoProducts.js",
     "seed:scenario": "node seedDemoScenario.js"
   },

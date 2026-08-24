@@ -478,3 +478,96 @@ CodeArts 必做内容：
 - 配置基础 CI 流水线，至少完成依赖安装和前端构建。
 
 当前部署目标为 A：CodeArts 用于开发过程和协作管理，系统运行演示优先采用本地或测试环境。若课程后续要求云端部署，可扩展为华为云 ECS + RDS + CodeArts Pipeline/Deploy。
+
+---
+
+## 十二、2026 夏小学期验收入口
+
+本仓库已补充小学期集中实践所需的容器化、CI/CD、Kubernetes、微服务骨架、测试报告和交付目录索引。推荐先看：
+
+| 文件或目录 | 用途 |
+| --- | --- |
+| `小学期交付总览.md` | 按任务书检查全部交付物 |
+| `业务场景用例清单与追溯表.md` | 用例、需求、代码、测试追溯 |
+| `微服务接口与数据归属.md` | 服务划分、接口清单、数据表归属 |
+| `services/` | API 网关、用户、商品、订单 3 个业务微服务 |
+| `docker-compose.yml` | 单体前端、后端、MySQL 容器化启动 |
+| `docker-compose.microservices.yml` | 微服务版本本地启动 |
+| `.github/workflows/ci-cd.yml` | 自动测试、构建镜像、K8s manifest 检查 |
+| `k8s/monolith` | 单体版本 Kubernetes 部署 |
+| `k8s/microservices` | 微服务版本 Kubernetes 部署和 HPA |
+| `reports/` | 测试报告和性能对比记录模板 |
+| `未完成任务清单.md` | 仍需现场、团队或真实环境完成的事项 |
+
+### 本地验证
+
+```bash
+npm run verify
+```
+
+等价于：
+
+```bash
+npm --prefix backend test
+npm run test:services
+npm --prefix frontend run build
+```
+
+需要 Docker 单体环境已启动时，可继续运行完整接口链路和浏览器 E2E：
+
+```bash
+npm run test:api
+API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
+```
+
+### 单体容器化启动
+
+```bash
+docker compose up --build
+```
+
+启动后访问：
+
+```text
+前端：http://localhost:8080
+后端健康检查：http://localhost:3001/api/health
+```
+
+### 微服务版本本地启动
+
+```bash
+docker compose -f docker-compose.microservices.yml up --build
+```
+
+启动后访问：
+
+```text
+API 网关：http://localhost:8081/health
+用户服务：http://localhost:3101/health
+商品服务：http://localhost:3102/health
+订单服务：http://localhost:3103/health
+```
+
+### Kubernetes 部署
+
+```bash
+kubectl apply -f k8s/monolith
+kubectl apply -f k8s/microservices
+```
+
+检查命令：
+
+```bash
+kind create cluster --name softw-practice --config k8s/kind-config.yaml
+sh scripts/build-local-images.sh
+sh scripts/k8s-health-check.sh softw-practice
+kubectl -n softw-microservices get pods,svc,hpa
+```
+
+### 原系统基线标签
+
+确认当前单体版本可作为改造前基线后执行：
+
+```bash
+sh scripts/tag-monolith.sh
+```

@@ -1,0 +1,132 @@
+name: softw-ci-cd
+
+on:
+  push:
+    branches: [main, develop, practice/**]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  microservice-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [user-service, product-service, order-service, api-gateway]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+        working-directory: services/${{ matrix.service }}
+      - run: npm test
+        working-directory: services/${{ matrix.service }}
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build, microservice-test]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/backend:practice
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/frontend:practice
+      - name: Build api gateway image
+        uses: docker/build-push-action@v6
+        with:
+          context: services
+          file: services/api-gateway/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/api-gateway:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/api-gateway:practice
+      - name: Build user service image
+        uses: docker/build-push-action@v6
+        with:
+          context: services
+          file: services/user-service/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/user-service:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/user-service:practice
+      - name: Build product service image
+        uses: docker/build-push-action@v6
+        with:
+          context: services
+          file: services/product-service/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/product-service:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/product-service:practice
+      - name: Build order service image
+        uses: docker/build-push-action@v6
+        with:
+          context: services
+          file: services/order-service/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/order-service:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/order-service:practice
+
+  kubernetes-manifest-check:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+      - run: kubectl apply --dry-run=client --validate=false -f k8s/monolith
+      - run: kubectl apply --dry-run=client --validate=false -f k8s/microservices
