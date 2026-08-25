@@ -73,3 +73,5 @@ exports.replaceAddresses = async (req, res) => {
     res.status(500).json({ message: '保存地址失败', error: error.message });
   }
 };
+
+exports._internal = { normalizeAddress, normalizeInput };

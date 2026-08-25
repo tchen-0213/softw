@@ -168,3 +168,5 @@ exports.getShopByUserId = async (req, res) => {
     res.status(500).json({ message: '获取用户店铺失败', error: error.message });
   }
 };
+
+exports._internal = { buildDefaultShop, toOwnerCreditDto };

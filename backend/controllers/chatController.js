@@ -351,3 +351,5 @@ exports.decideRequest = async (req, res) => {
     res.status(500).json({ message: '处理申请失败', error: error.message });
   }
 };
+
+exports._internal = { isParticipant, isSeller, isPurchasedOrder };

@@ -345,3 +345,11 @@ exports.approveEvaluation = async (req, res) => {
     res.status(500).json({ message: '审核评价失败', error: error.message });
   }
 };
+
+exports._internal = {
+  parsePaging,
+  parseReplyThread,
+  getLatestSellerReply,
+  isPendingSellerReply,
+  toEvaluationDto
+};

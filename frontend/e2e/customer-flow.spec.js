@@ -127,7 +127,7 @@ async function createCompletedOrder(id) {
   return { seller, buyer, product, order: finishedOrder };
 }
 
-test('buyer can register, find a product, add it to cart and submit checkout from the browser', async ({ page }) => {
+test('E2E-TC01/02/03/04/09: 买家注册、检索、加购、维护地址并提交订单', async ({ page }) => {
   const id = unique();
   const { product } = await createListedProduct(id);
 
@@ -167,7 +167,7 @@ test('buyer can register, find a product, add it to cart and submit checkout fro
   await expect(page.getByText(product.name)).toBeVisible();
 });
 
-test('seller can verify a shop, edit shop profile and publish a secondhand product from pages', async ({ page }) => {
+test('E2E-TC05/06: 卖家认证维护店铺并发布二手商品', async ({ page }) => {
   const id = unique();
   const seller = await registerViaApi('seller', id);
   await signIn(page, seller);
@@ -210,7 +210,7 @@ test('seller can verify a shop, edit shop profile and publish a secondhand produ
   await expect(page.getByText('二手商品信息')).toBeVisible();
 });
 
-test('buyer can submit an evaluation for a completed order from the browser', async ({ page }) => {
+test('E2E-TC07: 买家从已完成订单页面提交评价', async ({ page }) => {
   const id = unique();
   const { buyer, product, order } = await createCompletedOrder(id);
   await signIn(page, buyer);
@@ -226,7 +226,7 @@ test('buyer can submit an evaluation for a completed order from the browser', as
   await expect(page.getByText(product.name)).toBeVisible();
 });
 
-test('buyer can bargain in chat and seller can accept the request from the browser', async ({ browser }) => {
+test('E2E-TC08: 买家页面议价且卖家页面接受申请', async ({ browser }) => {
   const id = unique();
   const { seller, product } = await createListedProduct(id);
   const buyer = await registerViaApi('buyer', id);

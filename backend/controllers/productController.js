@@ -377,3 +377,11 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: '删除商品失败', error: error.message });
   }
 };
+
+exports._internal = {
+  parseBoolean,
+  parsePaging,
+  buildWhere,
+  getOrder,
+  toProductDto
+};

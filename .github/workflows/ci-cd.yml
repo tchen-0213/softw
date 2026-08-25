@@ -38,6 +38,7 @@ jobs:
       DB_NAME: shopping_platform
       JWT_SECRET: github_actions_test_secret
       CORS_ORIGIN: http://127.0.0.1:5173
+      RATE_LIMIT_MAX: 1000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -75,6 +76,8 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+        working-directory: frontend
+      - run: npm run test:unit
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
