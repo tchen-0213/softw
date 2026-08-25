@@ -50,35 +50,22 @@
 
 ```text
 softw/
-├── backend/                     # 后端服务
-│   ├── app.js                   # 后端入口文件
-│   ├── config/                  # 数据库配置
-│   ├── controllers/             # 控制器
-│   ├── middleware/              # 中间件
-│   ├── models/                  # Sequelize 数据模型
-│   ├── routes/                  # 路由文件
-│   ├── package.json             # 后端依赖配置
-│   └── .env.example             # 环境变量示例文件
-│
-├── frontend/                    # 前端项目
-│   ├── index.html
-│   ├── src/
-│   │   ├── components/          # 公共组件
-│   │   ├── pages/               # 页面组件
-│   │   ├── services/            # API 请求封装
-│   │   ├── store/               # Redux 状态管理
-│   │   ├── styles/              # 样式文件
-│   │   ├── App.jsx              # 前端路由入口
-│   │   └── main.jsx             # React 入口
-│   ├── package.json
-│   └── vite.config.js
-│
-├── 软件需求规格说明书.md
-├── 软件概要设计说明书.md
-├── 软件详细设计说明书.md
-├── 软件开发计划书.md
+├── 01_source/                   # 代码和仓库清单
+├── 02_docs/                     # 需求、设计、测试、追溯和模型
+├── 03_devops/                   # Compose、K8s、数据库与运维脚本
+├── 04_tests/                    # 压测脚本、报告和实验数据
+├── 05_management/               # 计划、站会、看板和贡献材料
+├── 06_defense/                  # 答辩提纲、PPT和技术总结
+├── backend/                     # Express 单体后端及邻近测试
+├── frontend/                    # React 前端及 Playwright E2E
+├── services/                    # 网关和三个业务微服务
+├── automation/                  # CodeArts 辅助自动化
+├── .github/workflows/           # GitHub Actions 固定目录
+├── package.json                 # 仓库级验证和部署命令
 └── README.md
 ```
+
+说明：课程交付材料按 `01` 至 `06` 归档；实际源码、模块测试、Dockerfile 和 GitHub 工作流保留在工具要求的可运行位置，并通过各目录 `README.md` 建立索引。
 
 ##  四、功能模块
 
@@ -151,6 +138,38 @@ MySQL 8.0+
 npm 9+
 ```
 
+### 全新机器容器化复现（推荐）
+
+全新机器只需安装 Git 和 Docker Desktop，不需要预先安装 Node.js 或 MySQL：
+
+```bash
+git clone https://github.com/tchen-0213/softw.git
+cd softw
+docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+```
+
+后端启动时会自动按版本执行 `backend/database/migrations/` 中的数据库迁移。检查容器、迁移版本和健康状态：
+
+```bash
+docker compose -f 03_devops/docker-compose.yml ps
+docker compose -f 03_devops/docker-compose.yml exec backend npm run db:migrate:status
+curl --fail http://127.0.0.1:3001/api/health
+curl --fail http://127.0.0.1:8080/
+```
+
+导入可重复执行的完整答辩演示数据：
+
+```bash
+docker compose -f 03_devops/docker-compose.yml exec backend npm run seed:scenario
+```
+
+演示账号统一密码为 `Demo@123456`，卖家账号为 `demo-seller@example.com`。浏览器访问 `http://127.0.0.1:8080/`。需要清空数据库并重新验证全新安装时执行：
+
+```bash
+docker compose -f 03_devops/docker-compose.yml down -v
+docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+```
+
 ---
 
 ## 六、后端启动方式
@@ -194,6 +213,7 @@ NODE_ENV=development
 启动后端：
 
 ```bash
+npm run db:migrate
 npm run dev
 ```
 
@@ -460,13 +480,13 @@ git push origin feature/模块名
 
 | 文档 | 说明 |
 | --- | --- |
-| `小学期重构计划.md` | 时间安排、分工、任务拆解和验收成果 |
-| `CodeArts使用说明.md` | CodeArts 项目、仓库、看板、流水线操作说明 |
-| `CodeArts看板任务清单.csv` | 可导入或手工创建到 CodeArts 的任务清单 |
-| `敏捷开发记录.md` | Scrum/Sprint 计划、每日站会和风险跟踪 |
-| `微服务拆分设计.md` | 稳定路线下的微服务拆分和网关设计 |
-| `性能优化与压测方案.md` | 高性能、高并发优化和压测计划 |
-| `安全加固方案.md` | JWT、参数校验、限流、上传和权限安全方案 |
+| `05_management/小学期重构计划.md` | 时间安排、分工、任务拆解和验收成果 |
+| `05_management/CodeArts使用说明.md` | CodeArts 项目、仓库、看板、流水线操作说明 |
+| `05_management/CodeArts看板任务清单.csv` | 可导入或手工创建到 CodeArts 的任务清单 |
+| `05_management/敏捷开发记录.md` | Scrum/Sprint 计划、每日站会和风险跟踪 |
+| `02_docs/微服务拆分设计.md` | 稳定路线下的微服务拆分和网关设计 |
+| `02_docs/性能优化与压测方案.md` | 高性能、高并发优化和压测计划 |
+| `02_docs/安全加固方案.md` | JWT、参数校验、限流、上传和权限安全方案 |
 
 CodeArts 必做内容：
 
@@ -474,7 +494,7 @@ CodeArts 必做内容：
 - 导入当前 Git 仓库。
 - 建立 Scrum 或看板流程。
 - 创建 Sprint 1 和 Sprint 2。
-- 按 `CodeArts看板任务清单.csv` 建立工作项。
+- 按 `05_management/CodeArts看板任务清单.csv` 建立工作项。
 - 配置基础 CI 流水线，至少完成依赖安装和前端构建。
 
 当前部署目标为 A：CodeArts 用于开发过程和协作管理，系统运行演示优先采用本地或测试环境。若课程后续要求云端部署，可扩展为华为云 ECS + RDS + CodeArts Pipeline/Deploy。
@@ -487,17 +507,17 @@ CodeArts 必做内容：
 
 | 文件或目录 | 用途 |
 | --- | --- |
-| `小学期交付总览.md` | 按任务书检查全部交付物 |
-| `业务场景用例清单与追溯表.md` | 用例、需求、代码、测试追溯 |
-| `微服务接口与数据归属.md` | 服务划分、接口清单、数据表归属 |
+| `06_defense/小学期交付总览.md` | 按任务书检查全部交付物 |
+| `02_docs/业务场景用例清单与追溯表.md` | 用例、需求、代码、测试追溯 |
+| `02_docs/微服务接口与数据归属.md` | 服务划分、接口清单、数据表归属 |
 | `services/` | API 网关、用户、商品、订单 3 个业务微服务 |
-| `docker-compose.yml` | 单体前端、后端、MySQL 容器化启动 |
-| `docker-compose.microservices.yml` | 微服务版本本地启动 |
+| `03_devops/docker-compose.yml` | 单体前端、后端、MySQL 容器化启动 |
+| `03_devops/docker-compose.microservices.yml` | 微服务版本本地启动 |
 | `.github/workflows/ci-cd.yml` | 自动测试、构建镜像、K8s manifest 检查 |
-| `k8s/monolith` | 单体版本 Kubernetes 部署 |
-| `k8s/microservices` | 微服务版本 Kubernetes 部署和 HPA |
-| `reports/` | 测试报告和性能对比记录模板 |
-| `未完成任务清单.md` | 仍需现场、团队或真实环境完成的事项 |
+| `03_devops/k8s/monolith` | 单体版本 Kubernetes 部署 |
+| `03_devops/k8s/microservices` | 微服务版本 Kubernetes 部署和 HPA |
+| `04_tests/reports/` | 测试报告和性能对比记录模板 |
+| `05_management/未完成任务清单.md` | 仍需现场、团队或真实环境完成的事项 |
 
 ### 本地验证
 
@@ -535,7 +555,7 @@ https://tchen-0213.github.io/softw/
 需要让校外设备访问完整前端、后端和 MySQL 业务时，可通过 Cloudflare Quick Tunnel 暴露本机 Docker 单体环境：
 
 ```bash
-sh scripts/start-public-demo.sh
+sh 03_devops/scripts/start-public-demo.sh
 ```
 
 脚本会输出临时的 `https://*.trycloudflare.com` 地址。前端页面、`/api` 和 `/uploads` 均通过该地址访问，MySQL 不直接暴露到公网。停止公网入口：
@@ -549,7 +569,7 @@ Quick Tunnel 仅适合课程演示：电脑和 Docker 必须保持运行，隧�
 ### 单体容器化启动
 
 ```bash
-docker compose up --build
+npm run compose:up
 ```
 
 启动后访问：
@@ -562,7 +582,7 @@ docker compose up --build
 ### 微服务版本本地启动
 
 ```bash
-docker compose -f docker-compose.microservices.yml up --build
+docker compose -f 03_devops/docker-compose.microservices.yml up --build
 ```
 
 启动后访问：
@@ -577,16 +597,16 @@ API 网关：http://localhost:8081/health
 ### Kubernetes 部署
 
 ```bash
-kubectl apply -f k8s/monolith
-kubectl apply -f k8s/microservices
+kubectl apply -f 03_devops/k8s/monolith
+kubectl apply -f 03_devops/k8s/microservices
 ```
 
 检查命令：
 
 ```bash
-kind create cluster --name softw-practice --config k8s/kind-config.yaml
-sh scripts/build-local-images.sh
-sh scripts/k8s-health-check.sh softw-practice
+kind create cluster --name softw-practice --config 03_devops/k8s/kind-config.yaml
+sh 03_devops/scripts/build-local-images.sh
+sh 03_devops/scripts/k8s-health-check.sh softw-practice
 kubectl -n softw-microservices get pods,svc,hpa
 ```
 
@@ -595,5 +615,5 @@ kubectl -n softw-microservices get pods,svc,hpa
 确认当前单体版本可作为改造前基线后执行：
 
 ```bash
-sh scripts/tag-monolith.sh
+sh 03_devops/scripts/tag-monolith.sh
 ```

@@ -3,6 +3,7 @@ const sequelize = require('./config/database');
 const User = require('./models/User');
 const Product = require('./models/Product');
 const Shop = require('./models/Shop');
+const { runMigrations } = require('./database/migrate');
 
 dotenv.config();
 
@@ -133,7 +134,7 @@ const demoProducts = [
 ];
 
 const seed = async () => {
-  await sequelize.sync();
+  await runMigrations(sequelize);
 
   const [seller] = await User.findOrCreate({
     where: { email: 'demo-seller@example.com' },

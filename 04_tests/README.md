@@ -1,18 +1,25 @@
-# 04_tests
+# 04_tests 测试与实验数据
 
-测试交付物索引：
+## 集中归档
 
-- `../backend/tests`
-- `../backend/tests/api-flow.test.js`
-- `../frontend/e2e/customer-flow.spec.js`
-- `../performance/k6-core-flow.js`
-- `../reports/tests/测试报告-小学期.md`
-- `../reports/performance/性能对比记录模板.md`
+| 类别 | 位置 |
+| --- | --- |
+| k6 压力脚本 | `performance/` |
+| 测试报告 | `reports/tests/` |
+| 性能、HPA 与故障实验记录 | `reports/performance/` |
+| Playwright HTML 报告 | `reports/playwright-html/`，运行后生成 |
 
-常用命令：
+自动化测试源码保留在被测模块旁，避免破坏导入、fixture 和框架配置：
+
+- 后端单元、安全与 API 测试：`../backend/tests/`
+- 前端单元与 Playwright E2E：`../frontend/src/**/*.test.*`、`../frontend/e2e/`
+- 微服务测试：`../services/*/tests/`
+
+常用命令应在仓库根目录执行：
 
 ```bash
 npm run verify
 npm run test:api
 API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
+npm run perf:k6
 ```

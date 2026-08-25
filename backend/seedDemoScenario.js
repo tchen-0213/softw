@@ -5,6 +5,7 @@ const Product = require('./models/Product');
 const Shop = require('./models/Shop');
 const Order = require('./models/Order');
 const Evaluation = require('./models/Evaluation');
+const { runMigrations } = require('./database/migrate');
 
 dotenv.config();
 
@@ -335,7 +336,7 @@ const recalculateProductRating = async (product) => {
 };
 
 const seed = async () => {
-  await sequelize.sync();
+  await runMigrations(sequelize);
 
   const usersByEmail = {};
   let createdUsers = 0;

@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: [
     ['list'],
     ...(process.env.CI ? [['github']] : []),
-    ['html', { outputFolder: '../reports/playwright-html', open: 'never' }]
+    ['html', { outputFolder: '../04_tests/reports/playwright-html', open: 'never' }]
   ],
   use: {
     baseURL: process.env.E2E_BASE_URL || 'http://localhost:8080',

@@ -70,7 +70,7 @@ coverage/
 *.lcov
 .nyc_output/
 frontend/test-results/
-reports/playwright-html/
+04_tests/reports/playwright-html/
 
 # =========================
 # TypeScript / ESLint / Stylelint cache
@@ -126,8 +126,8 @@ desktop.ini
 *.sqlite3
 *.sql
 .mysql-data/
-!database/
-!database/**/*.sql
+!03_devops/database/
+!03_devops/database/**/*.sql
 
 # =========================
 # Temporary files

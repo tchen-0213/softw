@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-const ensureSchema = require('./utils/ensureSchema');
+const { runMigrations } = require('./database/migrate');
 const {
   createRateLimiter,
   requestId,
@@ -96,16 +96,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 let databaseReady = false;
 
-// 数据库同步完成后才允许健康检查通过，避免部署流量过早进入应用。
-sequelize.sync()
-  .then(() => ensureSchema(sequelize))
+// 版本化迁移完成后才允许健康检查通过，避免部署流量过早进入应用。
+runMigrations(sequelize)
   .then(() => {
     databaseReady = true;
-    console.log('Database synchronized');
+    console.log('Database migrations completed');
   })
   .catch(err => {
     databaseReady = false;
-    console.error('Database sync error:', err);
+    console.error('Database migration error:', err);
   });
 
 // 路由

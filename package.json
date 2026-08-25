@@ -10,10 +10,12 @@
     "test:e2e": "npm --prefix frontend run test:e2e",
     "build": "npm --prefix frontend run build",
     "verify": "npm run test && npm run test:services && npm run build",
-    "compose:up": "docker compose up --build",
-    "compose:down": "docker compose down -v",
-    "k8s:monolith": "kubectl apply -f k8s/monolith",
-    "k8s:microservices": "kubectl apply -f k8s/microservices",
-    "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} performance/k6-core-flow.js"
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:migrate:status": "npm --prefix backend run db:migrate:status",
+    "compose:up": "docker compose -f 03_devops/docker-compose.yml up --build",
+    "compose:down": "docker compose -f 03_devops/docker-compose.yml down -v",
+    "k8s:monolith": "kubectl apply -f 03_devops/k8s/monolith",
+    "k8s:microservices": "kubectl apply -f 03_devops/k8s/microservices",
+    "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} 04_tests/performance/k6-core-flow.js"
   }
 }
