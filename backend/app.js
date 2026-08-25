@@ -66,11 +66,19 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 数据库同步
+let databaseReady = false;
+
+// 数据库同步完成后才允许健康检查通过，避免部署流量过早进入应用。
 sequelize.sync()
   .then(() => ensureSchema(sequelize))
-  .then(() => console.log('Database synchronized'))
-  .catch(err => console.error('Database sync error:', err));
+  .then(() => {
+    databaseReady = true;
+    console.log('Database synchronized');
+  })
+  .catch(err => {
+    databaseReady = false;
+    console.error('Database sync error:', err);
+  });
 
 // 路由
 app.use('/api/users', userRoutes);
@@ -88,6 +96,15 @@ app.get('/api/health', async (req, res) => {
   const startedAt = Date.now();
 
   try {
+    if (!databaseReady) {
+      return res.status(503).json({
+        status: 'starting',
+        database: 'synchronizing',
+        responseTimeMs: Date.now() - startedAt,
+        requestId: req.requestId
+      });
+    }
+
     await sequelize.authenticate();
     res.json({
       status: 'ok',

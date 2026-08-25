@@ -8,6 +8,7 @@ export default defineConfig({
   },
   reporter: [
     ['list'],
+    ...(process.env.CI ? [['github']] : []),
     ['html', { outputFolder: '../reports/playwright-html', open: 'never' }]
   ],
   use: {

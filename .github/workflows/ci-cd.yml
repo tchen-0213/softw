@@ -141,6 +141,18 @@ jobs:
       - name: Run browser business flows
         run: npm run test:e2e
         working-directory: frontend
+      - name: Upload Playwright failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-${{ github.sha }}
+          path: |
+            frontend/test-results
+            reports/playwright-html
+            /tmp/softw-backend-e2e.log
+            /tmp/softw-frontend-e2e.log
+          if-no-files-found: ignore
+          retention-days: 7
 
   microservice-test:
     runs-on: ubuntu-latest
