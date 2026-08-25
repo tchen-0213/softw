@@ -57,6 +57,7 @@ const trackingPrefixMap = {
 };
 
 const pendingSellerOrderStatuses = ['待付款', '待发货'];
+const logoImage = `${import.meta.env.BASE_URL}images/moyu-logo.png`;
 
 const createEmptyShippingForm = () => ({
   company: '',
@@ -183,7 +184,7 @@ const normalizeReply = (reply, index) => ({
 const normalizeSellerEvaluation = (evaluation) => ({
   ...evaluation,
   username: evaluation.user?.nickname || evaluation.user?.username || '匿名用户',
-  avatar: evaluation.user?.avatar || '/images/moyu-logo.png',
+  avatar: evaluation.user?.avatar || logoImage,
   productName: evaluation.product?.name || '未知商品',
   productImage: evaluation.product?.images?.[0] || productImages.iphone,
   createTime: evaluation.createTime || new Date(evaluation.createdAt).toLocaleString(),
@@ -1184,7 +1185,7 @@ const ShopPage = () => {
                       src={evaluation.avatar}
                       alt={evaluation.username}
                       onError={(event) => {
-                        event.currentTarget.src = '/images/moyu-logo.png';
+                        event.currentTarget.src = logoImage;
                       }}
                       style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }}
                     />

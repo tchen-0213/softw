@@ -7,6 +7,7 @@ import { chatApi, evaluationApi, orderApi } from '../services/api';
 import SearchBar from './product/SearchBar';
 
 const pendingSellerOrderStatuses = ['待付款', '待发货'];
+const logoImage = `${import.meta.env.BASE_URL}images/moyu-logo.png`;
 
 const Header = () => {
   const navigate = useNavigate();
@@ -184,7 +185,7 @@ const Header = () => {
       <div className="container header-container">
         <div className="header-content">
           <Link to="/" className="logo">
-            <img src="/images/moyu-logo.png" alt="摸鱼" className="logo-image" />
+            <img src={logoImage} alt="摸鱼" className="logo-image" />
             <span className="logo-text">摸鱼</span>
           </Link>
           <SearchBar />
