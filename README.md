@@ -520,6 +520,16 @@ npm run test:api
 API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
 ```
 
+### GitHub Pages 前端部署
+
+仓库已配置 `.github/workflows/github-pages.yml`。推送到 `main` 后会自动构建 `frontend` 并发布到 GitHub Pages：
+
+```text
+https://tchen-0213.github.io/softw/
+```
+
+说明：GitHub Pages 只能托管静态前端，不能运行 Node.js 后端和 MySQL。完整业务演示仍建议使用 Docker Compose 或 Kubernetes 环境。
+
 ### 单体容器化启动
 
 ```bash
