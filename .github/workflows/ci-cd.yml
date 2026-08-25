@@ -106,6 +106,7 @@ jobs:
       DB_NAME: shopping_platform
       JWT_SECRET: github_actions_e2e_secret
       CORS_ORIGIN: http://127.0.0.1:5173
+      RATE_LIMIT_MAX: 1000
       API_BASE_URL: http://127.0.0.1:3001
       E2E_BASE_URL: http://127.0.0.1:5173
       VITE_API_TIMEOUT: 10000
