@@ -53,9 +53,37 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '')
   .map(origin => origin.trim())
   .filter(Boolean);
 
+function matchesAllowedOrigin(origin, allowedOrigin) {
+  if (origin === allowedOrigin) {
+    return true;
+  }
+
+  const wildcardMarker = '://*.';
+  const markerIndex = allowedOrigin.indexOf(wildcardMarker);
+  if (markerIndex === -1) {
+    return false;
+  }
+
+  try {
+    const parsedOrigin = new URL(origin);
+    const protocol = `${allowedOrigin.slice(0, markerIndex)}:`;
+    const hostnameSuffix = allowedOrigin.slice(markerIndex + wildcardMarker.length);
+
+    return parsedOrigin.protocol === protocol
+      && parsedOrigin.port === ''
+      && parsedOrigin.hostname.endsWith(`.${hostnameSuffix}`);
+  } catch (error) {
+    return false;
+  }
+}
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    const originAllowed = allowedOrigins.some(allowedOrigin => (
+      matchesAllowedOrigin(origin, allowedOrigin)
+    ));
+
+    if (!origin || allowedOrigins.length === 0 || originAllowed) {
       return callback(null, true);
     }
 

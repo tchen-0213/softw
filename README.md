@@ -530,6 +530,22 @@ https://tchen-0213.github.io/softw/
 
 说明：GitHub Pages 只能托管静态前端，不能运行 Node.js 后端和 MySQL。完整业务演示仍建议使用 Docker Compose 或 Kubernetes 环境。
 
+### 临时公网完整业务演示
+
+需要让校外设备访问完整前端、后端和 MySQL 业务时，可通过 Cloudflare Quick Tunnel 暴露本机 Docker 单体环境：
+
+```bash
+sh scripts/start-public-demo.sh
+```
+
+脚本会输出临时的 `https://*.trycloudflare.com` 地址。前端页面、`/api` 和 `/uploads` 均通过该地址访问，MySQL 不直接暴露到公网。停止公网入口：
+
+```bash
+docker stop softw-public-tunnel
+```
+
+Quick Tunnel 仅适合课程演示：电脑和 Docker 必须保持运行，隧道重建后域名会变化，也不提供生产可用性保证。长期公网部署应使用具名 Cloudflare Tunnel 或云服务器。
+
 ### 单体容器化启动
 
 ```bash
