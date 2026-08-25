@@ -171,6 +171,10 @@ jobs:
           node-version: 20
       - run: npm install
         working-directory: services/${{ matrix.service }}
+      - name: Install upstream fixture dependencies
+        if: matrix.service == 'api-gateway'
+        run: npm install
+        working-directory: services/user-service
       - run: npm test
         working-directory: services/${{ matrix.service }}
 
