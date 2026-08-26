@@ -1,5 +1,8 @@
 # 华为云 CodeArts 使用说明
 
+> [!IMPORTANT]
+> 本文记录平台迁移前的 CodeArts 配置、验证和故障排查，仅用于历史追溯。当前任务管理以 [GitHub Project「软工小学期」](https://github.com/users/tchen-0213/projects/1)、GitHub Issues 和 GitHub Actions 为准，操作规则见 `GitHub-Projects使用说明.md`。下文中的“当前”均指当时记录状态，不代表现行流程。
+
 ## 1. 使用目标
 
 本项目小学期阶段继续使用华为云 CodeArts 作为开发平台。根据课程要求，CodeArts 至少承担以下职责：
