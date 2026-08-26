@@ -59,7 +59,7 @@ softw/
 ├── backend/                     # Express 单体后端及邻近测试
 ├── frontend/                    # React 前端及 Playwright E2E
 ├── services/                    # 网关和三个业务微服务
-├── automation/                  # CodeArts 辅助自动化
+├── automation/                  # 平台迁移与辅助自动化（含历史 CodeArts 脚本）
 ├── .github/workflows/           # GitHub Actions 固定目录
 ├── package.json                 # 仓库级验证和部署命令
 └── README.md
@@ -472,32 +472,31 @@ git push origin feature/模块名
 
 ---
 
-## 十一、小学期重构与 CodeArts 管理
+## 十一、小学期重构与 GitHub Projects 管理
 
-小学期阶段继续使用华为云 CodeArts 作为开发平台，在大作业基础上采用稳定增强路线进行系统重构和持续优化。当前路线保留 React + Express + Sequelize + MySQL 技术栈，重点完善敏捷过程、文档、测试、部署流程、安全性、性能和可观测性。
+小学期阶段统一使用 GitHub 进行代码托管和协作管理：以 [GitHub Project「软工小学期」](https://github.com/users/tchen-0213/projects/1) 管理任务看板，以 [Issues](https://github.com/tchen-0213/softw/issues) 承载任务内容与验收证据，以 [GitHub Actions](https://github.com/tchen-0213/softw/actions) 执行持续集成。在大作业基础上采用稳定增强路线进行系统重构和持续优化，保留 React + Express + Sequelize + MySQL 技术栈，重点完善敏捷过程、文档、测试、部署流程、安全性、性能和可观测性。
 
 小学期新增材料：
 
 | 文档 | 说明 |
 | --- | --- |
 | `05_management/小学期重构计划.md` | 时间安排、分工、任务拆解和验收成果 |
-| `05_management/CodeArts使用说明.md` | CodeArts 项目、仓库、看板、流水线操作说明 |
-| `05_management/CodeArts看板任务清单.csv` | 可导入或手工创建到 CodeArts 的任务清单 |
+| `05_management/GitHub-Projects使用说明.md` | GitHub Projects、Issues、Actions 的当前操作与验收规则 |
+| `05_management/CodeArts使用说明.md`、`05_management/CodeArts截图/` | 早期 CodeArts 配置和过程证据，仅作历史资料保留 |
 | `05_management/敏捷开发记录.md` | Scrum/Sprint 计划、每日站会和风险跟踪 |
 | `02_docs/微服务拆分设计.md` | 稳定路线下的微服务拆分和网关设计 |
 | `02_docs/性能优化与压测方案.md` | 高性能、高并发优化和压测计划 |
 | `02_docs/安全加固方案.md` | JWT、参数校验、限流、上传和权限安全方案 |
 
-CodeArts 必做内容：
+GitHub Projects 必做内容：
 
-- 创建 CodeArts 项目并邀请组员。
-- 导入当前 Git 仓库。
-- 建立 Scrum 或看板流程。
-- 创建 Sprint 1 和 Sprint 2。
-- 按 `05_management/CodeArts看板任务清单.csv` 建立工作项。
-- 配置基础 CI 流水线，至少完成依赖安装和前端构建。
+- 每项工作建立独立 Issue，标题使用 `[D1-01]` 形式的任务编号，并填写负责人、计划日期、任务清单、验收标准和证据要求。
+- 将 Issue 加入 Project，按 `待启动 -> 开发 -> 测试 -> 部署 -> 已完成` 流转；仅在验收项和证据完整后关闭 Issue。
+- 使用 Backlog、Priority board、Team items、Roadmap、My items 和每日视图检查范围、优先级、负责人、时间与当天进度。
+- 代码变更通过分支和 Pull Request 关联 Issue；构建、测试与部署结果由 GitHub Actions 留痕。
+- 每日站会后更新看板，并保留关键截图、测试输出、提交或 Actions 运行链接作为验收证据。
 
-当前部署目标为 A：CodeArts 用于开发过程和协作管理，系统运行演示优先采用本地或测试环境。若课程后续要求云端部署，可扩展为华为云 ECS + RDS + CodeArts Pipeline/Deploy。
+当前部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD 记录；完整系统运行演示优先采用 Docker 本地或测试环境，静态页面可通过 GitHub Pages 发布。早期 CodeArts 文件不再作为当前主看板说明，但保留用于追溯已经发生的平台配置和验证过程。
 
 ---
 
