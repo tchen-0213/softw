@@ -25,6 +25,7 @@ services:
     build:
       context: ../backend
     container_name: softw-backend
+    command: sh -c "node seedDemoProducts.js && node app.js"
     environment:
       NODE_ENV: development
       PORT: 3001
@@ -39,6 +40,8 @@ services:
       RATE_LIMIT_MAX: 300
     ports:
       - "3001:3001"
+    volumes:
+      - uploads-data:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -60,3 +63,4 @@ services:
 
 volumes:
   mysql-data:
+  uploads-data:
