@@ -2781,7 +2781,7 @@ html[data-theme='dark'] .home-hero-panel {
 .home-categories button:nth-child(4) { background: color-mix(in srgb, var(--accent-gold) 34%, var(--surface-bg)); }
 
 .home-categories button:hover {
-  transform: translate(-1px, -3px) rotate(-0.5deg);
+  transform: translateY(-2px);
   box-shadow: 7px 8px 0 rgba(83, 106, 101, 0.1);
 }
 
@@ -2824,7 +2824,7 @@ html[data-theme='dark'] .home-hero-panel {
 }
 
 .product-card:hover {
-  transform: translate(-1px, -5px);
+  transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--primary-color) 46%, transparent);
   box-shadow: var(--shadow-hover);
 }
@@ -2884,6 +2884,16 @@ html[data-theme='dark'] .home-hero-panel {
 
 .button:hover {
   transform: translateY(-2px);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary-color) 52%, transparent);
+  outline-offset: 3px;
 }
 
 .button-primary {
@@ -3130,16 +3140,9 @@ html[data-theme='dark'] .home-hero-panel {
 }
 
 .home-hero,
-.home-categories,
-.section-heading,
-.product-list,
 .auth-card {
-  animation: market-rise 0.55s ease both;
+  animation: market-rise 0.4s ease both;
 }
-
-.home-categories { animation-delay: 0.06s; }
-.section-heading { animation-delay: 0.1s; }
-.product-list { animation-delay: 0.14s; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -3167,6 +3170,10 @@ html[data-theme='dark'] .home-hero-panel {
 }
 
 @media (max-width: 820px) {
+  body::after {
+    display: none;
+  }
+
   .container {
     padding-inline: 16px;
   }
