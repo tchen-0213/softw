@@ -87,18 +87,18 @@ const SearchPage = () => {
           <h1>{pageTitle}</h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <div style={{ flex: '0 0 200px' }}>
+        <div className="search-layout">
+          <aside className="search-filters">
             <FilterPanel filters={filters} onFilterChange={handleFilterChange} />
-          </div>
-          <div style={{ flex: 1 }}>
+          </aside>
+          <section className="search-results">
             <SortBar sortBy={sortBy} onSortChange={handleSortChange} />
             <SearchResults 
               results={searchResults} 
               loading={searchLoading} 
               error={searchError} 
             />
-          </div>
+          </section>
         </div>
       </div>
     </div>

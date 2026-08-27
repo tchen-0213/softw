@@ -14,36 +14,15 @@ const SearchBar = () => {
 
   return (
     <form onSubmit={handleSearch} className="search-container">
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="site-search">
         <input
           type="text"
           placeholder="搜索商品"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            flex: 1,
-            height: '40px',
-            padding: '0 16px',
-            border: '1px solid #d9d9d9',
-            borderRight: 'none',
-            borderRadius: '4px 0 0 4px',
-            fontSize: '14px'
-          }}
+          aria-label="搜索商品"
         />
-        <button
-          type="submit"
-          style={{
-            height: '40px',
-            padding: '0 20px',
-            backgroundColor: '#1890ff',
-            color: '#fff',
-            border: '1px solid #1890ff',
-            borderLeft: 'none',
-            borderRadius: '0 4px 4px 0',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
+        <button type="submit">
           搜索
         </button>
       </div>

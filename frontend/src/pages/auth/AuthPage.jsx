@@ -59,13 +59,14 @@ const AuthPage = ({ mode }) => {
   };
 
   return (
-    <div style={{ padding: '40px 0' }}>
-      <div className="container" style={{ maxWidth: '460px' }}>
-        <div style={{ background: '#fff', padding: '28px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-          <h2 style={{ marginBottom: '24px' }}>{isRegister ? '用户注册' : '用户登录'}</h2>
+    <main className="auth-page">
+      <div className="container auth-container">
+        <section className="auth-card">
+          <span className="auth-kicker">欢迎来到摸鱼</span>
+          <h2>{isRegister ? '用户注册' : '用户登录'}</h2>
 
           {error && (
-            <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>
+            <div className="auth-error">
               {error}
             </div>
           )}
@@ -73,43 +74,40 @@ const AuthPage = ({ mode }) => {
           <form onSubmit={handleSubmit}>
             {isRegister && (
               <>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>用户名</label>
+                <div className="auth-field">
+                  <label>用户名</label>
                   <input
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
                     required
-                    style={{ width: '100%', padding: '10px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
                   />
                 </div>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px' }}>手机号</label>
+                <div className="auth-field">
+                  <label>手机号</label>
                   <input
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    style={{ width: '100%', padding: '10px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
                   />
                 </div>
               </>
             )}
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>邮箱</label>
+            <div className="auth-field">
+              <label>邮箱</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                style={{ width: '100%', padding: '10px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
               />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px' }}>密码</label>
+            <div className="auth-field">
+              <label>密码</label>
               <input
                 type="password"
                 name="password"
@@ -117,7 +115,6 @@ const AuthPage = ({ mode }) => {
                 onChange={handleChange}
                 required
                 minLength={6}
-                style={{ width: '100%', padding: '10px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
               />
             </div>
 
@@ -125,22 +122,21 @@ const AuthPage = ({ mode }) => {
               type="submit"
               disabled={loading}
               className="button button-primary"
-              style={{ width: '100%' }}
             >
               {loading ? '处理中...' : (isRegister ? '注册并登录' : '登录')}
             </button>
           </form>
 
-          <div style={{ marginTop: '18px', textAlign: 'center', color: '#666' }}>
+          <div className="auth-switch">
             {isRegister ? (
               <>已有账号？ <Link to="/login">去登录</Link></>
             ) : (
               <>没有账号？ <Link to="/register">立即注册</Link></>
             )}
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 

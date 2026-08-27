@@ -54,44 +54,29 @@ const CartPage = () => {
             </button>
           </div>
         ) : (
-          <div>
-            <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+          <div className="cart-content">
+            <div className="cart-list">
               {items.map((item) => (
                 <CartItem key={item.id} item={item} />
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+            <div className="cart-summary">
               <button
                 onClick={handleClearCart}
-                style={{
-                  padding: '8px 16px',
-                  background: '#fff',
-                  color: '#666',
-                  border: '1px solid #d9d9d9',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
+                className="button button-secondary"
               >
                 清空购物车
               </button>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ marginRight: '20px' }}>
+              <div className="cart-summary-main">
+                <div className="cart-total">
                   <span>共 {totalQuantity} 件商品</span>
-                  <span style={{ marginLeft: '20px', fontSize: '18px', fontWeight: 'bold', color: '#ff4d4f' }}>
+                  <strong>
                     合计: ¥{totalPrice.toFixed(2)}
-                  </span>
+                  </strong>
                 </div>
                 <button
                   onClick={handleCheckout}
-                  style={{
-                    padding: '10px 20px',
-                    background: '#ff4d4f',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '16px'
-                  }}
+                  className="button button-primary"
                 >
                   去结算
                 </button>
