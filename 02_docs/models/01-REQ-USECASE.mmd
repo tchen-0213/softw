@@ -1,0 +1,28 @@
+flowchart LR
+  Guest[游客]
+  Buyer[买家]
+  Seller[卖家]
+  subgraph Platform[购物与二手交易平台]
+    UC01((UC01 注册与登录))
+    UC02((UC02 浏览与搜索商品))
+    UC03((UC03 查看详情并加购))
+    UC04((UC04 完成订单交易))
+    UC05((UC05 发布二手商品))
+    UC06((UC06 管理店铺和商品))
+    UC07((UC07 评价与回复))
+    UC08((UC08 聊天议价))
+    UC09((UC09 维护收货地址))
+  end
+  Guest --> UC01
+  Guest --> UC02
+  Buyer --> UC02
+  Buyer --> UC03
+  Buyer --> UC04
+  Buyer --> UC07
+  Buyer --> UC08
+  Buyer --> UC09
+  Seller --> UC04
+  Seller --> UC05
+  Seller --> UC06
+  Seller --> UC07
+  Seller --> UC08

@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant view as addressManager:AddressManager
+  participant api as addressApi
+  participant ctrl as addressController
+  participant model as Address
+  view->>api: replaceAll(addresses)
+  api->>ctrl: replaceAddresses(req,res)
+  ctrl->>ctrl: addresses.map(normalizeInput)
+  ctrl->>ctrl: filter(name and phone and address)
+  alt no default and list not empty
+    ctrl->>ctrl: first.isDefault = true
+  end
+  ctrl->>ctrl: keep only first default
+  ctrl->>model: destroy(where userId)
+  ctrl->>model: bulkCreate(nextAddresses)
+  ctrl->>model: findAll(userId,default first)
+  ctrl-->>view: saved.map(normalizeAddress)

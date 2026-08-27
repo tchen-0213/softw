@@ -1,0 +1,21 @@
+sequenceDiagram
+  participant page as shopPage:ShopPage
+  participant api as shopApi
+  participant ctrl as shopController
+  participant shop as shop:Shop
+  participant user as owner:User
+  participant product as Product
+  page->>api: getMine()
+  api->>ctrl: getMyShop(req,res)
+  ctrl->>shop: findOrCreate(userId,defaults)
+  ctrl-->>page: toShopDto(shop,user)
+  page->>api: submitVerification(form)
+  api->>ctrl: submitShopVerification(req,res)
+  ctrl->>ctrl: requiredFields.find(missing)
+  ctrl->>shop: update(verified,operating,documents)
+  ctrl->>product: findAll(sellerId)
+  ctrl-->>page: shop + owner credit + products
+  page->>api: updateMine(profile)
+  api->>ctrl: updateMyShop(req,res)
+  ctrl->>shop: update(allowed fields)
+  ctrl-->>page: updated shop DTO

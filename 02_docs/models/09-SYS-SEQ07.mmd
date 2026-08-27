@@ -1,0 +1,13 @@
+sequenceDiagram
+  actor B as 买家
+  actor S as 卖家
+  participant P as 购物平台
+  B->>P: 对已完成订单提交评分和内容
+  alt 订单关系合法且未评价
+    P-->>B: 发布评价
+    P-->>S: 评价进入卖家收到的评价列表
+    S->>P: 回复评价
+    P-->>B: 保存并展示回复
+  else 未完成、越权或重复评价
+    P-->>B: 拒绝并返回原因
+  end

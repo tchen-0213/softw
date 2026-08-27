@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 
 const { _internal } = require('../controllers/orderController');
 
-test('seller order dto keeps only current seller items', () => {
+test('UNIT-TC04: seller order dto keeps only current seller items', () => {
   const order = {
     toJSON: () => ({
       id: 1,
@@ -21,4 +21,3 @@ test('seller order dto keeps only current seller items', () => {
   assert.equal(dto.items[0].name, 'A');
   assert.deepEqual(dto.logistics, { company: 'test' });
 });
-

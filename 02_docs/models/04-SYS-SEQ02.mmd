@@ -1,0 +1,10 @@
+sequenceDiagram
+  actor U as 用户
+  participant S as 购物平台
+  U->>S: 提交关键词、分类、价格和排序
+  S-->>U: 返回符合条件的分页商品列表
+  alt 没有匹配商品
+    S-->>U: 返回空列表和总数 0
+  else 分页参数非法
+    S-->>U: 按安全范围归一化后返回
+  end

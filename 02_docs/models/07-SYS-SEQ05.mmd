@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor S as 卖家
+  participant P as 购物平台
+  S->>P: 提交二手商品、成色、地点和图片
+  alt 店铺已认证且字段合法
+    P-->>S: 创建在售二手商品并展示详情
+  else 未认证或字段非法
+    P-->>S: 拒绝发布并说明原因
+  end
+  S->>P: 修改议价开关或上下架
+  P-->>S: 返回更新后的商品状态

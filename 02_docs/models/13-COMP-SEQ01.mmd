@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant UI as AuthPage
+  participant API as userApi
+  participant R as userRouter
+  participant C as userController
+  participant M as User Model
+  participant DB as MySQL
+  UI->>API: register(form)
+  API->>R: POST /api/users/register
+  R->>C: register(req,res)
+  C->>M: findOne / create
+  M->>DB: SELECT / INSERT
+  DB-->>M: user row
+  C-->>UI: 201 user + JWT
+  UI->>API: login(email,password)
+  API->>C: POST /api/users/login
+  C->>M: findOne + matchPassword
+  C-->>UI: 200 user + JWT

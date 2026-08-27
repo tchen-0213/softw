@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant UI as SearchPage
+  participant API as productApi
+  participant R as productRouter
+  participant C as productController
+  participant M as Product Model
+  participant DB as MySQL
+  UI->>API: getProducts(filters)
+  API->>R: GET /api/products query
+  R->>C: getProducts
+  C->>C: buildWhere + parsePaging + getOrder
+  C->>M: findAndCountAll
+  M->>DB: SELECT with filters
+  DB-->>C: rows + count
+  C-->>UI: products + pagination

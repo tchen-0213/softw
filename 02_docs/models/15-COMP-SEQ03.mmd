@@ -1,0 +1,13 @@
+sequenceDiagram
+  participant UI as ProductDetailPage
+  participant API as productApi
+  participant C as productController
+  participant M as Product Model
+  participant Cart as Redux cartSlice
+  UI->>API: getProduct(id)
+  API->>C: GET /api/products/:id
+  C->>M: findByPk + increment views
+  M-->>UI: product DTO
+  UI->>Cart: addToCart(product, quantity)
+  Cart->>Cart: merge and clamp by stock
+  Cart-->>UI: updated cart items

@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant UI as AddressManager/CheckoutPage
+  participant API as addressApi
+  participant Auth as protect Middleware
+  participant C as addressController
+  participant M as Address Model
+  participant DB as MySQL
+  UI->>API: replaceAddresses(list)
+  API->>Auth: PUT /api/addresses
+  Auth->>C: replaceAddresses
+  C->>C: normalize, filter, choose one default
+  C->>M: destroy current + bulkCreate next
+  M->>DB: DELETE + INSERT
+  DB-->>C: saved addresses
+  C-->>UI: normalized address list
+  UI->>API: getAddresses at checkout
+  API-->>UI: current user's addresses

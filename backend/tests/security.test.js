@@ -77,7 +77,7 @@ test('production mode rejects default jwt secrets', () => {
   process.env.JWT_SECRET = previousSecret;
 });
 
-test('register payload validation rejects weak inputs', () => {
+test('UNIT-TC01: register payload validation rejects weak inputs', () => {
   assert.equal(_internal.validateRegisterPayload({
     username: 'test',
     email: 'bad-email',
@@ -99,4 +99,3 @@ test('register payload validation rejects weak inputs', () => {
     password: '123456'
   }), null);
 });
-

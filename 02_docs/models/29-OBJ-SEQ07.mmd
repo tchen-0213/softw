@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant page as evaluationPage:EvaluationPage
+  participant api as evaluationApi
+  participant ctrl as evaluationController
+  participant order as order:Order
+  participant product as product:Product
+  participant evaluation as evaluation:Evaluation
+  participant seller as seller:User
+  page->>api: create({orderId,productId,rating,content})
+  api->>ctrl: createEvaluation(req,res)
+  ctrl->>product: findByPk(productId)
+  ctrl->>order: findByPk(orderId)
+  ctrl->>ctrl: verify buyer, finished and purchased item
+  ctrl->>evaluation: findOne(userId,productId,orderId)
+  ctrl->>evaluation: create(published evaluation)
+  ctrl->>product: update(rating,reviewCount)
+  ctrl->>seller: applyCreditDelta(rating rules)
+  ctrl-->>page: toEvaluationDto(evaluation)
+  page->>ctrl: replyEvaluation(id,reply)
+  ctrl->>ctrl: parseReplyThread + append role reply
+  ctrl->>evaluation: update(JSON reply thread)
+  ctrl-->>page: evaluation with replies

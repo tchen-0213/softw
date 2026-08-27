@@ -31,7 +31,7 @@ test('low rating penalty requires enough samples and ratio threshold', () => {
   assert.equal(getLowRatingPenalty([1, 2, 2, 5, 5]), -12);
 });
 
-test('shipping credit delta rewards timely shipping and penalizes overdue shipping', () => {
+test('UNIT-TC04-ALT: shipping credit delta rewards timely shipping and penalizes overdue shipping', () => {
   const paidAt = new Date('2026-08-25T08:00:00Z');
 
   assert.equal(getShippingCreditDelta(paidAt, new Date('2026-08-26T08:00:00Z')), 2);

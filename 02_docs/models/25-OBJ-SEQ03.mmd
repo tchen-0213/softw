@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant page as detailPage:ProductDetailPage
+  participant api as productApi
+  participant ctrl as productController
+  participant product as product:Product
+  participant store as cartState:cartSlice
+  page->>api: getDetail(productId)
+  api->>ctrl: getProductDetail(req,res)
+  ctrl->>product: findByPk(id, include User)
+  ctrl->>product: increment(views)
+  ctrl-->>page: toProductDto(product)
+  page->>store: dispatch(addToCart({...product,quantity}))
+  alt existing item
+    store->>store: clampQuantityByStock(old + quantity)
+  else new item and stock > 0
+    store->>store: items.push(item)
+  end
+  store-->>page: next cart state

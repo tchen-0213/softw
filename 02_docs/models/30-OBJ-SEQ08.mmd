@@ -1,0 +1,26 @@
+sequenceDiagram
+  participant page as chatPage:ChatPage
+  participant api as chatApi
+  participant ctrl as chatController
+  participant product as product:Product
+  participant conv as conversation:ChatConversation
+  participant msg as bargain:ChatMessage
+  page->>api: createConversation({productId})
+  api->>ctrl: createOrGetConversation(req,res)
+  ctrl->>product: findByPk(productId)
+  ctrl->>ctrl: reject own product
+  ctrl->>conv: findOne(buyerId,sellerId,productId)
+  opt no conversation
+    ctrl->>conv: create(participants,product)
+  end
+  ctrl-->>page: conversation DTO
+  page->>api: sendMessage(id,{type:bargain,amount})
+  api->>ctrl: sendMessage(req,res)
+  ctrl->>ctrl: isParticipant + validate amount and role
+  ctrl->>msg: create(pending)
+  page->>api: decideRequest(messageId,{status})
+  api->>ctrl: decideRequest(req,res)
+  ctrl->>ctrl: isSeller + pending check
+  ctrl->>msg: update(accepted or rejected,decidedAt)
+  ctrl->>msg: create(system message)
+  ctrl-->>page: request + systemMessage

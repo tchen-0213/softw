@@ -1,0 +1,24 @@
+sequenceDiagram
+  participant page as checkoutPage:CheckoutPage
+  participant api as orderApi
+  participant ctrl as orderController
+  participant tx as transaction:SequelizeTransaction
+  participant product as product:Product
+  participant order as order:Order
+  page->>api: create(payload)
+  api->>ctrl: createOrder(req,res)
+  ctrl->>tx: sequelize.transaction()
+  loop each requested item
+    ctrl->>product: findByPk(id,{transaction})
+    ctrl->>ctrl: validate status and stock
+    ctrl->>product: update(stock-sales,{transaction})
+  end
+  ctrl->>order: create(snapshot,{transaction})
+  ctrl->>tx: commit()
+  ctrl-->>page: toOrderDto(waitingPay)
+  page->>ctrl: payOrder(id)
+  ctrl->>order: update(waitingShip,paid)
+  page->>ctrl: shipOrder(company,trackingNumber)
+  ctrl->>order: update(waitingReceive,logisticsInfo)
+  page->>ctrl: confirmOrder(id)
+  ctrl->>order: update(finished,signed)

@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor G as 游客
+  participant S as 购物平台
+  G->>S: 提交用户名、邮箱、手机号和密码
+  alt 数据合法且未重复
+    S-->>G: 注册成功并返回 JWT
+    G->>S: 使用邮箱和密码登录
+    S-->>G: 返回登录身份和个人资料入口
+  else 参数错误或用户重复
+    S-->>G: 返回明确失败原因
+  end

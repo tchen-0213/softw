@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor S as 卖家
+  participant P as 购物平台
+  S->>P: 提交经营者、证件、地址和证明图片
+  alt 资料完整
+    P-->>S: 店铺认证并进入营业中
+    S->>P: 修改店铺名称和简介
+    P-->>S: 返回更新后的店铺
+  else 资料缺失
+    P-->>S: 拒绝认证并指出缺失项
+  end

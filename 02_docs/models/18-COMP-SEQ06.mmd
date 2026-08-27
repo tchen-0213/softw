@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant UI as ShopPage
+  participant API as shopApi/productApi
+  participant Auth as protect Middleware
+  participant SC as shopController
+  participant PC as productController
+  participant SM as Shop Model
+  participant PM as Product Model
+  UI->>API: submit verification
+  API->>Auth: POST /api/shops/mine/verification
+  Auth->>SC: submitShopVerification
+  SC->>SM: findOrCreate + update verified
+  SM-->>UI: operating shop DTO
+  UI->>API: update shop or own product
+  API->>SC: updateMyShop
+  API->>PC: updateProduct
+  SC->>SM: update own shop
+  PC->>PM: ownership check + update
+  SM-->>UI: updated data

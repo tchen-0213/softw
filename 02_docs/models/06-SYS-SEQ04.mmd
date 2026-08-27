@@ -1,0 +1,12 @@
+sequenceDiagram
+  actor B as 买家
+  actor S as 卖家
+  participant P as 购物平台
+  B->>P: 提交商品、数量、地址和支付方式
+  P-->>B: 创建待付款订单并扣减库存
+  B->>P: 模拟支付
+  P-->>S: 订单进入待发货
+  S->>P: 填写物流公司和单号并发货
+  P-->>B: 订单进入待收货
+  B->>P: 确认收货
+  P-->>B: 订单完成

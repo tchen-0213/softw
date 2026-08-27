@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant UI as ChatPage
+  participant API as chatApi
+  participant Auth as protect Middleware
+  participant C as chatController
+  participant CM as ChatConversation Model
+  participant MM as ChatMessage Model
+  participant PM as Product Model
+  UI->>API: createOrGetConversation(productId)
+  API->>Auth: POST /api/chats/conversations
+  Auth->>C: createOrGetConversation
+  C->>PM: verify product and seller
+  C->>CM: findOrCreate conversation
+  CM-->>UI: conversation
+  UI->>C: send text / bargain
+  C->>MM: create pending message
+  UI->>C: seller accepts or rejects
+  C->>MM: update once + create system message
+  MM-->>UI: final request status

@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant page as searchPage:SearchPage
+  participant api as productApi
+  participant ctrl as productController
+  participant model as Product
+  page->>api: getList(params)
+  api->>ctrl: getProducts(req,res)
+  ctrl->>ctrl: parsePaging(req.query)
+  ctrl->>ctrl: buildWhere(req.query)
+  ctrl->>ctrl: getOrder(req.query)
+  ctrl->>model: findAndCountAll(where,order,offset,limit)
+  model-->>ctrl: rows,count
+  ctrl->>ctrl: rows.map(toProductDto)
+  ctrl-->>page: products,pagination

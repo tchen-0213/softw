@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant page as sellPage:SellPage
+  participant uploader as uploadApi
+  participant api as secondhandApi
+  participant ctrl as productController
+  participant shop as sellerShop:Shop
+  participant product as secondhand:Product
+  page->>uploader: uploadImages(files)
+  uploader-->>page: upload paths
+  page->>api: create({...form,isSecondhand:true})
+  api->>ctrl: createProduct(req,res)
+  ctrl->>shop: findOne(userId)
+  ctrl->>ctrl: require verificationStatus == 已认证
+  ctrl->>product: create(normalized fields)
+  ctrl-->>page: toProductDto(secondhand)
+  page->>api: update(id,{bargainEnabled,status})
+  api->>ctrl: updateProduct(req,res)
+  ctrl->>product: verify sellerId + update whitelist
+  ctrl-->>page: updated DTO

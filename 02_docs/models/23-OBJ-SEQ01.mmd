@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant page as authPage:AuthPage
+  participant api as userApi:userApi
+  participant ctrl as userController
+  participant user as user:User
+  participant jwt as jwt:jsonwebtoken
+  page->>api: register(formData)
+  api->>ctrl: register(req,res)
+  ctrl->>ctrl: validateRegisterPayload(body)
+  ctrl->>user: findOne(or username/email)
+  ctrl->>user: create(attributes)
+  user->>user: beforeCreate bcrypt.hash(password)
+  ctrl->>jwt: sign({id}, secret)
+  ctrl-->>page: 201 safeUser + token
+  page->>api: login(email,password)
+  api->>ctrl: login(req,res)
+  ctrl->>user: findOne(email)
+  ctrl->>user: matchPassword(password)
+  ctrl-->>page: 200 safeUser + token

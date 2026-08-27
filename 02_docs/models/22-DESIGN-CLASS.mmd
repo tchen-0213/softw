@@ -1,0 +1,60 @@
+classDiagram
+  class AuthPage { +submitRegister(); +submitLogin() }
+  class SearchPage { +loadProducts(filters) }
+  class ProductDetailPage { +loadProduct(id); +handleAddToCart() }
+  class CheckoutPage { +submitOrder() }
+  class ShopPage { +submitVerification(); +saveShop() }
+  class EvaluationPage { +submitEvaluation() }
+  class ChatPage { +sendText(); +sendBargain(); +decideRequest() }
+  class AddressManager { +loadAddresses(); +saveAddresses() }
+  class ApiClient { +request(config); +attachJwt() }
+  class CartSlice { +addToCart(); +updateQuantity(); +removeFromCart(); +clearCart() }
+  class UserController { +register(); +login(); +getUserProfile(); +updatePassword() }
+  class ProductController { +getProducts(); +getProductDetail(); +createProduct(); +updateProduct() }
+  class OrderController { +createOrder(); +cancelOrder(); +payOrder(); +shipOrder(); +confirmOrder() }
+  class ShopController { +getMyShop(); +submitShopVerification(); +updateMyShop() }
+  class EvaluationController { +createEvaluation(); +replyEvaluation() }
+  class ChatController { +createOrGetConversation(); +sendMessage(); +decideRequest() }
+  class AddressController { +getAddresses(); +replaceAddresses() }
+  class User { +id; +email; +password; +creditScore; +matchPassword() }
+  class Product { +id; +sellerId; +price; +stock; +status; +isSecondhand }
+  class Order { +id; +userId; +items; +status; +paymentStatus; +logisticsInfo }
+  class Shop { +id; +userId; +verificationStatus; +status }
+  class Evaluation { +id; +orderId; +productId; +rating; +reply }
+  class Address { +id; +userId; +name; +phone; +isDefault }
+  class ChatConversation { +id; +buyerId; +sellerId; +productId }
+  class ChatMessage { +id; +conversationId; +type; +amount; +requestStatus }
+  AuthPage --> ApiClient
+  SearchPage --> ApiClient
+  ProductDetailPage --> ApiClient
+  ProductDetailPage --> CartSlice
+  CheckoutPage --> ApiClient
+  ShopPage --> ApiClient
+  EvaluationPage --> ApiClient
+  ChatPage --> ApiClient
+  AddressManager --> ApiClient
+  ApiClient --> UserController
+  ApiClient --> ProductController
+  ApiClient --> OrderController
+  ApiClient --> ShopController
+  ApiClient --> EvaluationController
+  ApiClient --> ChatController
+  ApiClient --> AddressController
+  UserController --> User
+  ProductController --> Product
+  ProductController --> Shop
+  OrderController --> Order
+  OrderController --> Product
+  ShopController --> Shop
+  EvaluationController --> Evaluation
+  EvaluationController --> Order
+  ChatController --> ChatConversation
+  ChatController --> ChatMessage
+  AddressController --> Address
+  User "1" <-- "0..1" Shop
+  User "1" <-- "0..*" Product
+  User "1" <-- "0..*" Order
+  User "1" <-- "0..*" Address
+  Order "1" <-- "0..*" Evaluation
+  Product "1" <-- "0..*" Evaluation
+  ChatConversation "1" <-- "0..*" ChatMessage

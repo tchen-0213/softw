@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant UI as EvaluationPage
+  participant API as evaluationApi
+  participant Auth as protect Middleware
+  participant C as evaluationController
+  participant OM as Order Model
+  participant EM as Evaluation Model
+  participant PM as Product Model
+  UI->>API: create evaluation
+  API->>Auth: POST /api/evaluations
+  Auth->>C: createEvaluation
+  C->>OM: verify completed order and buyer
+  C->>EM: check duplicate + create
+  C->>PM: update rating and count
+  EM-->>UI: published evaluation
+  UI->>C: seller reply
+  C->>EM: append reply thread
+  EM-->>UI: evaluation with reply

@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant UI as SellPage
+  participant Upload as uploadApi
+  participant API as secondhandApi
+  participant Auth as protect Middleware
+  participant C as productController
+  participant SM as Shop Model
+  participant PM as Product Model
+  UI->>Upload: upload allowed images
+  Upload-->>UI: image paths
+  UI->>API: createSecondhand(form)
+  API->>Auth: POST /api/secondhand
+  Auth->>C: createProduct with secondhand flag
+  C->>SM: verify seller shop
+  C->>PM: create secondhand product
+  PM-->>UI: 201 product DTO

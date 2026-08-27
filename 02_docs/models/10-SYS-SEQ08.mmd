@@ -1,0 +1,10 @@
+sequenceDiagram
+  actor B as 买家
+  actor S as 卖家
+  participant P as 购物平台
+  B->>P: 围绕商品创建会话并发送消息
+  P-->>S: 展示会话和消息
+  B->>P: 提交议价金额
+  P-->>S: 生成待处理议价申请
+  S->>P: 同意或拒绝
+  P-->>B: 展示议价最终状态

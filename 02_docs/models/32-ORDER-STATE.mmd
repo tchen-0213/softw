@@ -1,0 +1,9 @@
+stateDiagram-v2
+  [*] --> 待付款: createOrder
+  待付款 --> 待发货: payOrder
+  待付款 --> 已取消: cancelOrder / restore stock
+  待发货 --> 待收货: shipOrder / require logistics
+  待发货 --> 已取消: cancelOrder / restore stock
+  待收货 --> 已完成: confirmOrder
+  已完成 --> [*]
+  已取消 --> [*]

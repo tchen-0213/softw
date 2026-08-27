@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant B as Checkout/OrderPage
+  participant API as orderApi
+  participant Auth as protect Middleware
+  participant C as orderController
+  participant PM as Product Model
+  participant OM as Order Model
+  participant DB as MySQL
+  B->>API: create(items,address,payment)
+  API->>Auth: POST /api/orders + JWT
+  Auth->>C: createOrder
+  C->>DB: BEGIN
+  C->>PM: check and decrement stock
+  C->>OM: create order snapshot
+  C->>DB: COMMIT
+  C-->>B: waiting payment
+  B->>C: pay
+  C-->>B: waiting shipment
+  B->>C: seller ship with logistics
+  C-->>B: waiting receipt
+  B->>C: buyer confirm
+  C-->>B: finished order

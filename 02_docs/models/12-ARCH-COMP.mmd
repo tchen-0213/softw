@@ -1,0 +1,30 @@
+flowchart TB
+  Browser[浏览器]
+  subgraph FE[Frontend Container]
+    React[React Pages and Components]
+    Redux[Redux Cart Store]
+    Api[Axios API Client]
+  end
+  subgraph Mono[Monolith Backend Container]
+    Express[Express App and Middleware]
+    Routers[9 Route Modules]
+    Controllers[7 Business Controllers]
+    Models[8 Sequelize Models]
+    Uploads[Local Upload Storage]
+  end
+  DB[(MySQL 8)]
+  subgraph MS[Microservice Practice Deployment]
+    GW[API Gateway]
+    US[User Service]
+    PS[Product Service]
+    OS[Order Service]
+  end
+  Browser --> React
+  React <--> Redux
+  React --> Api
+  Api --> Express
+  Express --> Routers --> Controllers --> Models --> DB
+  Controllers --> Uploads
+  GW --> US
+  GW --> PS
+  GW --> OS
