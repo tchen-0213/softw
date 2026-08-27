@@ -76,4 +76,8 @@ Kubernetes 清单另使用 `kubeconform v0.7.0 -strict` 校验，结果为 17 �
 
 ## 远程流水线状态
 
-本记录证明当前工作区版本已在本地 Kind 中真实部署并验证。该批修改提交并推送前，GitHub Actions 尚未产生对应提交的远程运行记录；推送后应以新的成功运行链接补充本节，并创建 `microservices-v1` 标签。
+- 实现提交：[`63585e0`](https://github.com/tchen-0213/softw/commit/63585e0c9b6cd3b178b61be146c077e98e437dd3)
+- GitHub Actions：[#33037596220](https://github.com/tchen-0213/softw/actions/runs/33037596220)
+- 最终结果：`Success`
+- 已通过阶段：后端测试、前端构建、Playwright E2E、四项微服务矩阵测试、七个版本镜像构建、Kind 部署、rollout 和集群内健康检查。
+- 版本标签：`microservices-v1` 指向通过上述流水线验证的真实微服务版本。
