@@ -9,7 +9,7 @@
     "test:services": "npm --prefix services/user-service test && npm --prefix services/product-service test && npm --prefix services/order-service test && npm --prefix services/api-gateway test",
     "test:e2e": "npm --prefix frontend run test:e2e",
     "build": "npm --prefix frontend run build",
-    "verify": "npm run test && npm run test:services && npm run build",
+    "verify": "npm run test && npm run build",
     "db:migrate": "npm --prefix backend run db:migrate",
     "db:migrate:status": "npm --prefix backend run db:migrate:status",
     "compose:up": "docker compose -f 03_devops/docker-compose.yml up --build",

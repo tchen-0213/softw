@@ -1,7 +1,7 @@
 FROM node:20-alpine
 WORKDIR /app/api-gateway
 COPY api-gateway/package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 COPY api-gateway/app.js ./
 ENV PORT=8080
 EXPOSE 8080

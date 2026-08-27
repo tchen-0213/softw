@@ -502,7 +502,7 @@ GitHub Projects 必做内容：
 
 ## 十二、2026 夏小学期验收入口
 
-本仓库已补充小学期集中实践所需的容器化、CI/CD、Kubernetes、微服务骨架、测试报告和交付目录索引。推荐先看：
+本仓库已补充小学期集中实践所需的容器化、CI/CD、Kubernetes、三个可独立运行的业务微服务、测试报告和交付目录索引。推荐先看：
 
 | 文件或目录 | 用途 |
 | --- | --- |
@@ -521,14 +521,15 @@ GitHub Projects 必做内容：
 ### 本地验证
 
 ```bash
-npm run verify
+npm run test
+npm run build
 ```
 
 等价于：
 
 ```bash
 npm --prefix backend test
-npm run test:services
+npm --prefix frontend run test:unit
 npm --prefix frontend run build
 ```
 
@@ -581,16 +582,23 @@ npm run compose:up
 ### 微服务版本本地启动
 
 ```bash
-docker compose -f 03_devops/docker-compose.microservices.yml up --build
+docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
 ```
 
 启动后访问：
 
 ```text
+微服务前端：http://localhost:8082
 API 网关：http://localhost:8081/health
 用户服务：http://localhost:3101/health
 商品服务：http://localhost:3102/health
 订单服务：http://localhost:3103/health
+```
+
+三个服务分别使用 `softw_users`、`softw_catalog` 和 `softw_orders` 数据库。服务测试由 CI 的 `microservice-test` 作业在独立 MySQL 环境中执行；页面完整流程可运行：
+
+```bash
+API_BASE_URL=http://127.0.0.1:8081 E2E_BASE_URL=http://localhost:8082 npm run test:e2e
 ```
 
 ### Kubernetes 部署
@@ -606,6 +614,7 @@ kubectl apply -f 03_devops/k8s/microservices
 kind create cluster --name softw-practice --config 03_devops/k8s/kind-config.yaml
 sh 03_devops/scripts/build-local-images.sh
 sh 03_devops/scripts/k8s-health-check.sh softw-practice
+sh 03_devops/scripts/k8s-health-check.sh softw-microservices
 kubectl -n softw-microservices get pods,svc,hpa
 ```
 

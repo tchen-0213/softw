@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microservice-mysql-init
+  namespace: softw-microservices
+data:
+  001-databases.sql: |
+    CREATE DATABASE IF NOT EXISTS softw_users CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS softw_catalog CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS softw_orders CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    GRANT ALL PRIVILEGES ON softw_users.* TO 'softw'@'%';
+    GRANT ALL PRIVILEGES ON softw_catalog.* TO 'softw'@'%';
+    GRANT ALL PRIVILEGES ON softw_orders.* TO 'softw'@'%';
+    FLUSH PRIVILEGES;
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: softw-microservice-mysql-data
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /var/local/softw-microservice-mysql
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: microservice-mysql-data
+  namespace: softw-microservices
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: manual
+  volumeName: softw-microservice-mysql-data
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-mysql
+  namespace: softw-microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microservice-mysql
+  template:
+    metadata:
+      labels:
+        app: microservice-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - { name: MYSQL_ROOT_PASSWORD, value: root_password }
+            - { name: MYSQL_DATABASE, value: softw_users }
+            - { name: MYSQL_USER, value: softw }
+            - { name: MYSQL_PASSWORD, value: softw_password }
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+            - name: data
+              mountPath: /var/lib/mysql
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -proot_password"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: 500m, memory: 768Mi }
+      volumes:
+        - name: init
+          configMap:
+            name: microservice-mysql-init
+        - name: data
+          persistentVolumeClaim:
+            claimName: microservice-mysql-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microservice-mysql
+  namespace: softw-microservices
+spec:
+  selector:
+    app: microservice-mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

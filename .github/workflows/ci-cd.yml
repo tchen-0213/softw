@@ -164,6 +164,29 @@ jobs:
 
   microservice-test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: softw_test
+          MYSQL_USER: softw
+          MYSQL_PASSWORD: softw_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: softw_test
+      DB_USER: softw
+      DB_PASSWORD: softw_password
+      JWT_SECRET: test_microservice_secret
+      INTERNAL_SERVICE_TOKEN: test_internal_token
     strategy:
       matrix:
         service: [user-service, product-service, order-service, api-gateway]
@@ -172,12 +195,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
+      - run: npm ci
         working-directory: services/${{ matrix.service }}
-      - name: Install upstream fixture dependencies
-        if: matrix.service == 'api-gateway'
-        run: npm install
-        working-directory: services/user-service
       - run: npm test
         working-directory: services/${{ matrix.service }}
 
@@ -212,6 +231,15 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/frontend:practice
+      - name: Build microservice frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: frontend/Dockerfile.microservices
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/microservice-frontend:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/microservice-frontend:practice
       - name: Build api gateway image
         uses: docker/build-push-action@v6
         with:
@@ -252,6 +280,10 @@ jobs:
   kubernetes-deploy:
     runs-on: ubuntu-latest
     needs: docker-build
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
       - name: Create deployment cluster
@@ -263,6 +295,21 @@ jobs:
       - name: Deploy monolith and microservices
         run: |
           kubectl apply -f 03_devops/k8s/monolith
+          kubectl apply -f 03_devops/k8s/microservices/00-namespace.yaml
+          kubectl -n softw-practice create secret docker-registry ghcr-credentials \
+            --docker-server=${REGISTRY} \
+            --docker-username=${GITHUB_ACTOR} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n softw-practice patch serviceaccount default \
+            -p '{"imagePullSecrets":[{"name":"ghcr-credentials"}]}'
+          kubectl -n softw-microservices create secret docker-registry ghcr-credentials \
+            --docker-server=${REGISTRY} \
+            --docker-username=${GITHUB_ACTOR} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n softw-microservices patch serviceaccount default \
+            -p '{"imagePullSecrets":[{"name":"ghcr-credentials"}]}'
           kubectl apply -f 03_devops/k8s/microservices
           kubectl -n softw-practice set image deployment/backend \
             backend=${IMAGE_PREFIX}/backend:${GITHUB_SHA}
@@ -276,15 +323,19 @@ jobs:
             product-service=${IMAGE_PREFIX}/product-service:${GITHUB_SHA}
           kubectl -n softw-microservices set image deployment/order-service \
             order-service=${IMAGE_PREFIX}/order-service:${GITHUB_SHA}
+          kubectl -n softw-microservices set image deployment/microservice-frontend \
+            frontend=${IMAGE_PREFIX}/microservice-frontend:${GITHUB_SHA}
       - name: Wait for deployments
         run: |
           kubectl -n softw-practice rollout status deployment/mysql --timeout=300s
           kubectl -n softw-practice rollout status deployment/backend --timeout=300s
           kubectl -n softw-practice rollout status deployment/frontend --timeout=300s
+          kubectl -n softw-microservices rollout status deployment/microservice-mysql --timeout=300s
           kubectl -n softw-microservices rollout status deployment/user-service --timeout=180s
           kubectl -n softw-microservices rollout status deployment/product-service --timeout=180s
           kubectl -n softw-microservices rollout status deployment/order-service --timeout=180s
           kubectl -n softw-microservices rollout status deployment/api-gateway --timeout=180s
+          kubectl -n softw-microservices rollout status deployment/microservice-frontend --timeout=180s
       - name: Verify health from inside Kubernetes
         run: |
           kubectl -n softw-practice run monolith-healthcheck \
@@ -293,6 +344,9 @@ jobs:
           kubectl -n softw-microservices run microservices-healthcheck \
             --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
             --command -- curl --fail --silent http://api-gateway:8080/health
+          kubectl -n softw-microservices run microservice-frontend-healthcheck \
+            --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
+            --command -- curl --fail --silent http://microservice-frontend/
       - name: Show deployed workloads
         if: always()
         run: |

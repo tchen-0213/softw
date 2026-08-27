@@ -5,12 +5,26 @@ const version = process.env.SERVICE_VERSION || '1.0.0';
 
 const routes = [
   { prefix: '/api/users', target: process.env.USER_SERVICE_URL || 'http://localhost:3101' },
+  { prefix: '/api/addresses', target: process.env.USER_SERVICE_URL || 'http://localhost:3101' },
   { prefix: '/api/products', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
   { prefix: '/api/secondhand', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
+  { prefix: '/api/shops', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
+  { prefix: '/api/evaluations', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
+  { prefix: '/api/chats', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
+  { prefix: '/api/uploads', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
+  { prefix: '/uploads', target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3102' },
   { prefix: '/api/orders', target: process.env.ORDER_SERVICE_URL || 'http://localhost:3103' }
 ];
 
-app.use(express.json());
+app.use(express.json({ limit: '2mb', type: 'application/json' }));
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', req.get('origin') || '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, Idempotency-Key');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  return next();
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'api-gateway', version });
@@ -20,7 +34,7 @@ app.get('/version', (req, res) => {
   res.json({ service: 'api-gateway', version, routes });
 });
 
-app.use('/api', async (req, res) => {
+app.use(async (req, res) => {
   const match = routes.find(route => req.originalUrl.startsWith(route.prefix));
 
   if (!match) {
@@ -32,13 +46,17 @@ app.use('/api', async (req, res) => {
   const timeout = setTimeout(() => controller.abort(), Number(process.env.PROXY_TIMEOUT_MS || 3000));
 
   try {
+    const contentType = req.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
     const upstream = await fetch(targetUrl, {
       method: req.method,
       headers: {
-        'content-type': req.get('content-type') || 'application/json',
-        authorization: req.get('authorization') || ''
+        'content-type': contentType || 'application/json',
+        authorization: req.get('authorization') || '',
+        'idempotency-key': req.get('idempotency-key') || ''
       },
-      body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body || {}),
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : (isJson ? JSON.stringify(req.body || {}) : req),
+      duplex: isJson || ['GET', 'HEAD'].includes(req.method) ? undefined : 'half',
       signal: controller.signal
     });
     clearTimeout(timeout);

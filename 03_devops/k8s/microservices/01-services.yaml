@@ -24,6 +24,13 @@ spec:
               value: "3101"
             - name: SERVICE_NAME
               value: user-service
+            - { name: SERVICE_VERSION, value: "2.0.0" }
+            - { name: DB_HOST, value: microservice-mysql }
+            - { name: DB_NAME, value: softw_users }
+            - { name: DB_USER, value: softw }
+            - { name: DB_PASSWORD, value: softw_password }
+            - { name: JWT_SECRET, value: microservice_dev_secret }
+            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
           resources:
             requests:
               cpu: 100m
@@ -76,6 +83,15 @@ spec:
               value: "3102"
             - name: SERVICE_NAME
               value: product-service
+            - { name: SERVICE_VERSION, value: "2.0.0" }
+            - { name: DB_HOST, value: microservice-mysql }
+            - { name: DB_NAME, value: softw_catalog }
+            - { name: DB_USER, value: softw }
+            - { name: DB_PASSWORD, value: softw_password }
+            - { name: JWT_SECRET, value: microservice_dev_secret }
+            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
+            - { name: USER_SERVICE_URL, value: "http://user-service:3101" }
+            - { name: ORDER_SERVICE_URL, value: "http://order-service:3103" }
           resources:
             requests:
               cpu: 100m
@@ -128,6 +144,14 @@ spec:
               value: "3103"
             - name: SERVICE_NAME
               value: order-service
+            - { name: SERVICE_VERSION, value: "2.0.0" }
+            - { name: DB_HOST, value: microservice-mysql }
+            - { name: DB_NAME, value: softw_orders }
+            - { name: DB_USER, value: softw }
+            - { name: DB_PASSWORD, value: softw_password }
+            - { name: JWT_SECRET, value: microservice_dev_secret }
+            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
+            - { name: USER_SERVICE_URL, value: "http://user-service:3101" }
             - name: PRODUCT_SERVICE_URL
               value: http://product-service:3102
           resources:

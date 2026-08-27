@@ -1,0 +1,21 @@
+flowchart TB
+  FE[React 前端] --> GW[API Gateway]
+  GW --> US[user-service<br/>用户、认证、地址、信用]
+  GW --> PS[product-service<br/>商品、店铺、评价、聊天、上传]
+  GW --> OS[order-service<br/>订单、支付、物流、状态机]
+
+  OS -->|库存预留 / 释放 / 完成| PS
+  PS -->|验证已完成订单 / 购买关系| OS
+  PS -->|身份快照 / 信用更新| US
+  OS -->|身份校验 / 发货信用| US
+
+  subgraph MYSQL[同一 MySQL 服务器，三个隔离数据库]
+    UDB[(softw_users<br/>Users / Addresses)]
+    PDB[(softw_catalog<br/>Products / Shops / Evaluations<br/>ChatConversations / ChatMessages<br/>InventoryReservations)]
+    ODB[(softw_orders<br/>Orders)]
+  end
+
+  US --> UDB
+  PS --> PDB
+  OS --> ODB
+  PS --> VOL[(uploads 文件卷)]

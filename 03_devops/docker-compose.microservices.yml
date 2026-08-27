@@ -1,6 +1,22 @@
 name: softw-microservices
 
 services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: softw_users
+      MYSQL_USER: softw
+      MYSQL_PASSWORD: softw_password
+    volumes:
+      - microservice-mysql-data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   user-service:
     build:
       context: ../services
@@ -8,8 +24,23 @@ services:
     environment:
       PORT: 3101
       SERVICE_NAME: user-service
+      SERVICE_VERSION: 2.0.0
+      DB_HOST: mysql
+      DB_NAME: softw_users
+      DB_USER: softw
+      DB_PASSWORD: softw_password
+      JWT_SECRET: microservice_dev_secret
+      INTERNAL_SERVICE_TOKEN: microservice_internal_token
     ports:
       - "3101:3101"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3101/health | grep -q 'ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   product-service:
     build:
@@ -18,8 +49,30 @@ services:
     environment:
       PORT: 3102
       SERVICE_NAME: product-service
+      SERVICE_VERSION: 2.0.0
+      DB_HOST: mysql
+      DB_NAME: softw_catalog
+      DB_USER: softw
+      DB_PASSWORD: softw_password
+      JWT_SECRET: microservice_dev_secret
+      INTERNAL_SERVICE_TOKEN: microservice_internal_token
+      USER_SERVICE_URL: http://user-service:3101
+      ORDER_SERVICE_URL: http://order-service:3103
+      UPLOAD_DIR: /app/product-service/uploads
     ports:
       - "3102:3102"
+    volumes:
+      - microservice-uploads:/app/product-service/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3102/health | grep -q 'ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   order-service:
     build:
@@ -28,11 +81,29 @@ services:
     environment:
       PORT: 3103
       SERVICE_NAME: order-service
+      SERVICE_VERSION: 2.0.0
+      DB_HOST: mysql
+      DB_NAME: softw_orders
+      DB_USER: softw
+      DB_PASSWORD: softw_password
+      JWT_SECRET: microservice_dev_secret
+      INTERNAL_SERVICE_TOKEN: microservice_internal_token
+      USER_SERVICE_URL: http://user-service:3101
       PRODUCT_SERVICE_URL: http://product-service:3102
     ports:
       - "3103:3103"
     depends_on:
-      - product-service
+      mysql:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3103/health | grep -q 'ok'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   api-gateway:
     build:
@@ -40,12 +111,29 @@ services:
       dockerfile: api-gateway/Dockerfile
     environment:
       PORT: 8080
+      SERVICE_VERSION: 2.0.0
       USER_SERVICE_URL: http://user-service:3101
       PRODUCT_SERVICE_URL: http://product-service:3102
       ORDER_SERVICE_URL: http://order-service:3103
     ports:
       - "8081:8080"
     depends_on:
-      - user-service
-      - product-service
-      - order-service
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.microservices
+    ports:
+      - "8082:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  microservice-mysql-data:
+  microservice-uploads:
