@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://127.0.0.1:3001';
 const TEST_IMAGE = '../backend/uploads/1780540436586-391031648.png';
+const E2E_BASE_PATH = new URL(process.env.E2E_BASE_URL || 'http://localhost:8080').pathname
+  .replace(/\/?$/, '/');
+const appPath = path => `${E2E_BASE_PATH}${path.replace(/^\//, '')}`;
 
 const unique = () => `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
@@ -131,7 +134,7 @@ test('E2E-TC01/02/03/04/09: 买家注册、检索、加购、维护地址并提�
   const id = unique();
   const { product } = await createListedProduct(id);
 
-  await page.goto('/register');
+  await page.goto(appPath('/register'));
   await page.locator('input[name="username"]').fill(`e2e_buyer_${id}`);
   await page.locator('input[name="phone"]').fill(`136${String(id).slice(-8).padStart(8, '0')}`);
   await page.locator('input[name="email"]').fill(`e2e_buyer_${id}@example.com`);
@@ -141,7 +144,7 @@ test('E2E-TC01/02/03/04/09: 买家注册、检索、加购、维护地址并提�
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText(`e2e_buyer_${id}`)).toBeVisible();
 
-  await page.goto(`/search?keyword=${encodeURIComponent(product.name)}`);
+  await page.goto(appPath(`/search?keyword=${encodeURIComponent(product.name)}`));
   const productCard = page.locator('.product-card').filter({ hasText: product.name });
   await expect(productCard).toBeVisible();
   await productCard.click();
@@ -150,7 +153,7 @@ test('E2E-TC01/02/03/04/09: 买家注册、检索、加购、维护地址并提�
   await expect(page.getByRole('heading', { name: product.name, exact: true })).toBeVisible();
   await page.getByRole('button', { name: '加入购物车' }).click();
 
-  await page.goto('/cart');
+  await page.goto(appPath('/cart'));
   await expect(page.getByText(product.name)).toBeVisible();
   await page.getByRole('button', { name: '去结算' }).click();
 
@@ -172,7 +175,7 @@ test('E2E-TC05/06: 卖家认证维护店铺并发布二手商品', async ({ page
   const seller = await registerViaApi('seller', id);
   await signIn(page, seller);
 
-  await page.goto('/shop');
+  await page.goto(appPath('/shop'));
   await expect(page.getByRole('heading', { name: '店铺验证' })).toBeVisible();
   await page.locator('input[name="legalName"]').fill('E2E 页面卖家');
   await page.locator('input[name="idNumber"]').fill(`PAGE${id}`);
@@ -192,7 +195,7 @@ test('E2E-TC05/06: 卖家认证维护店铺并发布二手商品', async ({ page
   await expect(page.getByText('用于 Playwright 店铺管理专项测试')).toBeVisible();
 
   const secondhandName = `E2E 页面二手商品 ${id}`;
-  await page.goto('/sell');
+  await page.goto(appPath('/sell'));
   await expect(page.getByRole('heading', { name: '发布商品' })).toBeVisible();
   await page.locator('input[name="name"]').fill(secondhandName);
   await page.locator('input[name="price"]').fill('45');
@@ -215,7 +218,7 @@ test('E2E-TC07: 买家从已完成订单页面提交评价', async ({ page }) =>
   const { buyer, product, order } = await createCompletedOrder(id);
   await signIn(page, buyer);
 
-  await page.goto(`/evaluation/${order.id}`);
+  await page.goto(appPath(`/evaluation/${order.id}`));
   await expect(page.getByRole('heading', { name: '评价订单' })).toBeVisible();
   await expect(page.getByText(product.name)).toBeVisible();
   await page.locator('textarea').first().fill(`E2E 页面评价 ${id}`);
@@ -234,7 +237,7 @@ test('E2E-TC08: 买家页面议价且卖家页面接受申请', async ({ browser
   const buyerContext = await browser.newContext();
   const buyerPage = await buyerContext.newPage();
   await signIn(buyerPage, buyer);
-  await buyerPage.goto(`/product/${product.id}`);
+  await buyerPage.goto(appPath(`/product/${product.id}`));
   await expect(buyerPage.getByRole('heading', { name: product.name, exact: true })).toBeVisible();
   await buyerPage.getByRole('button', { name: '私聊商家' }).click();
   await expect(buyerPage).toHaveURL(/\/chat\/\d+$/);

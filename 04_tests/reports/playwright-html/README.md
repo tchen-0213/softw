@@ -16,4 +16,4 @@
 npm run test:e2e
 ```
 
-运行结束后，完整 HTML 报告生成在本目录的 `index.html`，可在本地浏览器中打开。
+运行结束后，完整 HTML 报告生成在本目录的 `report/index.html`，可在本地浏览器中打开。
