@@ -3296,7 +3296,6 @@ select:focus-visible,
 .auth-card,
 .filter-panel,
 .cart-summary,
-.sort-bar,
 .home-categories button {
   --card-accent: var(--primary-color);
 }
@@ -3333,8 +3332,7 @@ select:focus-visible,
 .home-hero-panel,
 .auth-card,
 .filter-panel,
-.cart-summary,
-.sort-bar {
+.cart-summary {
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -3386,7 +3384,6 @@ select:focus-visible,
 .auth-card::before,
 .filter-panel::before,
 .cart-summary::before,
-.sort-bar::before,
 .home-categories button::before {
   content: '';
   position: absolute;
@@ -3465,8 +3462,7 @@ html[data-theme='dark'] .product-card,
 html[data-theme='dark'] .home-hero-panel,
 html[data-theme='dark'] .auth-card,
 html[data-theme='dark'] .filter-panel,
-html[data-theme='dark'] .cart-summary,
-html[data-theme='dark'] .sort-bar {
+html[data-theme='dark'] .cart-summary {
   border-color: color-mix(in srgb, var(--card-accent) 34%, rgba(227, 239, 232, 0.18));
   background:
     linear-gradient(
@@ -3514,4 +3510,34 @@ html[data-theme='dark'] .product-badge {
   border-color: color-mix(in srgb, var(--card-accent, var(--primary-color)) 24%, rgba(227, 239, 232, 0.16));
   background:
     linear-gradient(180deg, rgba(25, 34, 32, 0.88), rgba(16, 24, 23, 0.72));
+}
+
+/* 排序条保持简洁横条，不用磨砂卡片质感 */
+.sort-bar {
+  position: static;
+  isolation: auto;
+  overflow-x: auto;
+  overflow-y: visible;
+  background: var(--surface-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  min-height: 54px;
+  padding: 8px 10px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.sort-bar::before,
+.sort-bar::after {
+  content: none;
+  display: none;
+}
+
+html[data-theme='dark'] .sort-bar {
+  background: var(--surface-bg);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-soft);
 }
