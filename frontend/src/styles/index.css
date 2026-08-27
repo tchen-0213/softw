@@ -3289,3 +3289,229 @@ select:focus-visible,
     grid-template-columns: 1fr;
   }
 }
+
+/* 磨砂金属渐变卡片质感 */
+.product-card,
+.home-hero-panel,
+.auth-card,
+.filter-panel,
+.cart-summary,
+.sort-bar,
+.home-categories button {
+  --card-accent: var(--primary-color);
+}
+
+.product-card:nth-child(4n + 1),
+.home-categories button:nth-child(1) {
+  --card-accent: #7eb4c4;
+}
+
+.product-card:nth-child(4n + 2),
+.home-categories button:nth-child(2) {
+  --card-accent: #7eac8c;
+}
+
+.product-card:nth-child(4n + 3),
+.home-categories button:nth-child(3) {
+  --card-accent: #c88896;
+}
+
+.product-card:nth-child(4n),
+.home-categories button:nth-child(4) {
+  --card-accent: #c8b078;
+}
+
+.home-hero-panel {
+  --card-accent: #86b8c8;
+}
+
+.auth-card {
+  --card-accent: #a892c0;
+}
+
+.product-card,
+.home-hero-panel,
+.auth-card,
+.filter-panel,
+.cart-summary,
+.sort-bar {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1.2px solid color-mix(in srgb, var(--card-accent) 34%, rgba(255, 255, 255, 0.58));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-accent) 44%, rgba(255, 255, 255, 0.42)) 0%,
+      color-mix(in srgb, var(--card-accent) 20%, rgba(255, 253, 248, 0.62)) 42%,
+      rgba(255, 253, 248, 0.72) 100%
+    );
+  backdrop-filter: blur(12px) saturate(1.14);
+  -webkit-backdrop-filter: blur(12px) saturate(1.14);
+  box-shadow:
+    4px 6px 0 color-mix(in srgb, var(--card-accent) 20%, rgba(60, 55, 48, 0.07)),
+    0 14px 32px rgba(60, 55, 48, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.home-categories button {
+  position: relative;
+  overflow: hidden;
+  border: 1.2px solid color-mix(in srgb, var(--card-accent) 36%, rgba(255, 255, 255, 0.55));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--card-accent) 38%, rgba(255, 255, 255, 0.46)) 0%,
+      color-mix(in srgb, var(--card-accent) 16%, rgba(255, 253, 248, 0.66)) 100%
+    );
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  box-shadow:
+    4px 5px 0 color-mix(in srgb, var(--card-accent) 18%, rgba(60, 55, 48, 0.06)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.home-hero {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 253, 248, 0.34)),
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.72), transparent 24%),
+    radial-gradient(circle at 14% 82%, rgba(126, 172, 140, 0.18), transparent 32%),
+    linear-gradient(125deg, rgba(180, 210, 220, 0.88), rgba(207, 194, 224, 0.64) 48%, rgba(229, 210, 164, 0.74));
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.product-card::before,
+.home-hero-panel::before,
+.auth-card::before,
+.filter-panel::before,
+.cart-summary::before,
+.sort-bar::before,
+.home-categories button::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 2;
+  background: color-mix(in srgb, var(--card-accent) 46%, rgba(255, 255, 255, 0.72));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.product-card::after,
+.home-hero-panel::after,
+.auth-card::after,
+.filter-panel::after,
+.cart-summary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 86% 10%, rgba(255, 255, 255, 0.62), transparent 30%),
+    radial-gradient(circle at 10% 92%, color-mix(in srgb, var(--card-accent) 24%, transparent), transparent 36%);
+  opacity: 0.78;
+}
+
+.home-hero::before {
+  background:
+    radial-gradient(circle at 78% 22%, rgba(255, 255, 255, 0.55), transparent 34%),
+    radial-gradient(circle at 18% 78%, rgba(200, 176, 120, 0.16), transparent 38%);
+  border: none;
+  opacity: 0.85;
+}
+
+.home-hero::after {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 58%);
+}
+
+.product-card:hover,
+.home-hero-panel:hover,
+.auth-card:hover,
+.filter-panel:hover,
+.home-categories button:hover {
+  border-color: color-mix(in srgb, var(--card-accent) 42%, rgba(41, 36, 29, 0.16));
+  box-shadow:
+    5px 8px 0 color-mix(in srgb, var(--card-accent) 28%, rgba(60, 50, 40, 0.1)),
+    0 18px 38px rgba(60, 50, 40, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.product-media,
+.product-info,
+.product-card-actions,
+.auth-field,
+.auth-card h2,
+.auth-card form,
+.auth-switch,
+.cart-summary-main,
+.cart-total,
+.filter-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.product-badge {
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--primary-color)) 28%, rgba(255, 255, 255, 0.55));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 253, 248, 0.72));
+  backdrop-filter: blur(10px) saturate(1.12);
+  -webkit-backdrop-filter: blur(10px) saturate(1.12);
+}
+
+html[data-theme='dark'] .product-card,
+html[data-theme='dark'] .home-hero-panel,
+html[data-theme='dark'] .auth-card,
+html[data-theme='dark'] .filter-panel,
+html[data-theme='dark'] .cart-summary,
+html[data-theme='dark'] .sort-bar {
+  border-color: color-mix(in srgb, var(--card-accent) 34%, rgba(227, 239, 232, 0.18));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-accent) 28%, rgba(255, 255, 255, 0.08)) 0%,
+      color-mix(in srgb, var(--card-accent) 12%, rgba(16, 24, 23, 0.72)) 46%,
+      rgba(16, 24, 23, 0.82) 100%
+    );
+  box-shadow:
+    4px 6px 0 rgba(0, 0, 0, 0.22),
+    0 16px 34px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .home-categories button {
+  border-color: color-mix(in srgb, var(--card-accent) 30%, rgba(227, 239, 232, 0.16));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--card-accent) 24%, rgba(255, 255, 255, 0.06)) 0%,
+      color-mix(in srgb, var(--card-accent) 10%, rgba(16, 24, 23, 0.78)) 100%
+    );
+}
+
+html[data-theme='dark'] .home-hero {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(16, 24, 23, 0.42)),
+    radial-gradient(circle at 84% 18%, rgba(255, 255, 255, 0.08), transparent 22%),
+    radial-gradient(circle at 14% 82%, rgba(126, 172, 140, 0.12), transparent 32%),
+    linear-gradient(125deg, #28464d, #3d354b 50%, #534d3b);
+}
+
+html[data-theme='dark'] .product-card::after,
+html[data-theme='dark'] .home-hero-panel::after,
+html[data-theme='dark'] .auth-card::after,
+html[data-theme='dark'] .filter-panel::after,
+html[data-theme='dark'] .cart-summary::after {
+  background:
+    radial-gradient(circle at 86% 10%, rgba(255, 255, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 10% 92%, color-mix(in srgb, var(--card-accent) 18%, transparent), transparent 36%);
+  opacity: 0.9;
+}
+
+html[data-theme='dark'] .product-badge {
+  border-color: color-mix(in srgb, var(--card-accent, var(--primary-color)) 24%, rgba(227, 239, 232, 0.16));
+  background:
+    linear-gradient(180deg, rgba(25, 34, 32, 0.88), rgba(16, 24, 23, 0.72));
+}
