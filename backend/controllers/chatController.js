@@ -6,7 +6,19 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 
 const participantAttributes = ['id', 'username', 'nickname', 'avatar', 'creditLevel', 'creditScore'];
-const productAttributes = ['id', 'name', 'price', 'images', 'bargainEnabled', 'sellerId'];
+const productAttributes = [
+  'id',
+  'name',
+  'description',
+  'price',
+  'stock',
+  'status',
+  'images',
+  'bargainEnabled',
+  'sellerId',
+  'sellerName',
+  'isSecondhand'
+];
 const requestTypes = ['bargain', 'refund'];
 
 const conversationIncludes = [

@@ -42,6 +42,9 @@ const ChatMessage = sequelize.define('ChatMessage', {
   decidedAt: {
     type: DataTypes.DATE
   },
+  redeemedAt: {
+    type: DataTypes.DATE
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

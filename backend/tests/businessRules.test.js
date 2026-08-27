@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const productRules = require('../controllers/productController')._internal;
 const addressRules = require('../controllers/addressController')._internal;
 const chatRules = require('../controllers/chatController')._internal;
+const orderRules = require('../controllers/orderController')._internal;
 const evaluationRules = require('../controllers/evaluationController')._internal;
 const shopRules = require('../controllers/shopController')._internal;
 
@@ -98,6 +99,24 @@ test('UNIT-TC08: 聊天参与者、商家权限和已购判定规则', () => {
     paymentStatus: '已支付',
     items: [{ productId: 8 }]
   }, 8), false);
+});
+
+test('UNIT-TC08-BARGAIN: 议价订单仅允许成功议价买家按约定价格购买一次', () => {
+  const base = {
+    message: { type: 'bargain', requestStatus: 'accepted', amount: 80, redeemedAt: null },
+    conversation: { buyerId: 10, sellerId: 20, productId: 30 },
+    buyerId: 10,
+    product: { id: 30, sellerId: 20 },
+    quantity: 1
+  };
+
+  assert.equal(orderRules.getBargainValidationError(base), '');
+  assert.equal(orderRules.getBargainValidationError({ ...base, buyerId: 11 }), '该议价不属于当前买家');
+  assert.equal(orderRules.getBargainValidationError({
+    ...base,
+    message: { ...base.message, redeemedAt: new Date() }
+  }), '该议价已经用于下单');
+  assert.equal(orderRules.getBargainValidationError({ ...base, quantity: 2 }), '议价商品每次只能购买一件');
 });
 
 test('UNIT-TC09: 地址输入清理和输出类型规则', () => {

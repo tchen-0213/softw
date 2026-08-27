@@ -6,6 +6,7 @@
 | --- | --- |
 | `001-baseline-schema.js` | 根据 Sequelize 模型建立完整业务表基线 |
 | `002-marketplace-fields.js` | 为旧数据库补齐议价和店铺认证字段 |
+| `003-bargain-redemption.js` | 为议价消息增加一次性下单核销时间字段 |
 
 常用命令：
 

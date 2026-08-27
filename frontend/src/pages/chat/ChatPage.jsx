@@ -221,11 +221,28 @@ const ChatPage = () => {
     }
   };
 
+  const handleBargainPurchase = (message) => {
+    navigate('/checkout', {
+      state: {
+        bargainPurchase: {
+          ...product,
+          id: product.id,
+          price: Number(message.amount),
+          originalPrice: Number(product.price),
+          quantity: 1,
+          bargainMessageId: message.id
+        }
+      }
+    });
+  };
+
   const renderMessage = (message) => {
     const isMine = String(message.senderId) === String(currentUserId);
     const isRequest = message.type === 'bargain' || message.type === 'refund';
     const isPendingRequest = isRequest && message.requestStatus === 'pending';
     const canDecide = isSeller && isPendingRequest;
+    const canBuyAtBargainPrice = isBuyer && message.type === 'bargain' &&
+      message.requestStatus === 'accepted' && !message.redeemedAt;
 
     if (message.type === 'system') {
       return (
@@ -273,6 +290,20 @@ const ChatPage = () => {
                 拒绝
               </button>
             </div>
+          )}
+          {canBuyAtBargainPrice && (
+            <div className="chat-request-actions">
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => handleBargainPurchase(message)}
+              >
+                以议价 ¥{Number(message.amount).toFixed(2)} 购买
+              </button>
+            </div>
+          )}
+          {isBuyer && message.type === 'bargain' && message.redeemedAt && (
+            <div className="chat-quick-hint">该议价已用于下单</div>
           )}
         </div>
       </div>

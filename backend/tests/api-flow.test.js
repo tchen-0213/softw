@@ -334,6 +334,27 @@ test('UC01-UC09 完整 API 主成功、备选和异常流程', { skip: !shouldRu
       token: seller.token, body: { status: 'accepted' }
     });
     assert.equal(decision.request.requestStatus, 'accepted');
+
+    const bargainOrderPayload = {
+      items: [{ productId: product.id, quantity: 1, bargainMessageId: acceptedBargain.id }],
+      shippingAddress: { name: '议价买家', phone: '13800138000', address: '软件工程测试路 1 号' },
+      paymentMethod: 'wechat'
+    };
+    await expectStatus('POST', '/api/orders', 403, {
+      token: outsider.token,
+      body: bargainOrderPayload
+    });
+    const bargainOrder = await expectStatus('POST', '/api/orders', 201, {
+      token: buyer.token,
+      body: bargainOrderPayload
+    });
+    assert.equal(Number(bargainOrder.totalAmount), 80);
+    assert.equal(Number(bargainOrder.items[0].price), 80);
+    assert.equal(bargainOrder.items[0].priceSource, 'accepted_bargain');
+    await expectStatus('POST', '/api/orders', 400, {
+      token: buyer.token,
+      body: bargainOrderPayload
+    });
   });
 
   await t.test('INT-TC08-ALT UC08 复用会话并拒绝另一条议价', async () => {

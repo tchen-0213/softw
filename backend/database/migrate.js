@@ -1,6 +1,7 @@
 const migrations = [
   require('./migrations/001-baseline-schema'),
-  require('./migrations/002-marketplace-fields')
+  require('./migrations/002-marketplace-fields'),
+  require('./migrations/003-bargain-redemption')
 ];
 
 const loadAllModels = () => {

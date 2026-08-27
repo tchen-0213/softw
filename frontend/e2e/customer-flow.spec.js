@@ -257,6 +257,29 @@ test('E2E-TC08: 买家页面议价且卖家页面接受申请', async ({ browser
   await sellerPage.getByRole('button', { name: '同意' }).click();
   await expect(sellerPage.locator('.chat-request-status.status-accepted')).toHaveText('已同意');
 
+  await apiRequest('PUT', '/api/addresses', {
+    token: buyer.token,
+    body: {
+      addresses: [{
+        id: `bargain-address-${id}`,
+        name: '议价买家',
+        phone: '13800138000',
+        address: '议价测试路 1 号',
+        isDefault: true
+      }]
+    }
+  });
+  await buyerPage.reload();
+  await buyerPage.getByRole('button', { name: '以议价 ¥55.00 购买' }).click();
+  await expect(buyerPage).toHaveURL(/\/checkout$/);
+  await expect(buyerPage.getByText('¥55.00', { exact: true }).first()).toBeVisible();
+  await expect(buyerPage.getByText('议价成交价')).toBeVisible();
+  await expect(buyerPage.getByText('议价买家')).toBeVisible();
+  buyerPage.once('dialog', dialog => dialog.accept());
+  await buyerPage.getByRole('button', { name: '提交订单' }).click();
+  await expect(buyerPage).toHaveURL(/\/order$/);
+  await expect(buyerPage.getByText(product.name)).toBeVisible();
+
   await buyerContext.close();
   await sellerContext.close();
 });

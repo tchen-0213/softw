@@ -3,6 +3,8 @@ const { Op, Sequelize } = require('sequelize');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const ChatConversation = require('../models/ChatConversation');
+const ChatMessage = require('../models/ChatMessage');
 const {
   SELLER_CANCEL_NON_SHIPMENT_DELTA,
   applyCreditDelta,
@@ -27,6 +29,38 @@ const orderFlow = {
 };
 
 const normalizeText = (value) => String(value || '').trim();
+
+const getBargainValidationError = ({ message, conversation, buyerId, product, quantity }) => {
+  if (!message || message.type !== 'bargain' || message.requestStatus !== 'accepted') {
+    return '议价申请不存在或尚未成功';
+  }
+
+  if (message.redeemedAt) {
+    return '该议价已经用于下单';
+  }
+
+  if (!conversation || Number(conversation.buyerId) !== Number(buyerId)) {
+    return '该议价不属于当前买家';
+  }
+
+  if (
+    Number(conversation.productId) !== Number(product.id) ||
+    Number(conversation.sellerId) !== Number(product.sellerId)
+  ) {
+    return '议价申请与商品不匹配';
+  }
+
+  if (quantity !== 1) {
+    return '议价商品每次只能购买一件';
+  }
+
+  const amount = Number(message.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return '议价金额无效';
+  }
+
+  return '';
+};
 
 const parsePaging = (query) => {
   const page = Math.max(parseInt(query.page || '1', 10), 1);
@@ -132,6 +166,8 @@ exports.createOrder = async (req, res) => {
   try {
     let totalAmount = 0;
     const orderItems = [];
+    const redeemedBargains = [];
+    const bargainMessageIds = new Set();
 
     for (const item of items) {
       const productId = item.productId || item.id;
@@ -153,7 +189,43 @@ exports.createOrder = async (req, res) => {
         return res.status(400).json({ message: `商品 ${product.name} 库存不足` });
       }
 
-      const price = Number(product.price);
+      let price = Number(product.price);
+      let bargainMessageId = null;
+
+      if (item.bargainMessageId !== undefined && item.bargainMessageId !== null) {
+        bargainMessageId = Number(item.bargainMessageId);
+        if (!Number.isInteger(bargainMessageId) || bargainMessageIds.has(bargainMessageId)) {
+          await transaction.rollback();
+          return res.status(400).json({ message: '议价凭证不合法或重复使用' });
+        }
+        bargainMessageIds.add(bargainMessageId);
+
+        const bargainMessage = await ChatMessage.findByPk(bargainMessageId, {
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+        const conversation = bargainMessage
+          ? await ChatConversation.findByPk(bargainMessage.conversationId, { transaction })
+          : null;
+        const validationError = getBargainValidationError({
+          message: bargainMessage,
+          conversation,
+          buyerId: req.user.id,
+          product,
+          quantity
+        });
+
+        if (validationError) {
+          await transaction.rollback();
+          return res.status(validationError === '该议价不属于当前买家' ? 403 : 400).json({
+            message: validationError
+          });
+        }
+
+        price = Number(bargainMessage.amount);
+        redeemedBargains.push(bargainMessage);
+      }
+
       totalAmount += price * quantity;
       orderItems.push({
         productId: product.id,
@@ -163,7 +235,9 @@ exports.createOrder = async (req, res) => {
         image: product.images?.[0] || '',
         sellerId: product.sellerId,
         sellerName: product.sellerName,
-        isSecondhand: product.isSecondhand
+        isSecondhand: product.isSecondhand,
+        bargainMessageId,
+        priceSource: bargainMessageId ? 'accepted_bargain' : 'product'
       });
 
       const nextStock = product.stock - quantity;
@@ -181,6 +255,10 @@ exports.createOrder = async (req, res) => {
       shippingAddress,
       paymentMethod: paymentMethodMap[paymentMethod] || paymentMethod || '微信支付'
     }, { transaction });
+
+    await Promise.all(redeemedBargains.map(message => (
+      message.update({ redeemedAt: new Date() }, { transaction })
+    )));
 
     await transaction.commit();
     res.status(201).json(toOrderDto(order));
@@ -259,6 +337,7 @@ exports.getSellerOrders = async (req, res) => {
 };
 
 exports._internal = {
+  getBargainValidationError,
   toOrderDto,
   toSellerOrderDto
 };

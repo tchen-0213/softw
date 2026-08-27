@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../../store/cartSlice';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { fallbackImages } from '../../data/imageAssets';
 import { addressApi, orderApi } from '../../services/api';
 import AddressManager from '../../components/user/AddressManager';
@@ -11,7 +11,10 @@ const CheckoutPage = () => {
   const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useMemo(() => getStoredUser(), []);
+  const bargainPurchase = location.state?.bargainPurchase;
+  const checkoutItems = bargainPurchase ? [bargainPurchase] : items;
 
   const [addresses, setAddresses] = useState(() => loadUserAddresses(user));
   const [selectedAddressId, setSelectedAddressId] = useState(() => {
@@ -22,7 +25,7 @@ const CheckoutPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   useEffect(() => {
     saveUserAddresses(addresses, user);
@@ -82,16 +85,19 @@ const CheckoutPage = () => {
     try {
       const address = addresses.find(item => item.id === selectedAddressId);
       await orderApi.create({
-        items: items.map(item => ({
+        items: checkoutItems.map(item => ({
           productId: item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          ...(item.bargainMessageId ? { bargainMessageId: item.bargainMessageId } : {})
         })),
         shippingAddress: address,
         paymentMethod
       });
 
       alert('订单提交成功，请在订单页完成支付。');
-      dispatch(clearCart());
+      if (!bargainPurchase) {
+        dispatch(clearCart());
+      }
       navigate('/order');
     } catch (err) {
       setError(err.response?.data?.message || '订单提交失败，请稍后重试');
@@ -116,7 +122,7 @@ const CheckoutPage = () => {
     );
   }
 
-  if (items.length === 0) {
+  if (checkoutItems.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '100px 0' }}>
         <p>购物车为空，无法结算</p>
@@ -157,9 +163,9 @@ const CheckoutPage = () => {
         <div style={{ marginBottom: '30px' }}>
           <h3 style={{ marginBottom: '15px' }}>订单商品</h3>
           <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
-            {items.map((item) => (
+            {checkoutItems.map((item) => (
               <div
-                key={item.id}
+                key={item.bargainMessageId ? `bargain-${item.bargainMessageId}` : item.id}
                 style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #e8e8e8' }}
               >
                 <img
@@ -170,7 +176,12 @@ const CheckoutPage = () => {
                 <div style={{ flex: 1 }}>
                   <div style={{ marginBottom: '8px' }}>{item.name}</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div>¥{item.price}</div>
+                    <div>
+                      ¥{Number(item.price).toFixed(2)}
+                      {item.bargainMessageId && (
+                        <span style={{ marginLeft: '8px', color: '#52c41a' }}>议价成交价</span>
+                      )}
+                    </div>
                     <div>x{item.quantity}</div>
                   </div>
                 </div>
