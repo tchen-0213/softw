@@ -83,7 +83,15 @@ Project 使用以下状态：
 
 主流水线位于 `.github/workflows/ci-cd.yml`，负责后端测试、API 完整业务流、前端单元测试与构建、Playwright E2E、镜像构建和 Kubernetes manifest 检查。工作流以 GitHub 上的实际运行结果为准。
 
-完整系统演示优先使用 Docker 本地测试环境：
+当前公网演示使用 GitHub Pages 前端和 Codespaces 后端/MySQL：
+
+```text
+前端：https://tchen-0213.github.io/softw/
+后端：https://<CODESPACE_NAME>-3001.app.github.dev
+健康检查：https://<CODESPACE_NAME>-3001.app.github.dev/api/health
+```
+
+Pages 构建读取 Actions Variable `CODESPACE_API_BASE_URL`。Codespaces 3001 端口必须设为 Public；实例休眠后需重新启动。Docker 本地环境作为备用：
 
 ```bash
 docker compose -f 03_devops/docker-compose.yml up -d --build --wait

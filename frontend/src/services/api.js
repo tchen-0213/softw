@@ -2,6 +2,33 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 3000);
+const pageOrigin = globalThis.location?.origin || 'http://localhost';
+
+const apiOrigin = (() => {
+  try {
+    return new URL(API_BASE_URL, pageOrigin).origin;
+  } catch {
+    return pageOrigin;
+  }
+})();
+
+export const resolveBackendAssetUrl = (value) => (
+  typeof value === 'string' && value.startsWith('/uploads/')
+    ? `${apiOrigin}${value}`
+    : value
+);
+
+const resolveResponseAssets = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(resolveResponseAssets);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, resolveResponseAssets(item)])
+    );
+  }
+  return resolveBackendAssetUrl(value);
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -24,6 +51,11 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+api.interceptors.response.use(response => {
+  response.data = resolveResponseAssets(response.data);
+  return response;
+});
 
 // 商品相关API
 export const productApi = {

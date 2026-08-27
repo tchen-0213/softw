@@ -261,19 +261,14 @@ http://localhost:5173
 
 ## 八、上线部署
 
-推荐部署方式：
+当前课程演示部署方式：
 
-- 前端：Railway 或 Vercel
-- 后端：Railway
-- 数据库：Railway MySQL 或其他云 MySQL
+- 前端：GitHub Pages，`https://tchen-0213.github.io/softw/`
+- 后端：GitHub Codespaces 的 3001 公网端口
+- 数据库：Codespaces 内 Docker MySQL
+- 自动发布：`.github/workflows/github-pages.yml`
 
-当前 Railway 部署地址：
-
-```text
-前端：https://frontend-production-b71b.up.railway.app
-后端：https://backend-production-8506.up.railway.app
-健康检查：https://backend-production-8506.up.railway.app/api/health
-```
+Railway/Vercel 配置继续保留为长期在线部署备选，不作为当前在线环境和验收地址。
 
 ### 1. 部署数据库
 
@@ -496,7 +491,7 @@ GitHub Projects 必做内容：
 - 代码变更通过分支和 Pull Request 关联 Issue；构建、测试与部署结果由 GitHub Actions 留痕。
 - 每日站会后更新看板，并保留关键截图、测试输出、提交或 Actions 运行链接作为验收证据。
 
-当前部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD 记录；完整系统运行演示优先采用 Docker 本地或测试环境，静态页面可通过 GitHub Pages 发布。早期 CodeArts 文件不再作为当前主看板说明，但保留用于追溯已经发生的平台配置和验证过程。
+当前部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD；GitHub Pages 托管静态前端，GitHub Codespaces 运行后端和 MySQL，Docker Compose 与 Kind 用于本地及流水线复现。早期 CodeArts 文件仅作为历史资料保留。
 
 ---
 
@@ -548,7 +543,35 @@ API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run te
 https://tchen-0213.github.io/softw/
 ```
 
-说明：GitHub Pages 只能托管静态前端，不能运行 Node.js 后端和 MySQL。完整业务演示仍建议使用 Docker Compose 或 Kubernetes 环境。
+当前公网演示架构：
+
+```text
+浏览器 -> GitHub Pages 前端 -> Codespaces 3001 公网端口 -> Express 后端 -> MySQL 容器
+```
+
+GitHub Pages 工作流从仓库变量 `CODESPACE_API_BASE_URL` 读取 API 地址，变量值格式为：
+
+```text
+https://<CODESPACE_NAME>-3001.app.github.dev/api
+```
+
+在仓库 `Settings -> Secrets and variables -> Actions -> Variables` 中更新该变量后，手动运行 `deploy-github-pages` 或再次推送前端文件即可让 Pages 使用新的 Codespaces 地址。GitHub Pages 只能托管静态前端；后端、MySQL 和上传文件实际位于 Codespaces。
+
+### Codespaces 后端部署
+
+仓库的 `.devcontainer/devcontainer.json` 会安装 Docker，并在 Codespace 启动时执行：
+
+```bash
+sh 03_devops/scripts/codespace-start.sh
+```
+
+脚本启动单体后端、MySQL 和容器前端。用于 Pages 联调的是 `3001` 端口，必须在 Codespaces 的 `Ports` 面板保持 `Public`。健康检查地址为：
+
+```text
+https://<CODESPACE_NAME>-3001.app.github.dev/api/health
+```
+
+Codespaces 不是长期生产主机：实例停止或休眠后后端不可访问，重建 Codespace 后域名可能变化，此时需要更新 `CODESPACE_API_BASE_URL` 并重新部署 Pages。MySQL 数据和上传文件保存在该 Codespace 的 Docker volumes 中，删除 Codespace 会删除这些运行数据。
 
 ### 临时公网完整业务演示
 
