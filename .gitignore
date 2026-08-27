@@ -70,7 +70,8 @@ coverage/
 *.lcov
 .nyc_output/
 frontend/test-results/
-04_tests/reports/playwright-html/
+04_tests/reports/playwright-html/*
+!04_tests/reports/playwright-html/README.md
 
 # =========================
 # TypeScript / ESLint / Stylelint cache
