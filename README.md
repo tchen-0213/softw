@@ -261,100 +261,65 @@ http://localhost:5173
 
 ## 八、上线部署
 
-当前课程演示部署方式：
+当前且唯一的课程公网演示方式：
 
 - 前端：GitHub Pages，`https://tchen-0213.github.io/softw/`
 - 后端：GitHub Codespaces 的 3001 公网端口
 - 数据库：Codespaces 内 Docker MySQL
 - 自动发布：`.github/workflows/github-pages.yml`
 
-Railway/Vercel 配置继续保留为长期在线部署备选，不作为当前在线环境和验收地址。
+### 1. 启动 Codespaces 后端和数据库
 
-### 1. 部署数据库
+从仓库页面进入 `Code -> Codespaces`，启动现有 Codespace。`.devcontainer/devcontainer.json` 会准备 Docker，并自动执行：
 
-在线上创建一个 MySQL 8.0 数据库，并记录以下信息：
+```bash
+sh 03_devops/scripts/codespace-start.sh
+```
+
+也可以在 Codespaces 终端手动运行该命令。脚本通过 Docker Compose 启动 Express 后端、MySQL 和备用容器前端。检查：
+
+```bash
+curl http://localhost:3001/api/health
+docker compose -f 03_devops/docker-compose.yml ps
+```
+
+### 2. 公开后端端口
+
+在 Codespaces 的 `PORTS` 面板找到 `3001`，将 `Port Visibility` 设置为 `Public`。当前已验证的后端地址为：
 
 ```text
-DB_HOST
-DB_PORT
-DB_USER
-DB_PASSWORD
-DB_NAME
+https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev
 ```
 
-数据库表会由 Sequelize 在后端启动时自动同步。
-
-### 2. 部署后端
-
-在 Railway 创建 Web Service，连接本仓库或使用 CLI 部署。
-
-后端服务配置：
+健康检查：
 
 ```text
-Root Directory: backend
-Build Command: npm install
-Start Command: npm start
+https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev/api/health
 ```
 
-后端环境变量：
+### 3. 连接并发布 GitHub Pages
 
-```env
-PORT=3001
-DB_HOST=你的线上数据库地址
-DB_PORT=3306
-DB_USER=你的线上数据库用户
-DB_PASSWORD=你的线上数据库密码
-DB_NAME=shopping_platform
-JWT_SECRET=请换成足够长的随机字符串
-JWT_EXPIRES_IN=30d
-CORS_ORIGIN=你的前端线上地址
-NODE_ENV=production
-```
-
-部署完成后，访问后端健康检查接口：
+仓库 `Settings -> Secrets and variables -> Actions -> Variables` 中配置：
 
 ```text
-https://你的后端域名/api/health
+Name:  CODESPACE_API_BASE_URL
+Value: https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev/api
 ```
 
-返回 `{"status":"ok"}` 表示后端已启动。
-
-项目已包含 `backend/railway.json`，可直接用于 Railway 后端部署。
-
-### 3. 部署前端
-
-在 Railway 或 Vercel 创建前端服务，连接本仓库。
-
-前端项目配置：
+随后在 Actions 中手动运行 `deploy-github-pages`，分支选择 `main`。工作流会将 `VITE_API_BASE_URL` 写入前端生产包并部署到：
 
 ```text
-Root Directory: frontend
-Framework Preset: Vite
-Build Command: npm run build
-Output Directory: dist
+https://tchen-0213.github.io/softw/
 ```
 
-前端环境变量：
+### 4. 部署验证与限制
 
-```env
-VITE_API_BASE_URL=https://你的后端域名/api
-VITE_API_TIMEOUT=10000
-```
-
-项目已包含：
-
-- `frontend/railway.json`：用于 Railway 前端部署
-- `frontend/vercel.json`：用于 Vercel 上支持 React Router 页面刷新和直接访问子路由
-
-### 4. 回填跨域地址
-
-前端部署成功后，将 Vercel 生成的前端地址填回后端环境变量：
-
-```env
-CORS_ORIGIN=https://你的前端域名
-```
-
-然后重新部署后端。
+- Pages 发布：[运行 #33054053025](https://github.com/tchen-0213/softw/actions/runs/33054053025)，成功。
+- 公网 Playwright：4/4 通过，覆盖 UC01-UC09。
+- 验证记录：`03_devops/2026-08-27-GitHub-Pages-Codespaces联通验证记录.md`。
+- Codespace 休眠时 API 会暂时离线；重新启动同一 Codespace 后恢复。
+- 重建 Codespace 后域名可能变化，需要更新 `CODESPACE_API_BASE_URL` 并重新运行 Pages 工作流。
+- 删除 Codespace 会删除其中的 Docker volumes，包括该环境的 MySQL 数据和上传文件。
 
 ---
 

@@ -13,7 +13,7 @@
 - 任务分配和进度跟踪。
 - 基础流水线构建验证。
 
-当前部署目标选择为 A：CodeArts 主要用于开发过程管理和代码协作，系统运行演示优先使用本地或测试环境。
+CodeArts 仅保留为早期过程材料。当前任务管理和 CI/CD 使用 GitHub，公网演示使用 GitHub Pages 前端与 Codespaces 后端/MySQL。
 
 ## 2. CodeArts 必做操作
 

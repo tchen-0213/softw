@@ -29,7 +29,7 @@ docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wai
 
 微服务版本启动后，前端位于 `http://localhost:8082`，网关健康检查位于 `http://localhost:8081/health`。用户、商品交易和订单服务分别管理 `softw_users`、`softw_catalog`、`softw_orders`，完整边界和接口见 `../02_docs/微服务接口与数据归属.md`。
 
-公网演示使用 GitHub Pages 前端 `https://tchen-0213.github.io/softw/` 和 Codespaces 单体后端。Pages 通过仓库变量 `CODESPACE_API_BASE_URL` 获取 `https://<CODESPACE_NAME>-3001.app.github.dev/api`；Codespaces 的 3001 端口必须设为 Public。
+公网演示使用 GitHub Pages 前端 `https://tchen-0213.github.io/softw/` 和 Codespaces 单体后端 `https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev`。Pages 通过仓库变量 `CODESPACE_API_BASE_URL` 获取后端 `/api` 地址；Codespaces 的 3001 端口必须设为 Public。完整启动和恢复步骤见 `部署文档.md`。
 
 全新数据库会在后端启动时自动迁移。也可以显式检查：
 

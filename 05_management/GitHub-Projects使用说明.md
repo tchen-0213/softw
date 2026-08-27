@@ -87,8 +87,8 @@ Project 使用以下状态：
 
 ```text
 前端：https://tchen-0213.github.io/softw/
-后端：https://<CODESPACE_NAME>-3001.app.github.dev
-健康检查：https://<CODESPACE_NAME>-3001.app.github.dev/api/health
+后端：https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev
+健康检查：https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev/api/health
 ```
 
 Pages 构建读取 Actions Variable `CODESPACE_API_BASE_URL`。Codespaces 3001 端口必须设为 Public；实例休眠后需重新启动。Docker 本地环境作为备用：

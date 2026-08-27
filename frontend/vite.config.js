@@ -22,8 +22,5 @@ export default defineConfig({
         secure: false
       }
     }
-  },
-  preview: {
-    allowedHosts: ['frontend-production-b71b.up.railway.app']
   }
 })
