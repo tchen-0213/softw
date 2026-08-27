@@ -104,6 +104,6 @@ docker compose -f 03_devops/docker-compose.yml up -d --build --wait
 后端健康检查：http://localhost:3001/api/health
 ```
 
-## 7. 历史 CodeArts 材料
+## 7. 单一平台约束
 
-`CodeArts使用说明.md`、`CodeArts看板任务清单.csv`、`CodeArts截图/` 和 `automation/` 中相关脚本记录了早期平台配置与排查过程。它们继续保留用于课程追溯，但不再代表当前任务管理方式，也不应与 GitHub Project 同时维护两套实时状态。
+本项目只使用 GitHub Repository、Issues、Project 和 Actions 管理代码、任务、看板与流水线。成员不需要在其他平台重复创建任务、同步仓库或维护流水线，答辩时也只展示 GitHub 上的真实记录。

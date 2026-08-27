@@ -59,7 +59,6 @@ softw/
 ├── backend/                     # Express 单体后端及邻近测试
 ├── frontend/                    # React 前端及 Playwright E2E
 ├── services/                    # 网关和三个业务微服务
-├── automation/                  # 平台迁移与辅助自动化（含历史 CodeArts 脚本）
 ├── .github/workflows/           # GitHub Actions 固定目录
 ├── package.json                 # 仓库级验证和部署命令
 └── README.md
@@ -442,7 +441,6 @@ git push origin feature/模块名
 | --- | --- |
 | `05_management/小学期重构计划.md` | 时间安排、分工、任务拆解和验收成果 |
 | `05_management/GitHub-Projects使用说明.md` | GitHub Projects、Issues、Actions 的当前操作与验收规则 |
-| `05_management/CodeArts使用说明.md`、`05_management/CodeArts截图/` | 早期 CodeArts 配置和过程证据，仅作历史资料保留 |
 | `05_management/敏捷开发记录.md` | Scrum/Sprint 计划、每日站会和风险跟踪 |
 | `02_docs/微服务拆分设计.md` | 稳定路线下的微服务拆分和网关设计 |
 | `02_docs/性能优化与压测方案.md` | 高性能、高并发优化和压测计划 |
@@ -456,7 +454,7 @@ GitHub Projects 必做内容：
 - 代码变更通过分支和 Pull Request 关联 Issue；构建、测试与部署结果由 GitHub Actions 留痕。
 - 每日站会后更新看板，并保留关键截图、测试输出、提交或 Actions 运行链接作为验收证据。
 
-当前部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD；GitHub Pages 托管静态前端，GitHub Codespaces 运行后端和 MySQL，Docker Compose 与 Kind 用于本地及流水线复现。早期 CodeArts 文件仅作为历史资料保留。
+当前管理与部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD；GitHub Pages 托管静态前端，GitHub Codespaces 运行后端和 MySQL，Docker Compose 与 Kind 用于本地及流水线复现。项目不再使用其他代码托管或看板平台。
 
 ---
 

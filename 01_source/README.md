@@ -7,7 +7,6 @@
 | 单体后端 | `../backend/` | Express、Sequelize、MySQL 接口服务 |
 | 单体前端 | `../frontend/` | React、Vite 页面应用 |
 | 微服务版本 | `../services/` | API 网关及用户、商品、订单服务 |
-| 辅助自动化 | `../automation/` | CodeArts 辅助脚本 |
 | 仓库级命令 | `../package.json` | 测试、构建、Compose、Kubernetes 和压测入口 |
 | CI/CD 工作流 | `../.github/workflows/` | GitHub 规定的流水线固定目录 |
 | Codespaces 配置 | `../.devcontainer/` | 自动准备 Docker，并启动后端、MySQL 和容器前端 |
