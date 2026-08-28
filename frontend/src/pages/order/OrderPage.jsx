@@ -1,41 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fallbackImages, productImages } from '../../data/imageAssets';
+import { fallbackImages } from '../../data/imageAssets';
 import { orderApi } from '../../services/api';
 import { isLoggedIn } from '../../utils/accountStorage';
-
-const mockOrders = [
-  {
-    id: '1',
-    createTime: '2026-04-01 12:00:00',
-    status: '待付款',
-    totalPrice: 199.99,
-    items: [
-      {
-        id: '1',
-        name: '全新 iPhone 15 Pro',
-        price: 199.99,
-        quantity: 1,
-        image: productImages.iphone
-      }
-    ]
-  },
-  {
-    id: '2',
-    createTime: '2026-03-28 15:30:00',
-    status: '待发货',
-    totalPrice: 599.99,
-    items: [
-      {
-        id: '2',
-        name: 'MacBook Pro 2026',
-        price: 599.99,
-        quantity: 1,
-        image: productImages.macbook
-      }
-    ]
-  }
-];
 
 const normalizeOrder = (order) => ({
   ...order,
@@ -137,9 +104,9 @@ const OrderPage = () => {
 
   if (!isLoggedIn()) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>我的订单</h2>
+          <h2 className="page-title">我的订单</h2>
           <div className="shop-empty-panel">
             <h3>请先登录后查看订单</h3>
             <button className="button button-primary" onClick={() => navigate('/login')}>
@@ -152,64 +119,42 @@ const OrderPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>我的订单</h2>
-        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
+        <h2 className="page-title">我的订单</h2>
+        {error && <div className="biz-error">{error}</div>}
         {orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '100px 0' }}>
+          <div className="biz-empty">
             <p>暂无订单</p>
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                marginTop: '20px',
-                padding: '8px 16px',
-                background: '#1890ff',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
+            <button className="button button-primary" onClick={() => navigate('/')}>
               去购物
             </button>
           </div>
         ) : (
           <div>
             {orders.map((order) => (
-              <div key={order.id} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', marginBottom: '20px' }}>
-                <div style={{ padding: '16px', borderBottom: '1px solid #e8e8e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={order.id} className="biz-card order-card">
+                <div className="order-card-head">
                   <div>订单号: {order.id}</div>
-                  <div style={{ color: '#ff4d4f' }}>{getStatusText(order.status)}</div>
+                  <div className="order-status">{getStatusText(order.status)}</div>
                 </div>
-                <div style={{ padding: '16px' }}>
+                <div>
                   {order.items.map((item) => (
                     <button
                       key={item.id}
                       type="button"
+                      className="biz-line-item biz-line-item-btn"
                       onClick={() => handleEvaluateOrder(order)}
                       title={isCompletedOrder(order.status) ? '评价该订单' : '确认收货后可评价'}
-                      style={{
-                        display: 'flex',
-                        width: '100%',
-                        marginBottom: '16px',
-                        padding: 0,
-                        alignItems: 'center',
-                        border: 'none',
-                        background: 'transparent',
-                        color: 'inherit',
-                        textAlign: 'left',
-                        cursor: 'pointer'
-                      }}
                     >
                       <img
                         src={item.image || fallbackImages.product}
                         alt={item.name}
-                        style={{ width: '80px', height: '80px', objectFit: 'cover', marginRight: '16px' }}
+                        className="biz-thumb"
                       />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ marginBottom: '8px' }}>{item.name}</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="biz-line-body">
+                        <div className="biz-line-name">{item.name}</div>
+                        <div className="biz-line-meta">
                           <div>¥{item.price}</div>
                           <div>x{item.quantity}</div>
                         </div>
@@ -217,84 +162,56 @@ const OrderPage = () => {
                     </button>
                   ))}
                 </div>
-                <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="order-card-foot">
                   <div>下单时间: {order.createTime}</div>
-                  <div style={{ fontSize: '16px', fontWeight: 'bold' }}>总计: ¥{order.totalPrice.toFixed(2)}</div>
+                  <div className="order-total">总计: ¥{order.totalPrice.toFixed(2)}</div>
                 </div>
                 {order.logistics && (
-                  <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', color: '#666' }}>
-                    <div style={{ marginBottom: '8px' }}>
+                  <div className="order-card-logistics order-logistics">
+                    <div>
                       物流：{order.logistics.company || '商家配送'} {order.logistics.trackingNumber || ''}
-                      <span style={{ marginLeft: '12px', color: '#1890ff' }}>{order.logistics.status || '运输中'}</span>
+                      <span className="order-logistics-status">{order.logistics.status || '运输中'}</span>
                     </div>
                     {(order.logistics.steps || []).slice(0, 3).map((step, index) => (
-                      <div key={index} style={{ fontSize: '14px', marginTop: '4px' }}>
+                      <div key={index} className="order-logistics-step">
                         {step.time} - {step.description}
                       </div>
                     ))}
                   </div>
                 )}
-                <div style={{ padding: '16px', borderTop: '1px solid #e8e8e8', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <div className="order-card-actions">
                   {(order.status === 1 || order.status === '待付款') && (
                     <>
                       <button
+                        className="button button-secondary button-sm"
                         onClick={() => handleCancel(order.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#fff',
-                          color: '#666',
-                          border: '1px solid #d9d9d9',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
                       >
                         取消订单
                       </button>
                       <button
+                        className="button button-danger button-sm"
                         onClick={() => handlePay(order.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#ff4d4f',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
                       >
                         立即支付
                       </button>
                     </>
                   )}
-                  {order.status === 3 || order.status === '待收货' ? (
+                  {(order.status === 3 || order.status === '待收货') && (
                     <button
+                      className="button button-primary button-sm"
                       onClick={() => handleConfirm(order.id)}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#1890ff',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
                     >
                       确认收货
                     </button>
-                  ) : null}
-                  {order.status === 4 || order.status === '已完成' ? (
+                  )}
+                  {(order.status === 4 || order.status === '已完成') && (
                     <button
+                      className="button button-primary button-sm"
                       onClick={() => navigate(`/evaluation/${order.id}`)}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#1890ff',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
                     >
                       评价
                     </button>
-                  ) : null}
+                  )}
                 </div>
               </div>
             ))}

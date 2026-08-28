@@ -6,7 +6,7 @@ import { evaluationApi, orderApi, uploadApi } from '../../services/api';
 const EvaluationPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  
+
   const [evaluations, setEvaluations] = useState([
     {
       id: '1',
@@ -64,13 +64,13 @@ const EvaluationPage = () => {
   }, [orderId]);
 
   const handleRatingChange = (productId, rating) => {
-    setEvaluations(prev => prev.map(item => 
+    setEvaluations(prev => prev.map(item =>
       item.productId === productId ? { ...item, rating } : item
     ));
   };
 
   const handleContentChange = (productId, content) => {
-    setEvaluations(prev => prev.map(item => 
+    setEvaluations(prev => prev.map(item =>
       item.productId === productId ? { ...item, content } : item
     ));
   };
@@ -97,9 +97,9 @@ const EvaluationPage = () => {
   };
 
   const handleRemoveImage = (productId, index) => {
-    setEvaluations(prev => prev.map(item => 
-      item.productId === productId 
-        ? { ...item, images: item.images.filter((_, i) => i !== index) } 
+    setEvaluations(prev => prev.map(item =>
+      item.productId === productId
+        ? { ...item, images: item.images.filter((_, i) => i !== index) }
         : item
     ));
   };
@@ -132,92 +132,67 @@ const EvaluationPage = () => {
     }
   };
 
-  const renderStars = (productId, currentRating) => {
-    return Array(5).fill(0).map((_, index) => (
-      <span
-        key={index}
-        style={{
-          color: index < currentRating ? '#ffd700' : '#ddd',
-          fontSize: '20px',
-          cursor: 'pointer'
-        }}
-        onClick={() => handleRatingChange(productId, index + 1)}
-      >
-        ★
-      </span>
-    ));
-  };
+  const renderStars = (productId, currentRating) => (
+    <div className="eval-stars">
+      {Array(5).fill(0).map((_, index) => (
+        <span
+          key={index}
+          className={`eval-star${index < currentRating ? ' active' : ''}`}
+          onClick={() => handleRatingChange(productId, index + 1)}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>评价订单</h2>
-        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
-        <form onSubmit={handleSubmit} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
+        <h2 className="page-title">评价订单</h2>
+        {error && <div className="biz-error">{error}</div>}
+        <form className="biz-card eval-form" onSubmit={handleSubmit}>
           {evaluations.map((item) => (
-            <div key={item.id} style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #e8e8e8' }}>
-              <div style={{ display: 'flex', marginBottom: '16px' }}>
+            <div key={item.id} className="eval-block">
+              <div className="eval-product">
                 <img
                   src={item.productImage}
                   alt={item.productName}
-                  style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '16px' }}
+                  className="biz-thumb biz-thumb-lg"
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ marginBottom: '8px' }}>{item.productName}</div>
-                  <div style={{ marginBottom: '8px' }}>
-                    {renderStars(item.productId, item.rating)}
-                  </div>
+                <div className="biz-line-body">
+                  <div className="biz-line-name">{item.productName}</div>
+                  {renderStars(item.productId, item.rating)}
                 </div>
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px' }}>评价内容</label>
+              <div className="eval-field">
+                <label>评价内容</label>
                 <textarea
                   value={item.content}
                   onChange={(e) => handleContentChange(item.productId, e.target.value)}
                   rows="4"
-                  style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', resize: 'vertical' }}
                 />
               </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px' }}>上传图片</label>
+              <div className="eval-field">
+                <label>上传图片</label>
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={(e) => handleImageUpload(item.productId, e)}
                   disabled={uploadingProductId === item.productId}
-                  style={{ marginBottom: '12px' }}
                 />
                 {uploadingProductId === item.productId && (
-                  <div style={{ color: '#666', marginBottom: '12px' }}>图片上传中...</div>
+                  <div className="eval-hint">图片上传中...</div>
                 )}
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div className="eval-images">
                   {item.images.map((image, index) => (
-                    <div key={index} style={{ position: 'relative' }}>
-                      <img
-                        src={image}
-                        alt={`预览 ${index + 1}`}
-                        style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                      />
+                    <div key={index} className="eval-image">
+                      <img src={image} alt={`预览 ${index + 1}`} />
                       <button
                         type="button"
+                        className="eval-image-remove"
                         onClick={() => handleRemoveImage(item.productId, index)}
-                        style={{
-                          position: 'absolute',
-                          top: '-8px',
-                          right: '-8px',
-                          background: '#ff4d4f',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '20px',
-                          height: '20px',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
                       >
                         ×
                       </button>
@@ -227,19 +202,11 @@ const EvaluationPage = () => {
               </div>
             </div>
           ))}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div className="eval-actions">
             <button
               type="submit"
+              className="button button-primary"
               disabled={loading}
-              style={{
-                padding: '10px 30px',
-                background: '#1890ff',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontSize: '16px'
-              }}
             >
               {loading ? '提交中...' : '提交评价'}
             </button>

@@ -108,9 +108,9 @@ const CheckoutPage = () => {
 
   if (!isLoggedIn()) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>结算</h2>
+          <h2 className="page-title">结算</h2>
           <div className="shop-empty-panel">
             <h3>请先登录后再结算</h3>
             <button className="button button-primary" onClick={() => navigate('/login')}>
@@ -124,33 +124,26 @@ const CheckoutPage = () => {
 
   if (checkoutItems.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <p>购物车为空，无法结算</p>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            marginTop: '20px',
-            padding: '8px 16px',
-            background: '#1890ff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          去购物
-        </button>
+      <div className="biz-page">
+        <div className="container">
+          <div className="biz-empty">
+            <p>购物车为空，无法结算</p>
+            <button className="button button-primary" onClick={() => navigate('/')}>
+              去购物
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>结算</h2>
-        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
-        
-        <div style={{ marginBottom: '30px' }}>
+        <h2 className="page-title">结算</h2>
+        {error && <div className="biz-error">{error}</div>}
+
+        <div className="biz-section">
           <AddressManager
             addresses={addresses}
             onChange={handleAddressesChange}
@@ -160,26 +153,26 @@ const CheckoutPage = () => {
           />
         </div>
 
-        <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '15px' }}>订单商品</h3>
-          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+        <div className="biz-section">
+          <h3 className="biz-section-title">订单商品</h3>
+          <div className="biz-card">
             {checkoutItems.map((item) => (
               <div
                 key={item.bargainMessageId ? `bargain-${item.bargainMessageId}` : item.id}
-                style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #e8e8e8' }}
+                className="biz-line-item"
               >
                 <img
                   src={item.images?.[0] || fallbackImages.product}
                   alt={item.name}
-                  style={{ width: '80px', height: '80px', objectFit: 'cover', marginRight: '16px' }}
+                  className="biz-thumb"
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ marginBottom: '8px' }}>{item.name}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="biz-line-body">
+                  <div className="biz-line-name">{item.name}</div>
+                  <div className="biz-line-meta">
                     <div>
                       ¥{Number(item.price).toFixed(2)}
                       {item.bargainMessageId && (
-                        <span style={{ marginLeft: '8px', color: '#52c41a' }}>议价成交价</span>
+                        <span className="biz-tag-ok">议价成交价</span>
                       )}
                     </div>
                     <div>x{item.quantity}</div>
@@ -190,72 +183,63 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '15px' }}>支付方式</h3>
-          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '16px' }}>
-            <div style={{ marginBottom: '12px' }}>
-              <input
-                type="radio"
-                name="payment"
-                value="wechat"
-                checked={paymentMethod === 'wechat'}
-                onChange={() => setPaymentMethod('wechat')}
-                style={{ marginRight: '8px' }}
-              />
-              <span>微信支付</span>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <input
-                type="radio"
-                name="payment"
-                value="alipay"
-                checked={paymentMethod === 'alipay'}
-                onChange={() => setPaymentMethod('alipay')}
-                style={{ marginRight: '8px' }}
-              />
-              <span>支付宝</span>
-            </div>
-            <div>
-              <input
-                type="radio"
-                name="payment"
-                value="creditcard"
-                checked={paymentMethod === 'creditcard'}
-                onChange={() => setPaymentMethod('creditcard')}
-                style={{ marginRight: '8px' }}
-              />
-              <span>信用卡</span>
+        <div className="biz-section">
+          <h3 className="biz-section-title">支付方式</h3>
+          <div className="biz-card biz-card-pad">
+            <div className="biz-radio-list">
+              <label className="biz-radio">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="wechat"
+                  checked={paymentMethod === 'wechat'}
+                  onChange={() => setPaymentMethod('wechat')}
+                />
+                <span>微信支付</span>
+              </label>
+              <label className="biz-radio">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="alipay"
+                  checked={paymentMethod === 'alipay'}
+                  onChange={() => setPaymentMethod('alipay')}
+                />
+                <span>支付宝</span>
+              </label>
+              <label className="biz-radio">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="creditcard"
+                  checked={paymentMethod === 'creditcard'}
+                  onChange={() => setPaymentMethod('creditcard')}
+                />
+                <span>信用卡</span>
+              </label>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <div style={{ marginRight: '30px' }}>
-            <div style={{ marginBottom: '8px' }}>
+        <div className="biz-checkout-footer">
+          <div className="biz-checkout-totals">
+            <div>
               <span>商品总价: </span>
               <span>¥{totalPrice.toFixed(2)}</span>
             </div>
-            <div style={{ marginBottom: '8px' }}>
+            <div>
               <span>运费: </span>
               <span>¥0.00</span>
             </div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ff4d4f' }}>
+            <div className="biz-checkout-pay">
               <span>实付金额: </span>
               <span>¥{totalPrice.toFixed(2)}</span>
             </div>
           </div>
           <button
+            className="button button-danger"
             onClick={handleSubmit}
             disabled={submitting}
-            style={{
-              padding: '12px 30px',
-              background: '#ff4d4f',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              fontSize: '16px'
-            }}
           >
             {submitting ? '提交中...' : '提交订单'}
           </button>
