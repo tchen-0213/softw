@@ -534,6 +534,19 @@ sh 03_devops/scripts/codespace-start.sh
 https://<CODESPACE_NAME>-3001.app.github.dev/api/health
 ```
 
+自动化 API/E2E 测试会创建以 `api_`、`e2e_` 开头的临时账号和商品。答辩前可在 Codespaces
+终端先预览、再清除这些数据，最后确认演示初始数据完整：
+
+```bash
+docker compose -f 03_devops/docker-compose.yml build backend
+docker compose -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data
+docker compose -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data -- --execute
+docker compose -f 03_devops/docker-compose.yml run --rm backend npm run seed:scenario
+```
+
+清理命令按外键依赖顺序删除测试消息、会话、评价、订单、地址、店铺、商品和账号；不匹配测试
+前缀的演示数据不会被删除。不加 `--execute` 时只显示待清理数量，不修改数据库。
+
 Codespaces 不是长期生产主机：实例停止或休眠后后端不可访问，重建 Codespace 后域名可能变化，此时需要更新 `CODESPACE_API_BASE_URL` 并重新部署 Pages。MySQL 数据和上传文件保存在该 Codespace 的 Docker volumes 中，删除 Codespace 会删除这些运行数据。
 
 ### 临时公网完整业务演示

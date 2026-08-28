@@ -11,6 +11,7 @@
     "db:migrate": "node scripts/migrate.js up",
     "db:migrate:status": "node scripts/migrate.js status",
     "db:migrate:down": "node scripts/migrate.js down",
+    "cleanup:test-data": "node scripts/cleanupTestData.js",
     "seed": "node seedDemoProducts.js",
     "seed:scenario": "node seedDemoScenario.js"
   },
