@@ -2775,10 +2775,10 @@ html[data-theme='dark'] .home-hero-panel {
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.home-categories button:nth-child(1) { background: color-mix(in srgb, var(--accent-lilac) 33%, var(--surface-bg)); }
-.home-categories button:nth-child(2) { background: color-mix(in srgb, var(--accent-sage) 34%, var(--surface-bg)); }
-.home-categories button:nth-child(3) { background: color-mix(in srgb, var(--accent-rose) 30%, var(--surface-bg)); }
-.home-categories button:nth-child(4) { background: color-mix(in srgb, var(--accent-gold) 34%, var(--surface-bg)); }
+.home-categories button:nth-child(1) { background: color-mix(in srgb, #7faab6 28%, var(--surface-bg)); }
+.home-categories button:nth-child(2) { background: color-mix(in srgb, #8bb3a6 28%, var(--surface-bg)); }
+.home-categories button:nth-child(3) { background: color-mix(in srgb, #93a8af 26%, var(--surface-bg)); }
+.home-categories button:nth-child(4) { background: color-mix(in srgb, #9eb3bc 28%, var(--surface-bg)); }
 
 .home-categories button:hover {
   transform: translateY(-2px);
@@ -3033,9 +3033,6 @@ select:focus-visible,
   padding: clamp(28px, 5vw, 44px);
   border: 1px solid var(--border-color);
   border-radius: 28px 19px 30px 21px;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--accent-lilac) 24%, var(--surface-bg)), var(--surface-bg) 46%),
-    var(--surface-bg);
   box-shadow: 10px 12px 0 rgba(83, 106, 101, 0.09);
 }
 
@@ -3302,22 +3299,22 @@ select:focus-visible,
 
 .product-card:nth-child(4n + 1),
 .home-categories button:nth-child(1) {
-  --card-accent: #7eb4c4;
+  --card-accent: #7faab6;
 }
 
 .product-card:nth-child(4n + 2),
 .home-categories button:nth-child(2) {
-  --card-accent: #7eac8c;
+  --card-accent: #8bb3a6;
 }
 
 .product-card:nth-child(4n + 3),
 .home-categories button:nth-child(3) {
-  --card-accent: #c88896;
+  --card-accent: #93a8af;
 }
 
 .product-card:nth-child(4n),
 .home-categories button:nth-child(4) {
-  --card-accent: #c8b078;
+  --card-accent: #9eb3bc;
 }
 
 .home-hero-panel {
@@ -3325,7 +3322,11 @@ select:focus-visible,
 }
 
 .auth-card {
-  --card-accent: #a892c0;
+  --card-accent: var(--primary-color);
+}
+
+.filter-panel {
+  --card-accent: var(--primary-color);
 }
 
 .product-card,
@@ -3540,4 +3541,74 @@ html[data-theme='dark'] .sort-bar {
   background: var(--surface-bg);
   border-color: var(--border-color);
   box-shadow: var(--shadow-soft);
+}
+
+/* 色彩协调：统一青绿系，降低卡片染色强度 */
+.product-card,
+.filter-panel {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-accent) 24%, rgba(255, 255, 255, 0.42)) 0%,
+      color-mix(in srgb, var(--card-accent) 10%, rgba(255, 253, 248, 0.68)) 40%,
+      rgba(255, 253, 248, 0.9) 100%
+    );
+}
+
+.auth-card {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary-color) 16%, rgba(255, 255, 255, 0.52)) 0%,
+      color-mix(in srgb, var(--primary-color) 6%, rgba(255, 253, 248, 0.82)) 46%,
+      rgba(255, 253, 248, 0.94) 100%
+    );
+}
+
+.auth-kicker {
+  background: color-mix(in srgb, var(--primary-soft) 72%, rgba(255, 253, 248, 0.95));
+  border-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+  color: color-mix(in srgb, var(--primary-hover) 70%, var(--text-main));
+}
+
+.auth-card .button-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.auth-card .button-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.auth-switch a {
+  color: var(--primary-hover);
+}
+
+html[data-theme='dark'] .auth-card {
+  --card-accent: var(--primary-color);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary-color) 22%, rgba(255, 255, 255, 0.06)) 0%,
+      color-mix(in srgb, var(--primary-color) 8%, rgba(16, 24, 23, 0.82)) 48%,
+      rgba(16, 24, 23, 0.9) 100%
+    );
+}
+
+html[data-theme='dark'] .auth-kicker {
+  background: color-mix(in srgb, var(--primary-soft) 55%, rgba(16, 24, 23, 0.88));
+  border-color: color-mix(in srgb, var(--primary-color) 28%, transparent);
+  color: var(--text-main);
+}
+
+html[data-theme='dark'] .product-card,
+html[data-theme='dark'] .filter-panel {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-accent) 18%, rgba(255, 255, 255, 0.06)) 0%,
+      color-mix(in srgb, var(--card-accent) 8%, rgba(16, 24, 23, 0.78)) 46%,
+      rgba(16, 24, 23, 0.88) 100%
+    );
 }
