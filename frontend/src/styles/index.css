@@ -4890,3 +4890,109 @@ html[data-theme='dark'] .home-categories button:nth-child(3) {
 html[data-theme='dark'] .home-categories button:nth-child(4) {
   background: color-mix(in srgb, var(--accent-gold) 28%, rgba(16, 24, 23, 0.9));
 }
+
+/* 整体再淡一档：更轻、更和谐 */
+:root {
+  --page-bg: #f5f8fa;
+  --surface-bg: rgba(255, 255, 255, 0.96);
+  --surface-soft: #eef3f6;
+}
+
+.logo-image {
+  background: color-mix(in srgb, #c5e0ea 42%, #fff);
+  border-color: color-mix(in srgb, #9ec9d6 22%, transparent);
+  box-shadow: 3px 4px 0 rgba(79, 131, 146, 0.08);
+}
+
+.theme-toggle {
+  background: color-mix(in srgb, #c5e0ea 28%, #fff);
+}
+
+body {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(170, 210, 225, 0.18), transparent 28%),
+    radial-gradient(circle at 88% 14%, rgba(190, 210, 230, 0.12), transparent 26%),
+    radial-gradient(circle at 78% 78%, rgba(180, 215, 205, 0.1), transparent 30%),
+    linear-gradient(180deg, #f8fbfc 0%, #f5f8fa 52%, #f3f7f9 100%);
+}
+
+.home-hero {
+  border-color: color-mix(in srgb, #a8cbd6 22%, transparent);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.82), transparent 24%),
+    radial-gradient(circle at 18% 86%, rgba(190, 220, 228, 0.22), transparent 34%),
+    linear-gradient(
+      125deg,
+      rgba(198, 224, 232, 0.78) 0%,
+      rgba(210, 220, 236, 0.62) 42%,
+      rgba(204, 228, 220, 0.66) 100%
+    );
+  box-shadow: 6px 8px 0 rgba(79, 131, 146, 0.06);
+}
+
+.product-card:nth-child(4n + 1) { --card-accent: #a8cdd8; }
+.product-card:nth-child(4n + 2) { --card-accent: #b2d0bc; }
+.product-card:nth-child(4n + 3) { --card-accent: #ddc0c6; }
+.product-card:nth-child(4n) { --card-accent: #c9bdd8; }
+
+.product-card,
+.filter-panel {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-accent) 22%, rgba(255, 255, 255, 0.62)) 0%,
+      color-mix(in srgb, var(--card-accent) 8%, rgba(255, 255, 255, 0.88)) 42%,
+      rgba(255, 255, 255, 0.96) 100%
+    );
+}
+
+.home-categories button {
+  box-shadow: 4px 5px 0 rgba(120, 130, 120, 0.07);
+}
+
+.home-categories button:nth-child(1) {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent-lilac) 26%, #fff) 0%,
+      color-mix(in srgb, var(--accent-lilac) 10%, #fff) 100%
+    );
+}
+
+.home-categories button:nth-child(2) {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent-sage) 28%, #fff) 0%,
+      color-mix(in srgb, var(--accent-sage) 10%, #fff) 100%
+    );
+}
+
+.home-categories button:nth-child(3) {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent-rose) 24%, #fff) 0%,
+      color-mix(in srgb, var(--accent-rose) 9%, #fff) 100%
+    );
+}
+
+.home-categories button:nth-child(4) {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #9ec9d6 26%, #fff) 0%,
+      color-mix(in srgb, #9ec9d6 10%, #fff) 100%
+    );
+}
+
+.home-hero-panel {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--card-accent) 12%, #fff) 0%,
+      color-mix(in srgb, var(--card-accent) 5%, #fff) 54%,
+      #fff 100%
+    );
+  box-shadow: 4px 6px 0 rgba(120, 130, 120, 0.08);
+}
