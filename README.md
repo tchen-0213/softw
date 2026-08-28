@@ -144,14 +144,15 @@ npm 9+
 ```bash
 git clone https://github.com/tchen-0213/softw.git
 cd softw
-docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+sh 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
 ```
 
 后端启动时会自动按版本执行 `backend/database/migrations/` 中的数据库迁移。检查容器、迁移版本和健康状态：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml ps
-docker compose -f 03_devops/docker-compose.yml exec backend npm run db:migrate:status
+docker compose --env-file .env -f 03_devops/docker-compose.yml ps
+docker compose --env-file .env -f 03_devops/docker-compose.yml exec backend npm run db:migrate:status
 curl --fail http://127.0.0.1:3001/api/health
 curl --fail http://127.0.0.1:8080/
 ```
@@ -159,14 +160,14 @@ curl --fail http://127.0.0.1:8080/
 导入可重复执行的完整答辩演示数据：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml exec backend npm run seed:scenario
+docker compose --env-file .env -f 03_devops/docker-compose.yml exec backend npm run seed:scenario
 ```
 
 演示账号统一密码为 `Demo@123456`，卖家账号为 `demo-seller@example.com`。浏览器访问 `http://127.0.0.1:8080/`。需要清空数据库并重新验证全新安装时执行：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml down -v
-docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.yml down -v
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
 ```
 
 ---
@@ -279,7 +280,7 @@ sh 03_devops/scripts/codespace-start.sh
 
 ```bash
 curl http://localhost:3001/api/health
-docker compose -f 03_devops/docker-compose.yml ps
+docker compose --env-file .env -f 03_devops/docker-compose.yml ps
 ```
 
 ### 2. 公开后端端口
@@ -456,6 +457,18 @@ GitHub Projects 必做内容：
 
 当前管理与部署口径：GitHub Projects 和 Issues 用于过程管理，GitHub Actions 用于 CI/CD；GitHub Pages 托管静态前端，GitHub Codespaces 运行后端和 MySQL，Docker Compose 与 Kind 用于本地及流水线复现。项目不再使用其他代码托管或看板平台。
 
+GitHub Actions 不在工作流中保存口令。首次运行前，在仓库 `Settings -> Secrets and variables -> Actions`
+中创建以下 Repository secrets：
+
+```text
+CI_MYSQL_ROOT_PASSWORD
+CI_DB_PASSWORD
+CI_JWT_SECRET
+CI_INTERNAL_SERVICE_TOKEN
+```
+
+四个值应分别随机生成；它们只用于临时 CI 数据库、服务认证和 Kind 部署，不写入仓库或测试报告。
+
 ---
 
 ## 十二、2026 夏小学期验收入口
@@ -473,7 +486,7 @@ GitHub Projects 必做内容：
 | `.github/workflows/ci-cd.yml` | 自动测试、构建镜像、K8s manifest 检查 |
 | `03_devops/k8s/monolith` | 单体版本 Kubernetes 部署 |
 | `03_devops/k8s/microservices` | 微服务版本 Kubernetes 部署和 HPA |
-| `04_tests/reports/` | 测试报告和性能对比记录模板 |
+| `04_tests/reports/` | 测试报告、三接口性能对比实测和云原生实验原始数据 |
 | `05_management/未完成任务清单.md` | 仍需现场、团队或真实环境完成的事项 |
 
 ### 本地验证
@@ -538,10 +551,10 @@ https://<CODESPACE_NAME>-3001.app.github.dev/api/health
 终端先预览、再清除这些数据，最后确认演示初始数据完整：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml build backend
-docker compose -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data
-docker compose -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data -- --execute
-docker compose -f 03_devops/docker-compose.yml run --rm backend npm run seed:scenario
+docker compose --env-file .env -f 03_devops/docker-compose.yml build backend
+docker compose --env-file .env -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data
+docker compose --env-file .env -f 03_devops/docker-compose.yml run --rm backend npm run cleanup:test-data -- --execute
+docker compose --env-file .env -f 03_devops/docker-compose.yml run --rm backend npm run seed:scenario
 ```
 
 清理命令按外键依赖顺序删除测试消息、会话、评价、订单、地址、店铺、商品和账号；不匹配测试
@@ -581,7 +594,7 @@ npm run compose:up
 ### 微服务版本本地启动
 
 ```bash
-docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up -d --build --wait
 ```
 
 启动后访问：
@@ -613,8 +626,18 @@ API_BASE_URL=http://127.0.0.1:8081 E2E_BASE_URL=http://localhost:8082 npm run te
 ### Kubernetes 部署
 
 ```bash
-kubectl apply -f 03_devops/k8s/monolith
-kubectl apply -f 03_devops/k8s/microservices
+set -a
+. ./.env
+set +a
+npm run k8s:deploy
+```
+
+部署脚本会把环境变量写入集群 Secret，再应用单体和微服务 YAML、等待就绪并执行健康检查；仓库不保存
+Secret 值。回滚单个 Deployment：
+
+```bash
+npm run k8s:rollback -- softw-microservices product-service
+npm run k8s:rollback -- softw-microservices product-service 2
 ```
 
 检查命令：

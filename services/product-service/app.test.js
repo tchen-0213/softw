@@ -3,7 +3,17 @@ const assert = require('node:assert/strict');
 
 process.env.DB_NAME = process.env.DB_NAME || 'softw_catalog_test';
 process.env.INTERNAL_SERVICE_TOKEN = 'test_internal_token';
-const { app, initialize, sequelize, models } = require('./app');
+const { app, initialize, sequelize, models, experiment } = require('./app');
+
+test('CPU burn experiment is disabled by default and capped when enabled', () => {
+  delete process.env.EXPERIMENT_CPU_BURN_ENABLED;
+  assert.equal(experiment.parseExperimentBurnMs('120'), 0);
+  process.env.EXPERIMENT_CPU_BURN_ENABLED = 'true';
+  assert.equal(experiment.parseExperimentBurnMs('120'), 120);
+  assert.equal(experiment.parseExperimentBurnMs('999'), 250);
+  assert.equal(experiment.parseExperimentBurnMs('invalid'), 0);
+  delete process.env.EXPERIMENT_CPU_BURN_ENABLED;
+});
 
 test('product service owns products and performs idempotent stock reservation', async () => {
   await initialize();

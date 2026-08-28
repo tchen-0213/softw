@@ -1,67 +1,88 @@
 # HPA 与故障处理实验记录
 
-## 环境
+实验日期：2026-08-28
 
-| 项 | 值 |
+## 环境与结论
+
+| 项 | 实测值 |
 | --- | --- |
-| Docker 后端 | Docker Desktop 29.7.2 |
-| Kubernetes | kind，context `kind-softw-practice` |
-| metrics-server | 已安装，并为 kind 添加 `--kubelet-insecure-tls` |
-| 单体入口 | `http://127.0.0.1:30080` |
-| 微服务网关 | `http://127.0.0.1:30081` |
+| Kubernetes | Kind，context `kind-softw-practice` |
+| 节点 | 1 个控制平面节点 |
+| metrics-server | `Available=True`，`kubectl top pods` 正常 |
+| 微服务入口 | `http://127.0.0.1:30081` |
+| 商品服务资源 | request `100m/128Mi`，limit `500m/512Mi` |
+| HPA | CPU 目标 60%，最少 1、最多 5 个副本 |
+| 总结 | 扩容 `1 -> 3 -> 5`，卸载后缩容 `5 -> 1`；依赖停止时降级成功，其他服务未崩溃 |
+
+## 自动扩缩容实验
+
+一键复现：
+
+```bash
+npm run experiment:hpa
+```
+
+脚本先在商品 Pod 内验证受控 CPU 负载已启用，再通过网关运行 k6。负载参数仅在
+`EXPERIMENT_CPU_BURN_ENABLED=true` 时生效，单次最多 250ms，避免误用于普通环境。
+
+### 扩缩容时间线
+
+| 时间 | CPU/目标 | 期望副本 | 当前副本 | Ready 副本 |
+| --- | --- | --- | --- | --- |
+| 15:17:57 | `1%/60%` | 1 | 1 | 1 |
+| 15:18:12 | `364%/60%` | 3 | 3 | 1 |
+| 15:18:22 | `364%/60%` | 3 | 3 | 3 |
+| 15:18:27 | `479%/60%` | 5 | 5 | 3 |
+| 15:18:38 | `479%/60%` | 5 | 5 | 5 |
+| 15:18:43 | `498%/60%` | 5 | 5 | 5 |
+| 15:19:55 | `1%/60%` | 5 | 5 | 5 |
+| 15:20:10 | `1%/60%` | 1 | 1 | 1 |
+
+### k6 结果
+
+| 指标 | 实测值 | 判定 |
+| --- | --- | --- |
+| 请求数 | 1229 | 完成 |
+| 吞吐量 | 11.70 req/s | 记录完成 |
+| 平均响应时间 | 514.08ms | 记录完成 |
+| P95 | 950.10ms | 通过 `< 3000ms` 阈值 |
+| 最大响应时间 | 1.05s | 记录完成 |
+| 错误率 | 0/1229，0% | 通过 `< 5%` 阈值 |
+| 业务断言 | 2458/2458 | 全部通过 |
+
+原始证据：
+
+- `raw/hpa-timeline-2026-08-28.tsv`：每 5 秒记录 CPU 和副本变化。
+- `raw/hpa-k6-summary-2026-08-28.json`：k6 机器可读汇总。
+- `raw/hpa-k6-2026-08-28.txt`：k6 控制台原始输出。
 
 ## 故障处理实验
 
-操作：
+一键复现：
 
 ```bash
-kubectl -n softw-microservices delete hpa product-service-hpa
-kubectl -n softw-microservices scale deploy/product-service --replicas=0
-kubectl -n softw-microservices wait --for=delete pod -l app=product-service --timeout=90s
-curl -i http://127.0.0.1:30081/api/orders/health/dependencies
-kubectl -n softw-microservices scale deploy/product-service --replicas=1
-kubectl apply -f 03_devops/k8s/microservices/03-hpa.yaml
+npm run experiment:fault
 ```
 
-结果：
+脚本暂时删除 HPA，主动把 `product-service` 缩至 0 个副本，验证结果后自动恢复商品服务和 HPA；
+即使中途按 Ctrl+C，`trap` 也会执行恢复操作。
 
-```text
-product-service endpoints: <none>
-HTTP/1.1 206 Partial Content
-{"service":"order-service","status":"degraded","dependencies":{"productService":"degraded"},"fallback":"商品信息暂不可用，订单核心查询保持可用"}
-恢复后：
-{"service":"order-service","status":"ok","dependencies":{"productService":"ok"},"fallback":null}
-```
+| 检查点 | 实测结果 |
+| --- | --- |
+| 商品接口 | HTTP 503，返回“依赖服务暂不可用”，提示其他服务保持可用 |
+| 订单依赖检查 | HTTP 206，`status=degraded`，返回“商品信息暂不可用，订单查询保持可用” |
+| API 网关健康检查 | HTTP 200 |
+| 用户服务 | Deployment `1/1` |
+| 订单服务 | Deployment `1/1` |
+| 商品服务 | 故障期间 `0/0`，恢复后接口 HTTP 200 |
+| HPA | 恢复为 CPU 60%、1 至 5 副本 |
 
-结论：商品服务停止时，订单服务返回设计好的降级结果，网关、订单服务和用户服务保持 Running。
+这证明实现了超时返回、备用结果和故障隔离：商品依赖故障不会让订单、用户或网关进程跟着崩溃。
+原始输出为 `raw/fault-isolation-2026-08-28.txt`。
 
-## HPA 扩缩容实验
+## 现场演示顺序
 
-操作：
-
-```bash
-k6 run -e BASE_URL=http://127.0.0.1:30081 04_tests/performance/k6-hpa-product-burn.js
-kubectl -n softw-microservices get hpa product-service-hpa
-kubectl -n softw-microservices get pods -l app=product-service
-```
-
-关键记录：
-
-| 时间 | HPA 指标 | Replicas | Pod 数 |
-| --- | --- | --- | --- |
-| 16:36:05 | `cpu: 115%/60%` | 1 | 2 |
-| 16:36:20 | `cpu: <unknown>/60%` | 2 | 2 |
-| 16:40:04 | `cpu: 1%/60%` | 1 | 2 |
-| 16:40:19 | `cpu: 1%/60%` | 1 | 1 |
-
-压测摘要：
-
-```text
-iterations: 2379
-http_reqs: 2379
-avg duration: 1.41s
-P95: 3s
-error rate: 21.18%
-```
-
-说明：HPA 压测脚本故意制造 CPU 压力，网关 3 秒超时导致部分请求失败。该脚本用于证明扩缩容，不用于业务性能对比结论。
+1. 运行 `kubectl get hpa,pods -n softw-microservices -w`，另开终端执行 `npm run experiment:hpa`。
+2. 展示 Pod 从 1 增加到 3/5，并在压力停止后回到 1；随后展示 k6 五项指标。
+3. 执行 `npm run experiment:fault`，重点解释 HTTP 503 隔离结果、HTTP 206 订单备用结果和其他 Deployment 的 `1/1`。
+4. 打开本报告及 `raw/` 原始文件，证明结果不是手工填写。

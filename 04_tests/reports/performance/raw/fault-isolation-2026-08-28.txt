@@ -1,0 +1,36 @@
+故障隔离实验 2026-08-28
+== 故障前 ==
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+api-gateway             1/1     1            1           3d23h
+microservice-frontend   1/1     1            1           28h
+microservice-mysql      1/1     1            1           28h
+order-service           1/1     1            1           3d23h
+product-service         1/1     1            1           3d23h
+user-service            1/1     1            1           3d23h
+{"status":"ok","service":"api-gateway","version":"2.0.0","revision":"dev","uptime":3479.622180542}
+HTTP_STATUS=200
+== 注入故障：停止商品服务 ==
+horizontalpodautoscaler.autoscaling "product-service-hpa" deleted from softw-microservices namespace
+deployment.apps/product-service scaled
+pod/product-service-5d54bbbdbd-6c5ws condition met
+== 商品接口：网关超时/隔离返回 ==
+{"message":"依赖服务暂不可用","route":"/api/products","fallback":"请稍后重试，其他服务保持可用"}
+HTTP_STATUS=503
+== 订单依赖检查：返回预设降级结果 ==
+{"service":"order-service","status":"degraded","dependencies":{"productService":"degraded"},"fallback":"商品信息暂不可用，订单查询保持可用"}
+HTTP_STATUS=206
+== 网关自身和其余服务仍存活 ==
+{"status":"ok","service":"api-gateway","version":"2.0.0","revision":"dev","uptime":3510.709135514}
+HTTP_STATUS=200
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+api-gateway             1/1     1            1           3d23h
+microservice-frontend   1/1     1            1           28h
+microservice-mysql      1/1     1            1           28h
+order-service           1/1     1            1           3d23h
+product-service         0/0     0            0           3d23h
+user-service            1/1     1            1           3d23h
+== 恢复商品服务与 HPA ==
+NAME                  REFERENCE                    TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+product-service-hpa   Deployment/product-service   cpu: <unknown>/60%   1         5         0          0s
+{"products":[{"id":1,"name":"K8s Product 1787802239574","description":"Kubernetes cross-service verification","images":["/images/moyu-logo.png"],"videos":[],"price":"88.00","stock":0,"category":"books","subCategory":null,"brand":"K8s","sellerId":1,"sellerName":"k8s_seller_1787802239574","sellerAvatar":"","sellerCreditLevel":"普通","sellerCreditScore":100,"status":"在售","sales":1,"views":2,"rating":"0.00","reviewCount":0,"isSecondhand":false,"condition":null,"usageTime":null,"hasDefect":false,"defectDescription":null,"location":null,"bargainEnabled":true,"createdAt":"2026-08-27T03:44:00.000Z","updatedAt":"2026-08-27T03:44:00.000Z","productType":1,"evaluationCount":0,"seller":{"id":1,"username":"k8s_seller_1787802239574","nickname":"k8s_seller_1787802239574","avatar":"","creditLevel":"普通","creditScore":100}}],"pagination":{"total":1,"page":1,"limit":20,"pages":1}}
+HTTP_STATUS=200

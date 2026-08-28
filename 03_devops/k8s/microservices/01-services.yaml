@@ -28,9 +28,15 @@ spec:
             - { name: DB_HOST, value: microservice-mysql }
             - { name: DB_NAME, value: softw_users }
             - { name: DB_USER, value: softw }
-            - { name: DB_PASSWORD, value: softw_password }
-            - { name: JWT_SECRET, value: microservice_dev_secret }
-            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: DB_PASSWORD }
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: JWT_SECRET }
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: INTERNAL_SERVICE_TOKEN }
           resources:
             requests:
               cpu: 100m
@@ -93,11 +99,18 @@ spec:
             - { name: DB_HOST, value: microservice-mysql }
             - { name: DB_NAME, value: softw_catalog }
             - { name: DB_USER, value: softw }
-            - { name: DB_PASSWORD, value: softw_password }
-            - { name: JWT_SECRET, value: microservice_dev_secret }
-            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: DB_PASSWORD }
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: JWT_SECRET }
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: INTERNAL_SERVICE_TOKEN }
             - { name: USER_SERVICE_URL, value: "http://user-service:3101" }
             - { name: ORDER_SERVICE_URL, value: "http://order-service:3103" }
+            - { name: EXPERIMENT_CPU_BURN_ENABLED, value: "true" }
           resources:
             requests:
               cpu: 100m
@@ -160,9 +173,15 @@ spec:
             - { name: DB_HOST, value: microservice-mysql }
             - { name: DB_NAME, value: softw_orders }
             - { name: DB_USER, value: softw }
-            - { name: DB_PASSWORD, value: softw_password }
-            - { name: JWT_SECRET, value: microservice_dev_secret }
-            - { name: INTERNAL_SERVICE_TOKEN, value: microservice_internal_token }
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: DB_PASSWORD }
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: JWT_SECRET }
+            - name: INTERNAL_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: INTERNAL_SERVICE_TOKEN }
             - { name: USER_SERVICE_URL, value: "http://user-service:3101" }
             - name: PRODUCT_SERVICE_URL
               value: http://product-service:3102

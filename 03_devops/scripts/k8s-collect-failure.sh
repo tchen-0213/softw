@@ -7,8 +7,7 @@ mkdir -p "$OUTPUT_DIR"
 
 redact() {
   sed -E \
-    -e 's/(PASSWORD|SECRET|TOKEN):[[:space:]]+[^[:space:]]+/\1: [REDACTED]/g' \
-    -e 's/(root_password|softw_password|microservice_dev_secret|microservice_internal_token)/[REDACTED]/g'
+    -e 's/(PASSWORD|SECRET|TOKEN):[[:space:]]+[^[:space:]]+/\1: [REDACTED]/g'
 }
 
 kubectl -n "$NAMESPACE" get all -o wide 2>&1 | redact > "$OUTPUT_DIR/workloads.txt" || true

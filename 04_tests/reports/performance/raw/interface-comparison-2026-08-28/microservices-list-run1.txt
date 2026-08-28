@@ -1,0 +1,119 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: /Users/ply/softw/new/softw/04_tests/performance/k6-interface-comparison.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 50s max duration (incl. graceful stop):
+              * interface_comparison: 5 looping VUs for 20s (gracefulStop: 30s)
+
+
+running (01.0s), 5/5 VUs, 1081 complete and 0 interrupted iterations
+interface_comparison   [   5% ] 5 VUs  01.0s/20s
+
+running (02.0s), 5/5 VUs, 2681 complete and 0 interrupted iterations
+interface_comparison   [  10% ] 5 VUs  02.0s/20s
+
+running (03.0s), 5/5 VUs, 4403 complete and 0 interrupted iterations
+interface_comparison   [  15% ] 5 VUs  03.0s/20s
+
+running (04.0s), 5/5 VUs, 6117 complete and 0 interrupted iterations
+interface_comparison   [  20% ] 5 VUs  04.0s/20s
+
+running (05.0s), 5/5 VUs, 7896 complete and 0 interrupted iterations
+interface_comparison   [  25% ] 5 VUs  05.0s/20s
+
+running (06.0s), 5/5 VUs, 9614 complete and 0 interrupted iterations
+interface_comparison   [  30% ] 5 VUs  06.0s/20s
+
+running (07.0s), 5/5 VUs, 11443 complete and 0 interrupted iterations
+interface_comparison   [  35% ] 5 VUs  07.0s/20s
+
+running (08.0s), 5/5 VUs, 13244 complete and 0 interrupted iterations
+interface_comparison   [  40% ] 5 VUs  08.0s/20s
+
+running (09.0s), 5/5 VUs, 14950 complete and 0 interrupted iterations
+interface_comparison   [  45% ] 5 VUs  09.0s/20s
+
+running (10.0s), 5/5 VUs, 16672 complete and 0 interrupted iterations
+interface_comparison   [  50% ] 5 VUs  10.0s/20s
+
+running (11.0s), 5/5 VUs, 18419 complete and 0 interrupted iterations
+interface_comparison   [  55% ] 5 VUs  11.0s/20s
+
+running (12.0s), 5/5 VUs, 19756 complete and 0 interrupted iterations
+interface_comparison   [  60% ] 5 VUs  12.0s/20s
+
+running (13.0s), 5/5 VUs, 21284 complete and 0 interrupted iterations
+interface_comparison   [  65% ] 5 VUs  13.0s/20s
+
+running (14.0s), 5/5 VUs, 22874 complete and 0 interrupted iterations
+interface_comparison   [  70% ] 5 VUs  14.0s/20s
+
+running (15.0s), 5/5 VUs, 24569 complete and 0 interrupted iterations
+interface_comparison   [  75% ] 5 VUs  15.0s/20s
+
+running (16.0s), 5/5 VUs, 26299 complete and 0 interrupted iterations
+interface_comparison   [  80% ] 5 VUs  16.0s/20s
+
+running (17.0s), 5/5 VUs, 28058 complete and 0 interrupted iterations
+interface_comparison   [  85% ] 5 VUs  17.0s/20s
+
+running (18.0s), 5/5 VUs, 29741 complete and 0 interrupted iterations
+interface_comparison   [  90% ] 5 VUs  18.0s/20s
+
+running (19.0s), 5/5 VUs, 31475 complete and 0 interrupted iterations
+interface_comparison   [  95% ] 5 VUs  19.0s/20s
+
+running (20.0s), 5/5 VUs, 33229 complete and 0 interrupted iterations
+interface_comparison   [ 100% ] 5 VUs  20.0s/20s
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_duration
+    ✓ 'p(95)<2000' p(95)=4.22ms
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 66470   3323.118008/s
+    checks_succeeded...: 100.00% 66470 out of 66470
+    checks_failed......: 0.00%   0 out of 66470
+
+    ✓ status is 200
+    ✓ response contains fixed dataset
+
+    HTTP
+    http_req_duration..............: avg=2.93ms min=1.44ms med=2.71ms max=94.69ms p(90)=3.62ms p(95)=4.22ms
+      { expected_response:true }...: avg=2.93ms min=1.44ms med=2.71ms max=94.69ms p(90)=3.62ms p(95)=4.22ms
+    http_req_failed................: 0.00%  0 out of 33235
+    http_reqs......................: 33235  1661.559004/s
+
+    EXECUTION
+    iteration_duration.............: avg=3ms    min=1.48ms med=2.78ms max=94.84ms p(90)=3.7ms  p(95)=4.3ms 
+    iterations.....................: 33235  1661.559004/s
+    vus............................: 5      min=5          max=5
+    vus_max........................: 5      min=5          max=5
+
+    NETWORK
+    data_received..................: 548 MB 27 MB/s
+    data_sent......................: 5.5 MB 273 kB/s
+
+
+
+
+running (20.0s), 0/5 VUs, 33235 complete and 0 interrupted iterations
+interface_comparison ✓ [ 100% ] 5 VUs  20s

@@ -23,12 +23,21 @@ Dockerfile 需要与构建上下文一起使用，因此保留在 `../backend/`�
 常用命令应在仓库根目录执行：
 
 ```bash
+sh 03_devops/scripts/init-local-env.sh
 npm run compose:up
 npm run compose:down
-docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up -d --build --wait
 npm run test:services:api
 npm run k8s:observe
+npm run k8s:deploy
+npm run k8s:rollback -- softw-microservices product-service
+npm run perf:compare
+npm run experiment:hpa
+npm run experiment:fault
 ```
+
+Compose 从仓库根目录下被 Git 忽略的 `.env` 读取运行密钥。Kubernetes 部署前还需把同一组环境变量
+载入当前 shell，并执行 `sh 03_devops/scripts/create-k8s-secrets.sh`；密钥值不会写入 YAML。
 
 微服务版本启动后，前端位于 `http://localhost:8082`，网关健康检查位于 `http://localhost:8081/health`。用户、商品交易和订单服务分别管理 `softw_users`、`softw_catalog`、`softw_orders`，完整边界和接口见 `../02_docs/微服务接口与数据归属.md`。
 
@@ -37,5 +46,5 @@ npm run k8s:observe
 全新数据库会在后端启动时自动迁移。也可以显式检查：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml exec backend npm run db:migrate:status
+docker compose --env-file .env -f 03_devops/docker-compose.yml exec backend npm run db:migrate:status
 ```

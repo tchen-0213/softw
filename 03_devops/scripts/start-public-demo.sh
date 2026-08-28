@@ -6,7 +6,8 @@ cd "$ROOT_DIR"
 
 TUNNEL_CONTAINER="softw-public-tunnel"
 
-docker compose -f 03_devops/docker-compose.yml up -d --build
+sh 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build
 
 if docker inspect "$TUNNEL_CONTAINER" >/dev/null 2>&1; then
   if [ "$(docker inspect -f '{{.State.Running}}' "$TUNNEL_CONTAINER")" != "true" ]; then

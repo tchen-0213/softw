@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 
 function getJwtSecret() {
-  return process.env.JWT_SECRET || 'local_dev_secret_change_before_production';
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required');
+  return process.env.JWT_SECRET;
 }
 
 function decodeToken(req) {
@@ -22,7 +23,8 @@ function decodeToken(req) {
 }
 
 function requireInternalToken(req, res, next) {
-  const expected = process.env.INTERNAL_SERVICE_TOKEN || 'local_internal_service_token';
+  const expected = process.env.INTERNAL_SERVICE_TOKEN;
+  if (!expected) return res.status(503).json({ message: '内部服务凭据未配置' });
   if (req.get('x-internal-token') !== expected) {
     return res.status(403).json({ message: '内部服务凭据无效' });
   }

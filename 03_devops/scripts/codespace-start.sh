@@ -4,7 +4,8 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
 cd "$ROOT_DIR"
 
-docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+sh 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
 
 if [ -n "${CODESPACE_NAME:-}" ]; then
   API_ORIGIN="https://${CODESPACE_NAME}-3001.app.github.dev"

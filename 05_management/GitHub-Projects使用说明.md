@@ -94,7 +94,7 @@ Project 使用以下状态：
 Pages 构建读取 Actions Variable `CODESPACE_API_BASE_URL`。Codespaces 3001 端口必须设为 Public；实例休眠后需重新启动。Docker 本地环境作为备用：
 
 ```bash
-docker compose -f 03_devops/docker-compose.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
 ```
 
 常用检查地址：

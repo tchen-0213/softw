@@ -1,0 +1,22 @@
+timestamp	container	cpu	memory
+2026-08-28T16:05:03+08:00	softw-microservices-api-gateway-1	77.77%	61.14MiB / 7.748GiB
+2026-08-28T16:05:03+08:00	softw-microservices-product-service-1	99.55%	93.61MiB / 7.748GiB
+2026-08-28T16:05:03+08:00	softw-microservices-mysql-1	94.91%	415MiB / 7.748GiB
+2026-08-28T16:05:05+08:00	softw-microservices-api-gateway-1	74.91%	61.71MiB / 7.748GiB
+2026-08-28T16:05:05+08:00	softw-microservices-product-service-1	100.44%	83.38MiB / 7.748GiB
+2026-08-28T16:05:05+08:00	softw-microservices-mysql-1	95.47%	414.4MiB / 7.748GiB
+2026-08-28T16:05:08+08:00	softw-microservices-api-gateway-1	73.85%	61.57MiB / 7.748GiB
+2026-08-28T16:05:08+08:00	softw-microservices-product-service-1	96.51%	107.9MiB / 7.748GiB
+2026-08-28T16:05:08+08:00	softw-microservices-mysql-1	92.98%	414.4MiB / 7.748GiB
+2026-08-28T16:05:11+08:00	softw-microservices-api-gateway-1	61.52%	99.02MiB / 7.748GiB
+2026-08-28T16:05:11+08:00	softw-microservices-product-service-1	95.84%	106.4MiB / 7.748GiB
+2026-08-28T16:05:11+08:00	softw-microservices-mysql-1	83.32%	414.9MiB / 7.748GiB
+2026-08-28T16:05:14+08:00	softw-microservices-api-gateway-1	69.08%	99.45MiB / 7.748GiB
+2026-08-28T16:05:14+08:00	softw-microservices-product-service-1	96.57%	97.62MiB / 7.748GiB
+2026-08-28T16:05:14+08:00	softw-microservices-mysql-1	93.81%	415MiB / 7.748GiB
+2026-08-28T16:05:17+08:00	softw-microservices-api-gateway-1	71.88%	99.59MiB / 7.748GiB
+2026-08-28T16:05:17+08:00	softw-microservices-product-service-1	98.19%	126.1MiB / 7.748GiB
+2026-08-28T16:05:17+08:00	softw-microservices-mysql-1	97.09%	414.9MiB / 7.748GiB
+2026-08-28T16:05:20+08:00	softw-microservices-api-gateway-1	73.66%	99.26MiB / 7.748GiB
+2026-08-28T16:05:20+08:00	softw-microservices-product-service-1	99.13%	84.93MiB / 7.748GiB
+2026-08-28T16:05:20+08:00	softw-microservices-mysql-1	90.67%	414.6MiB / 7.748GiB

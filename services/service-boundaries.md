@@ -30,5 +30,5 @@
 ## 本地运行
 
 ```bash
-docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up -d --build --wait
 ```

@@ -4,15 +4,15 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: ${SOFTW_MYSQL_ROOT_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
       MYSQL_DATABASE: softw_users
       MYSQL_USER: softw
-      MYSQL_PASSWORD: softw_password
+      MYSQL_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
     volumes:
       - microservice-mysql-data:/var/lib/mysql
       - ./database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot_password"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -28,9 +28,9 @@ services:
       DB_HOST: mysql
       DB_NAME: softw_users
       DB_USER: softw
-      DB_PASSWORD: softw_password
-      JWT_SECRET: microservice_dev_secret
-      INTERNAL_SERVICE_TOKEN: microservice_internal_token
+      DB_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
+      JWT_SECRET: ${SOFTW_JWT_SECRET:?run sh 03_devops/scripts/init-local-env.sh}
+      INTERNAL_SERVICE_TOKEN: ${SOFTW_INTERNAL_SERVICE_TOKEN:?run sh 03_devops/scripts/init-local-env.sh}
     ports:
       - "3101:3101"
     depends_on:
@@ -50,12 +50,13 @@ services:
       PORT: 3102
       SERVICE_NAME: product-service
       SERVICE_VERSION: 2.0.0
+      EXPERIMENT_CPU_BURN_ENABLED: "true"
       DB_HOST: mysql
       DB_NAME: softw_catalog
       DB_USER: softw
-      DB_PASSWORD: softw_password
-      JWT_SECRET: microservice_dev_secret
-      INTERNAL_SERVICE_TOKEN: microservice_internal_token
+      DB_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
+      JWT_SECRET: ${SOFTW_JWT_SECRET:?run sh 03_devops/scripts/init-local-env.sh}
+      INTERNAL_SERVICE_TOKEN: ${SOFTW_INTERNAL_SERVICE_TOKEN:?run sh 03_devops/scripts/init-local-env.sh}
       USER_SERVICE_URL: http://user-service:3101
       ORDER_SERVICE_URL: http://order-service:3103
       UPLOAD_DIR: /app/product-service/uploads
@@ -85,9 +86,9 @@ services:
       DB_HOST: mysql
       DB_NAME: softw_orders
       DB_USER: softw
-      DB_PASSWORD: softw_password
-      JWT_SECRET: microservice_dev_secret
-      INTERNAL_SERVICE_TOKEN: microservice_internal_token
+      DB_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
+      JWT_SECRET: ${SOFTW_JWT_SECRET:?run sh 03_devops/scripts/init-local-env.sh}
+      INTERNAL_SERVICE_TOKEN: ${SOFTW_INTERNAL_SERVICE_TOKEN:?run sh 03_devops/scripts/init-local-env.sh}
       USER_SERVICE_URL: http://user-service:3101
       PRODUCT_SERVICE_URL: http://product-service:3102
     ports:

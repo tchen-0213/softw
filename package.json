@@ -13,11 +13,17 @@
     "verify": "npm run test && npm run build",
     "db:migrate": "npm --prefix backend run db:migrate",
     "db:migrate:status": "npm --prefix backend run db:migrate:status",
-    "compose:up": "docker compose -f 03_devops/docker-compose.yml up --build",
-    "compose:down": "docker compose -f 03_devops/docker-compose.yml down -v",
+    "env:init": "sh 03_devops/scripts/init-local-env.sh",
+    "compose:up": "docker compose --env-file .env -f 03_devops/docker-compose.yml up --build",
+    "compose:down": "docker compose --env-file .env -f 03_devops/docker-compose.yml down -v",
     "k8s:monolith": "kubectl apply -f 03_devops/k8s/monolith",
     "k8s:microservices": "kubectl apply -f 03_devops/k8s/microservices",
+    "k8s:deploy": "sh 03_devops/scripts/deploy-k8s.sh",
+    "k8s:rollback": "sh 03_devops/scripts/rollback-k8s.sh",
     "k8s:observe": "sh 03_devops/scripts/k8s-observe-microservices.sh",
+    "experiment:hpa": "sh 03_devops/scripts/run-hpa-experiment.sh",
+    "experiment:fault": "sh 03_devops/scripts/run-fault-isolation-experiment.sh",
+    "perf:compare": "bash 03_devops/scripts/run-performance-comparison.sh",
     "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} 04_tests/performance/k6-core-flow.js"
   }
 }

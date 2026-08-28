@@ -6,17 +6,17 @@ services:
     container_name: softw-mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: ${SOFTW_MYSQL_ROOT_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
       MYSQL_DATABASE: shopping_platform
       MYSQL_USER: softw
-      MYSQL_PASSWORD: softw_password
+      MYSQL_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot_password"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -32,9 +32,9 @@ services:
       DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: softw
-      DB_PASSWORD: softw_password
+      DB_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
       DB_NAME: shopping_platform
-      JWT_SECRET: local_dev_secret_change_before_production
+      JWT_SECRET: ${SOFTW_JWT_SECRET:?run sh 03_devops/scripts/init-local-env.sh}
       JWT_EXPIRES_IN: 30d
       CORS_ORIGIN: http://localhost:5173,http://localhost:8080,https://tchen-0213.github.io,https://*.app.github.dev,https://*.trycloudflare.com
       RATE_LIMIT_MAX: 300

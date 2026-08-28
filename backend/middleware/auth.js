@@ -3,12 +3,8 @@ const User = require('../models/User');
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET;
-
-  if (process.env.NODE_ENV === 'production' && (!secret || secret === 'your-secret-key' || secret === 'please_change_this_secret')) {
-    throw new Error('生产环境必须配置安全的 JWT_SECRET');
-  }
-
-  return secret || 'your-secret-key';
+  if (!secret) throw new Error('JWT_SECRET 未配置');
+  return secret;
 };
 
 const protect = async (req, res, next) => {

@@ -17,14 +17,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: shopping_platform
           MYSQL_USER: softw
-          MYSQL_PASSWORD: softw_password
+          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.CI_MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
@@ -34,9 +34,9 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_USER: softw
-      DB_PASSWORD: softw_password
+      DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
       DB_NAME: shopping_platform
-      JWT_SECRET: github_actions_test_secret
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
       CORS_ORIGIN: http://127.0.0.1:5173
       RATE_LIMIT_MAX: 1000
     steps:
@@ -91,14 +91,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: shopping_platform
           MYSQL_USER: softw
-          MYSQL_PASSWORD: softw_password
+          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.CI_MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
@@ -108,9 +108,9 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_USER: softw
-      DB_PASSWORD: softw_password
+      DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
       DB_NAME: shopping_platform
-      JWT_SECRET: github_actions_e2e_secret
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
       CORS_ORIGIN: http://127.0.0.1:5173
       RATE_LIMIT_MAX: 1000
       API_BASE_URL: http://127.0.0.1:3001
@@ -168,14 +168,14 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: softw_test
           MYSQL_USER: softw
-          MYSQL_PASSWORD: softw_password
+          MYSQL_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_password"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${{ secrets.CI_MYSQL_ROOT_PASSWORD }}"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
@@ -184,9 +184,9 @@ jobs:
       DB_PORT: 3306
       DB_NAME: softw_test
       DB_USER: softw
-      DB_PASSWORD: softw_password
-      JWT_SECRET: test_microservice_secret
-      INTERNAL_SERVICE_TOKEN: test_internal_token
+      DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+      INTERNAL_SERVICE_TOKEN: ${{ secrets.CI_INTERNAL_SERVICE_TOKEN }}
     strategy:
       matrix:
         service: [user-service, product-service, order-service, api-gateway]
@@ -202,6 +202,11 @@ jobs:
 
   microservice-api-e2e:
     runs-on: ubuntu-latest
+    env:
+      SOFTW_MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_ROOT_PASSWORD }}
+      SOFTW_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+      SOFTW_JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+      SOFTW_INTERNAL_SERVICE_TOKEN: ${{ secrets.CI_INTERNAL_SERVICE_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -350,7 +355,13 @@ jobs:
           version: v0.32.0
           wait: 120s
       - name: Deploy monolith and microservices
+        env:
+          SOFTW_MYSQL_ROOT_PASSWORD: ${{ secrets.CI_MYSQL_ROOT_PASSWORD }}
+          SOFTW_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+          SOFTW_JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+          SOFTW_INTERNAL_SERVICE_TOKEN: ${{ secrets.CI_INTERNAL_SERVICE_TOKEN }}
         run: |
+          sh 03_devops/scripts/create-k8s-secrets.sh
           kubectl apply -f 03_devops/k8s/monolith
           kubectl apply -f 03_devops/k8s/microservices/00-namespace.yaml
           kubectl -n softw-practice create secret docker-registry ghcr-credentials \

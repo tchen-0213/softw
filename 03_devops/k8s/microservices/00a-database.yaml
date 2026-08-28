@@ -59,10 +59,14 @@ spec:
         - name: mysql
           image: mysql:8.0
           env:
-            - { name: MYSQL_ROOT_PASSWORD, value: root_password }
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: MYSQL_ROOT_PASSWORD }
             - { name: MYSQL_DATABASE, value: softw_users }
             - { name: MYSQL_USER, value: softw }
-            - { name: MYSQL_PASSWORD, value: softw_password }
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: softw-microservice-secret, key: DB_PASSWORD }
           ports:
             - containerPort: 3306
           volumeMounts:
@@ -72,7 +76,7 @@ spec:
               mountPath: /var/lib/mysql
           readinessProbe:
             exec:
-              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -proot_password"]
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
             initialDelaySeconds: 10
             periodSeconds: 5
           resources:

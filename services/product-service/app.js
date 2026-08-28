@@ -70,6 +70,17 @@ const parsePaging = query => {
   return { page, limit, offset: (page - 1) * limit };
 };
 const parseBoolean = value => value === undefined ? undefined : value === true || value === 'true' || value === '1' || value === 1;
+const parseExperimentBurnMs = value => {
+  if (process.env.EXPERIMENT_CPU_BURN_ENABLED !== 'true') return 0;
+  const milliseconds = Number(value);
+  return Number.isFinite(milliseconds) ? Math.min(Math.max(Math.trunc(milliseconds), 0), 250) : 0;
+};
+const burnCpu = milliseconds => {
+  const deadline = process.hrtime.bigint() + BigInt(milliseconds) * 1000000n;
+  let accumulator = 1;
+  while (process.hrtime.bigint() < deadline) accumulator = (accumulator + Math.sqrt(accumulator + 1)) % 1000003;
+  return accumulator;
+};
 const userDto = user => ({ id: user.id, username: user.username, nickname: user.nickname || user.username, avatar: user.avatar || '', creditLevel: user.creditLevel, creditScore: user.creditScore, role: user.role });
 const productDto = row => {
   const data = row.toJSON ? row.toJSON() : row;
@@ -101,6 +112,11 @@ const router = express.Router();
 
 const listProducts = async (req, res, next) => {
   try {
+    const burnMs = parseExperimentBurnMs(req.query.burnMs);
+    if (burnMs > 0) {
+      burnCpu(burnMs);
+      res.set('X-Experiment-Cpu-Burn-Ms', String(burnMs));
+    }
     const { page, limit, offset } = parsePaging(req.query);
     const sortable = { price_asc: ['price', 'ASC'], price_desc: ['price', 'DESC'], sales: ['sales', 'DESC'], rating: ['rating', 'DESC'] };
     const { rows, count } = await Product.findAndCountAll({ where: buildProductWhere(req.query), order: [sortable[req.query.sortBy || req.query.sort] || ['createdAt', 'DESC']], offset, limit });
@@ -175,4 +191,4 @@ router.post('/api/uploads/images', requireUser, upload.array('images',10), (req,
 const app = createService({ express, name: serviceName, version, isReady: () => databaseReady, routes: instance => { instance.use('/uploads', express.static(uploadDir)); instance.use(router); } });
 async function initialize() { await initializeDatabase(sequelize); databaseReady = true; }
 if (require.main === module) initialize().then(() => app.listen(Number(process.env.PORT || 3102), () => console.log(`${serviceName} listening`))).catch(error => { console.error(error); process.exit(1); });
-module.exports = { app, initialize, sequelize, models: { Product, Shop, Evaluation, ChatConversation, ChatMessage, InventoryReservation } };
+module.exports = { app, initialize, sequelize, models: { Product, Shop, Evaluation, ChatConversation, ChatMessage, InventoryReservation }, experiment: { parseExperimentBurnMs } };
