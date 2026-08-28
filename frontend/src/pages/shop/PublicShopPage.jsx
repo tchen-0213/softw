@@ -49,7 +49,7 @@ const PublicShopPage = () => {
 
   if (error || !shop) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
           <div className="error">{error || '店铺不存在'}</div>
         </div>
@@ -58,41 +58,43 @@ const PublicShopPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', overflow: 'hidden', marginBottom: '30px' }}>
+        <div className="biz-card" style={{ marginBottom: 24 }}>
           <img
             src={shop.banner}
             alt={shop.name}
+            className="public-shop-banner"
             onError={(event) => {
               event.currentTarget.src = shopImages.banner;
             }}
-            style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
           />
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', padding: '20px' }}>
+          <div className="public-shop-head">
             <img
               src={shop.logo}
               alt={shop.name}
+              className="public-shop-logo"
               onError={(event) => {
                 event.currentTarget.src = shopImages.logo;
               }}
-              style={{ width: '96px', height: '96px', objectFit: 'cover', borderRadius: '8px' }}
             />
-            <div style={{ flex: 1 }}>
-              <h2 style={{ marginBottom: '8px' }}>{shop.name}</h2>
-              <div style={{ color: '#666', lineHeight: 1.6 }}>{shop.description || '店主暂未填写简介'}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', marginTop: '12px' }}>
-                <div style={{ color: '#1890ff' }}>在售商品 {shop.products.length} 件</div>
+            <div>
+              <h1>{shop.name}</h1>
+              <p>{shop.description || '店主暂未填写简介'}</p>
+              <div className="detail-seller-row">
+                <span style={{ color: 'var(--primary-color)', fontWeight: 650 }}>
+                  在售商品 {shop.products.length} 件
+                </span>
                 <CreditBadge compact level={shop.creditLevel} score={shop.creditScore} />
               </div>
             </div>
           </div>
         </div>
 
-        <h3 style={{ marginBottom: '16px' }}>店铺商品</h3>
+        <h3 className="biz-section-title">店铺商品</h3>
         {shop.products.length === 0 ? (
-          <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '40px', textAlign: 'center', color: '#666' }}>
-            暂无商品
+          <div className="biz-empty">
+            <p>暂无商品</p>
           </div>
         ) : (
           <div className="product-list">

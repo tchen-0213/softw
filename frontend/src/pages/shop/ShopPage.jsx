@@ -658,9 +658,9 @@ const ShopPage = () => {
 
   if (!user || !isLoggedIn()) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+          <h2 className="page-title">店铺管理</h2>
           <div className="shop-empty-panel">
             <h3>请先登录后管理店铺</h3>
             <button className="button button-primary" onClick={() => navigate('/login')}>
@@ -676,11 +676,11 @@ const ShopPage = () => {
     const verificationBusy = uploadingBusinessLicense || uploadingIdCard || verifyingShop;
 
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+          <h2 className="page-title">店铺管理</h2>
           {loading && <div className="loading">加载中...</div>}
-          {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
+          {error && <div className="biz-error">{error}</div>}
 
           <div className="shop-owner-note">
             当前店铺归属：<strong>{user.username || user.email}</strong>
@@ -775,34 +775,34 @@ const ShopPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>店铺管理</h2>
+        <h2 className="page-title">店铺管理</h2>
         {loading && <div className="loading">加载中...</div>}
-        {error && <div style={{ color: '#ff4d4f', marginBottom: '16px' }}>{error}</div>}
+        {error && <div className="biz-error">{error}</div>}
 
         <div className="shop-owner-note">
           当前店铺归属：<strong>{user.username || user.email}</strong>
         </div>
 
-        <div style={{ marginBottom: '30px', border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
-          <h3 style={{ marginBottom: '16px' }}>店铺信息</h3>
+        <div className="biz-card shop-manage-card">
+          <h3 className="biz-field">店铺信息</h3>
 
           {editingShop ? (
-            <form onSubmit={handleSaveShop} style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <form onSubmit={handleSaveShop}>
+              <div className="shop-manage-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>店铺名称</label>
+                  <label className="biz-field-label">店铺名称</label>
                   <input
                     name="name"
                     value={shopForm.name}
                     onChange={handleShopFormChange}
                     required
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="biz-field-label">
                     店铺 Logo 图片（可选）
                   </label>
                   <input
@@ -810,7 +810,7 @@ const ShopPage = () => {
                     accept="image/*"
                     onChange={handleLogoUpload}
                     disabled={uploadingLogo}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                   <div className="shop-field-hint">
                     {uploadingLogo ? 'Logo 上传中...' : '选择图片后会自动上传，Logo 会显示在店铺信息左侧。'}
@@ -827,20 +827,20 @@ const ShopPage = () => {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>店铺简介</label>
+              <div className="biz-field">
+                <label className="biz-field-label">店铺简介</label>
                 <textarea
                   name="description"
                   value={shopForm.description}
                   onChange={handleShopFormChange}
                   rows="3"
                   required
-                  style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px', resize: 'vertical' }}
+                  className="biz-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="biz-field">
+                <label className="biz-field-label">
                   店铺横幅图片（可选）
                 </label>
                 <input
@@ -848,7 +848,7 @@ const ShopPage = () => {
                   accept="image/*"
                   onChange={handleBannerUpload}
                   disabled={uploadingBanner}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                  className="biz-input"
                 />
                 <div className="shop-field-hint">
                   {uploadingBanner ? '横幅上传中...' : '选择图片后会自动上传，横幅会显示在店铺顶部。'}
@@ -887,7 +887,7 @@ const ShopPage = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="biz-form-actions" style={{ justifyContent: "flex-start" }}>
                 <button type="submit" className="button button-primary" disabled={uploadingLogo || uploadingBanner}>
                   保存
                 </button>
@@ -906,15 +906,15 @@ const ShopPage = () => {
               />
               <div style={{ flex: 1 }}>
                 <div style={{ marginBottom: '8px', fontSize: '18px', fontWeight: 'bold' }}>{shop.name}</div>
-                <div style={{ marginBottom: '16px' }}>{shop.description}</div>
-                <div style={{ marginBottom: '16px' }}>
+                <div className="biz-field">{shop.description}</div>
+                <div className="biz-field">
                   <CreditBadge
                     compact
                     level={shop.creditLevel || user.creditLevel}
                     score={shop.creditScore ?? user.creditScore}
                   />
                 </div>
-                <button onClick={handleEditShop} className="button button-primary" style={{ padding: '8px 16px' }}>
+                <button onClick={handleEditShop} className="button button-primary button-sm">
                   编辑店铺信息
                 </button>
               </div>
@@ -927,21 +927,21 @@ const ShopPage = () => {
             onError={(event) => {
               event.currentTarget.src = shopImages.banner;
             }}
-            style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px' }}
+            className="shop-banner-preview"
           />
         </div>
 
         <div style={{ marginBottom: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3>商品管理</h3>
-            <button onClick={handleAddProduct} className="button button-primary" style={{ padding: '8px 16px' }}>
-              添加商品
-            </button>
+              <button onClick={handleAddProduct} className="button button-primary button-sm">
+                添加商品
+              </button>
           </div>
 
           {editingProductId && (
             <form onSubmit={handleSaveProduct} style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '16px', marginBottom: '16px', background: '#fafafa' }}>
-              <h4 style={{ marginBottom: '16px' }}>编辑商品</h4>
+              <h4 className="biz-field">编辑商品</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                 <label>
                   <div style={{ marginBottom: '8px', color: '#666' }}>商品名称</div>
@@ -950,7 +950,7 @@ const ShopPage = () => {
                     value={productForm.name}
                     onChange={handleProductFormChange}
                     required
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                 </label>
                 <label>
@@ -963,7 +963,7 @@ const ShopPage = () => {
                     min="0"
                     step="0.01"
                     required
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                 </label>
                 <label>
@@ -975,7 +975,7 @@ const ShopPage = () => {
                     onChange={handleProductFormChange}
                     min="0"
                     required
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                 </label>
                 <label>
@@ -988,7 +988,7 @@ const ShopPage = () => {
                     min="0"
                     disabled
                     required
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   />
                 </label>
                 <label>
@@ -997,7 +997,7 @@ const ShopPage = () => {
                     name="status"
                     value={productForm.status}
                     onChange={handleProductFormChange}
-                    style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+                    className="biz-input"
                   >
                     <option value="在售">在售</option>
                     <option value="下架">下架</option>
@@ -1025,7 +1025,7 @@ const ShopPage = () => {
                 />
                 <span>允许买家在私聊中发起议价</span>
               </label>
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="biz-form-actions" style={{ justifyContent: "flex-start" }}>
                 <button type="submit" className="button button-primary">保存商品</button>
                 <button type="button" className="button button-secondary" onClick={() => setEditingProductId(null)}>取消</button>
               </div>
@@ -1108,7 +1108,7 @@ const ShopPage = () => {
         </div>
 
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '16px' }}>私聊与议价</h3>
+          <h3 className="biz-field">私聊与议价</h3>
           {sellerConversations.length === 0 ? (
             <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px', color: '#666' }}>
               暂无买家私聊
@@ -1156,7 +1156,7 @@ const ShopPage = () => {
         </div>
 
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '16px' }}>收到的评价</h3>
+          <h3 className="biz-field">收到的评价</h3>
           {pendingReplyEvaluations.length > 0 && (
             <div className="shop-order-alert">
               <strong>有 {pendingReplyEvaluations.length} 条新评价待回复</strong>
@@ -1244,7 +1244,7 @@ const ShopPage = () => {
         </div>
 
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ marginBottom: '16px' }}>卖家订单与物流</h3>
+          <h3 className="biz-field">卖家订单与物流</h3>
           {pendingSellerOrders.length > 0 && (
             <div className="shop-order-alert">
               <strong>有 {pendingSellerOrders.length} 笔卖家订单需要关注</strong>

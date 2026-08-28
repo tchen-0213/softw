@@ -281,17 +281,14 @@ const UserPage = () => {
 
   const renderOrderDetail = (selectedOrder) => {
     return (
-      <div style={{ marginTop: '20px', border: '1px solid #e8e8e8', borderRadius: '4px', padding: '16px', background: '#fafafa' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div className="user-order-detail">
+        <div className="user-order-detail-head">
           <h4>订单详情 #{selectedOrder.id}</h4>
-          <button
-            onClick={() => setSelectedOrderId(null)}
-            style={{ border: 'none', background: 'transparent', color: '#666', cursor: 'pointer' }}
-          >
+          <button type="button" className="link-button" onClick={() => setSelectedOrderId(null)}>
             关闭
           </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div className="user-order-detail-grid">
           <div>状态：{getStatusText(selectedOrder.status)}</div>
           <div>支付方式：{selectedOrder.paymentMethod}</div>
           <div>下单时间：{selectedOrder.createTime}</div>
@@ -302,34 +299,21 @@ const UserPage = () => {
             <button
               key={item.id}
               type="button"
+              className="biz-line-item biz-line-item-btn"
               onClick={() => handleEvaluateOrder(selectedOrder)}
               title={isCompletedOrder(selectedOrder.status) ? '评价该订单' : '确认收货后可评价'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                marginBottom: '12px',
-                padding: 0,
-                border: 'none',
-                background: 'transparent',
-                color: 'inherit',
-                textAlign: 'left',
-                cursor: 'pointer'
-              }}
             >
-              <img
-                src={item.image}
-                alt={item.name}
-                style={{ width: '64px', height: '64px', objectFit: 'cover', marginRight: '12px' }}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>{item.name}</div>
-                <div style={{ color: '#666' }}>¥{Number(item.price).toFixed(2)} x {item.quantity}</div>
+              <img src={item.image} alt={item.name} className="biz-thumb" />
+              <div className="biz-line-body">
+                <div className="biz-line-name">{item.name}</div>
+                <div className="biz-line-meta">
+                  <div>¥{Number(item.price).toFixed(2)} x {item.quantity}</div>
+                </div>
               </div>
             </button>
           ))}
         </div>
-        <div style={{ textAlign: 'right', fontWeight: 'bold', color: '#ff4d4f' }}>
+        <div className="biz-checkout-pay" style={{ textAlign: 'right', marginTop: 12 }}>
           合计：¥{selectedOrder.totalPrice.toFixed(2)}
         </div>
       </div>
@@ -338,9 +322,9 @@ const UserPage = () => {
 
   if (!isLoggedIn() || !user) {
     return (
-      <div style={{ padding: '20px 0' }}>
+      <div className="biz-page">
         <div className="container">
-          <h2 style={{ marginBottom: '20px' }}>个人中心</h2>
+          <h2 className="page-title">个人中心</h2>
           <div className="shop-empty-panel">
             <h3>请先登录后查看个人中心</h3>
             <button className="button button-primary" onClick={() => navigate('/login')}>
@@ -353,94 +337,62 @@ const UserPage = () => {
   }
 
   return (
-    <div style={{ padding: '20px 0' }}>
+    <div className="biz-page">
       <div className="container">
-        <h2 style={{ marginBottom: '20px' }}>个人中心</h2>
+        <h2 className="page-title">个人中心</h2>
 
-        <div style={{ display: 'flex', marginBottom: '30px' }}>
-          <div style={{ width: '200px', marginRight: '30px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <img
-                src={user.avatar}
-                alt={user.nickname}
-                style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '12px' }}
-              />
-              <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>{user.nickname}</div>
+        <div className="user-layout">
+          <aside className="user-side">
+            <div className="user-avatar-block">
+              <img src={user.avatar} alt={user.nickname} />
+              <strong>{user.nickname}</strong>
               <CreditBadge compact level={user.creditLevel} score={user.creditScore} />
             </div>
-            <div style={{ border: '1px solid #e8e8e8', borderRadius: '4px' }}>
+            <nav className="user-nav">
               {[
                 ['profile', '个人信息'],
                 ['addresses', '收货地址'],
                 ['orders', '我的订单'],
                 ['logistics', '物流跟踪'],
                 ['shop', '店铺管理']
-              ].map(([key, label], index) => (
-                <div
+              ].map(([key, label]) => (
+                <button
                   key={key}
+                  type="button"
+                  className={`user-nav-item${activeTab === key ? ' active' : ''}`}
                   onClick={() => setActiveTab(key)}
-                  style={{
-                    padding: '12px 16px',
-                    borderBottom: index < 4 ? '1px solid #e8e8e8' : 'none',
-                    cursor: 'pointer',
-                    background: activeTab === key ? '#f5f5f5' : '#fff'
-                  }}
                 >
                   {label}
-                </div>
+                </button>
               ))}
-            </div>
-          </div>
+            </nav>
+          </aside>
 
-          <div style={{ flex: 1, border: '1px solid #e8e8e8', borderRadius: '4px', padding: '20px' }}>
+          <section className="biz-card user-panel">
             {activeTab === 'profile' && (
               <div>
-                <h3 style={{ marginBottom: '20px' }}>个人信息</h3>
+                <h3>个人信息</h3>
                 {editingProfile ? (
                   <form onSubmit={handleSaveProfile}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                      <label>
-                        <div style={{ marginBottom: '8px', color: '#666' }}>昵称</div>
-                        <input
-                          name="nickname"
-                          value={profileForm.nickname}
-                          onChange={handleProfileChange}
-                          required
-                          style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                        />
+                    <div className="profile-grid">
+                      <label className="profile-field">
+                        <span>昵称</span>
+                        <input name="nickname" value={profileForm.nickname} onChange={handleProfileChange} required />
                       </label>
-                      <label>
-                        <div style={{ marginBottom: '8px', color: '#666' }}>手机号</div>
-                        <input
-                          name="phone"
-                          value={profileForm.phone}
-                          onChange={handleProfileChange}
-                          required
-                          style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                        />
+                      <label className="profile-field">
+                        <span>手机号</span>
+                        <input name="phone" value={profileForm.phone} onChange={handleProfileChange} required />
                       </label>
-                      <label>
-                        <div style={{ marginBottom: '8px', color: '#666' }}>邮箱</div>
-                        <input
-                          type="email"
-                          name="email"
-                          value={profileForm.email}
-                          onChange={handleProfileChange}
-                          required
-                          style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                        />
+                      <label className="profile-field">
+                        <span>邮箱</span>
+                        <input type="email" name="email" value={profileForm.email} onChange={handleProfileChange} required />
                       </label>
-                      <label>
-                        <div style={{ marginBottom: '8px', color: '#666' }}>头像地址</div>
-                        <input
-                          name="avatar"
-                          value={profileForm.avatar}
-                          onChange={handleProfileChange}
-                          style={{ width: '100%', padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' }}
-                        />
+                      <label className="profile-field">
+                        <span>头像地址</span>
+                        <input name="avatar" value={profileForm.avatar} onChange={handleProfileChange} />
                       </label>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div className="biz-form-actions" style={{ justifyContent: 'flex-start' }}>
                       <button type="submit" className="button button-primary">保存</button>
                       <button type="button" className="button button-secondary" onClick={() => setEditingProfile(false)}>取消</button>
                     </div>
@@ -452,13 +404,13 @@ const UserPage = () => {
                       ['邮箱', user.email],
                       ['手机号', user.phone]
                     ].map(([label, value]) => (
-                      <div key={label} style={{ marginBottom: '16px' }}>
-                        <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666' }}>{label}</div>
-                        <div style={{ padding: '8px', border: '1px solid #e8e8e8', borderRadius: '4px' }}>{value}</div>
+                      <div key={label} className="profile-readonly">
+                        <span>{label}</span>
+                        <div>{value}</div>
                       </div>
                     ))}
-                    <div style={{ marginBottom: '16px' }}>
-                      <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666' }}>信用等级</div>
+                    <div className="profile-readonly">
+                      <span>信用等级</span>
                       <CreditBadge level={user.creditLevel} score={user.creditScore} />
                     </div>
                     <button onClick={handleEditProfile} className="button button-primary">
@@ -470,28 +422,26 @@ const UserPage = () => {
             )}
 
             {activeTab === 'addresses' && (
-              <div>
-                <AddressManager
-                  addresses={addresses}
-                  onChange={handleAddressesChange}
-                />
-              </div>
+              <AddressManager addresses={addresses} onChange={handleAddressesChange} />
             )}
 
             {activeTab === 'orders' && (
               <div>
-                <h3 style={{ marginBottom: '20px' }}>我的订单</h3>
+                <h3>我的订单</h3>
                 {orders.map(order => (
-                  <div key={order.id} style={{ borderBottom: '1px solid #e8e8e8', padding: '16px 0' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div key={order.id} className="user-order-row">
+                    <div className="user-order-meta">
                       <div>订单号: {order.id}</div>
-                      <div style={{ color: '#ff4d4f' }}>{getStatusText(order.status)}</div>
+                      <div className="order-status">{getStatusText(order.status)}</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div className="user-order-meta">
                       <div>下单时间: {order.createTime}</div>
-                      <div style={{ fontWeight: 'bold' }}>总计: ¥{order.totalPrice.toFixed(2)}</div>
+                      <div className="order-total">总计: ¥{order.totalPrice.toFixed(2)}</div>
                     </div>
-                    <button onClick={() => handleViewOrder(order.id)} className="button button-primary" style={{ padding: '6px 12px', fontSize: '14px' }}>
+                    <button
+                      onClick={() => handleViewOrder(order.id)}
+                      className="button button-primary button-sm"
+                    >
                       {isSameOrder(selectedOrderId, order.id) ? '收起详情' : '查看详情'}
                     </button>
                     {isSameOrder(selectedOrderId, order.id) && renderOrderDetail(order)}
@@ -502,55 +452,35 @@ const UserPage = () => {
 
             {activeTab === 'logistics' && (
               <div>
-                <h3 style={{ marginBottom: '20px' }}>物流跟踪</h3>
+                <h3>物流跟踪</h3>
                 {orders.filter(order => order.logistics).length === 0 ? (
-                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#666' }}>暂无物流信息</div>
+                  <div className="logistics-empty">暂无物流信息</div>
                 ) : (
                   orders.filter(order => order.logistics).map(order => (
-                    <div key={order.id} style={{ borderBottom: '1px solid #e8e8e8', padding: '16px 0' }}>
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>订单号: {order.id}</div>
+                    <div key={order.id} className="logistics-block">
+                      <div>
+                        <div className="biz-line-name">订单号: {order.id}</div>
                         <div>订单状态: {getStatusText(order.status)}</div>
                         <div>物流公司: {order.logistics.company}</div>
                         <div>物流单号: {order.logistics.trackingNumber}</div>
-                        <div style={{ color: order.logistics.status === '已签收' ? '#52c41a' : '#1890ff', marginBottom: '12px' }}>
+                        <div className={`logistics-status${order.logistics.status === '已签收' ? ' done' : ''}`}>
                           物流状态: {order.logistics.status || '运输中'}
                         </div>
                         {isWaitingReceive(order.status) && (
                           <button
-                            className="button button-primary"
+                            className="button button-primary button-sm"
                             type="button"
                             onClick={() => handleConfirmReceipt(order.id)}
-                            style={{ padding: '6px 12px', fontSize: '14px' }}
                           >
                             确认收货
                           </button>
                         )}
                       </div>
-                      <div style={{ position: 'relative', paddingLeft: '20px' }}>
+                      <div className="logistics-timeline">
                         {(order.logistics.steps || []).map((step, index) => (
-                          <div key={index} style={{ marginBottom: '16px', position: 'relative' }}>
-                            <div style={{
-                              position: 'absolute',
-                              left: '-20px',
-                              top: '0',
-                              width: '10px',
-                              height: '10px',
-                              borderRadius: '50%',
-                              background: index === 0 ? '#1890ff' : '#ddd'
-                            }}></div>
-                            {index < (order.logistics.steps || []).length - 1 && (
-                              <div style={{
-                                position: 'absolute',
-                                left: '-15px',
-                                top: '10px',
-                                width: '1px',
-                                height: '32px',
-                                background: '#ddd'
-                              }}></div>
-                            )}
-                            <div style={{ fontWeight: index === 0 ? 'bold' : 'normal' }}>{step.description}</div>
-                            <div style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>{step.time}</div>
+                          <div key={index} className="logistics-step">
+                            {index === 0 ? <strong>{step.description}</strong> : <div>{step.description}</div>}
+                            <span>{step.time}</span>
                           </div>
                         ))}
                       </div>
@@ -562,13 +492,13 @@ const UserPage = () => {
 
             {activeTab === 'shop' && (
               <div>
-                <h3 style={{ marginBottom: '20px' }}>店铺管理</h3>
+                <h3>店铺管理</h3>
                 <button onClick={() => navigate('/shop')} className="button button-primary">
                   进入店铺管理
                 </button>
               </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </div>

@@ -19,34 +19,22 @@ const CartItem = ({ item }) => {
   };
 
   return (
-    <div style={{ display: 'flex', padding: '16px', borderBottom: '1px solid #e8e8e8', alignItems: 'center' }}>
+    <div className="cart-item">
       <img
         src={item.images?.[0] || fallbackImages.product}
         alt={item.name}
-        style={{ width: '100px', height: '100px', objectFit: 'cover', marginRight: '16px' }}
+        className="cart-item-thumb"
       />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '16px', marginBottom: '8px' }}>{item.name}</div>
-        <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
-          卖家: {item.seller?.nickname || '未知卖家'}
-        </div>
-        <div style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
-          库存: {hasStockLimit ? item.stock : '充足'}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#ff4d4f' }}>
-            ¥{item.price}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="cart-item-body">
+        <div className="cart-item-name">{item.name}</div>
+        <div className="cart-item-sub">卖家: {item.seller?.nickname || '未知卖家'}</div>
+        <div className="cart-item-sub">库存: {hasStockLimit ? item.stock : '充足'}</div>
+        <div className="cart-item-row">
+          <div className="cart-item-price">¥{item.price}</div>
+          <div className="qty-control">
             <button
+              type="button"
               onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity - 1 }))}
-              style={{
-                width: '32px',
-                height: '32px',
-                border: '1px solid #d9d9d9',
-                background: '#fff',
-                cursor: 'pointer'
-              }}
             >
               -
             </button>
@@ -54,40 +42,17 @@ const CartItem = ({ item }) => {
               type="number"
               value={item.quantity}
               onChange={handleQuantityChange}
-              style={{
-                width: '60px',
-                height: '32px',
-                border: '1px solid #d9d9d9',
-                textAlign: 'center',
-                outline: 'none'
-              }}
               min="1"
               max={hasStockLimit ? item.stock : undefined}
             />
             <button
+              type="button"
               onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
               disabled={isAtStockLimit}
-              style={{
-                width: '32px',
-                height: '32px',
-                border: '1px solid #d9d9d9',
-                background: '#fff',
-                cursor: isAtStockLimit ? 'not-allowed' : 'pointer',
-                color: isAtStockLimit ? '#999' : 'inherit'
-              }}
             >
               +
             </button>
-            <button
-              onClick={handleRemove}
-              style={{
-                marginLeft: '16px',
-                color: '#666',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
+            <button type="button" className="cart-item-remove" onClick={handleRemove}>
               删除
             </button>
           </div>

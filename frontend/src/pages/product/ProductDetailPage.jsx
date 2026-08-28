@@ -143,16 +143,15 @@ const ProductDetailPage = () => {
               <img
                 src={currentProduct.images?.[0] || fallbackImages.product}
                 alt={currentProduct.name}
-                style={{ width: '100%', height: '500px', objectFit: 'contain' }}
+                className="detail-main-image"
               />
               {currentProduct.images && currentProduct.images.length > 1 && (
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <div className="detail-gallery">
                   {currentProduct.images.map((image, index) => (
                     <img
                       key={index}
                       src={image}
                       alt={`${currentProduct.name} ${index + 1}`}
-                      style={{ width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer' }}
                     />
                   ))}
                 </div>
@@ -171,30 +170,30 @@ const ProductDetailPage = () => {
               </div>
               <div className="product-detail-seller">
                 <h3>卖家信息</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                <div className="detail-seller-row">
                   <button
                     type="button"
+                    className="link-button"
                     onClick={handleGoToSellerShop}
                     disabled={!(currentProduct.seller?.id || currentProduct.sellerId)}
                     title="进入店铺"
-                    style={{ border: 'none', background: 'transparent', padding: 0, cursor: currentProduct.seller?.id || currentProduct.sellerId ? 'pointer' : 'default' }}
                   >
                     <img
                       src={currentProduct.seller?.avatar || fallbackImages.avatar}
                       alt={currentProduct.seller?.nickname}
-                      style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }}
+                      className="detail-seller-avatar"
                     />
                   </button>
                   <div>
                     <button
                       type="button"
+                      className="detail-seller-name"
                       onClick={handleGoToSellerShop}
                       disabled={!(currentProduct.seller?.id || currentProduct.sellerId)}
-                      style={{ border: 'none', background: 'transparent', padding: 0, cursor: currentProduct.seller?.id || currentProduct.sellerId ? 'pointer' : 'default' }}
                     >
                       {currentProduct.seller?.nickname || '未知卖家'}
                     </button>
-                    <div style={{ marginTop: '8px' }}>
+                    <div style={{ marginTop: 8 }}>
                       <CreditBadge
                         compact
                         level={currentProduct.seller?.creditLevel || '普通'}
@@ -221,24 +220,20 @@ const ProductDetailPage = () => {
               )}
             </div>
           </div>
-          <div style={{ marginTop: '40px' }}>
+          <div className="detail-section">
             <h2>商品描述</h2>
-            <div style={{ marginTop: '20px', lineHeight: '1.6' }}>
-              {currentProduct.description || '暂无描述'}
-            </div>
+            <p>{currentProduct.description || '暂无描述'}</p>
           </div>
           {(Number(currentProduct.productType) === 2 || currentProduct.isSecondhand) && (
-            <div style={{ marginTop: '40px' }}>
+            <div className="detail-section">
               <h2>二手商品信息</h2>
-              <div style={{ marginTop: '20px' }}>
-                <p>成色: {getConditionText(currentProduct.condition)}</p>
-                <p>使用时间: {currentProduct.usageTime || '未知'}</p>
-                <p>交易地点: {currentProduct.location || '未填写'}</p>
-                <p>是否有瑕疵: {currentProduct.hasDefect ? '是' : '否'}</p>
-                {currentProduct.defectDescription && (
-                  <p>瑕疵描述: {currentProduct.defectDescription}</p>
-                )}
-              </div>
+              <p>成色: {getConditionText(currentProduct.condition)}</p>
+              <p>使用时间: {currentProduct.usageTime || '未知'}</p>
+              <p>交易地点: {currentProduct.location || '未填写'}</p>
+              <p>是否有瑕疵: {currentProduct.hasDefect ? '是' : '否'}</p>
+              {currentProduct.defectDescription && (
+                <p>瑕疵描述: {currentProduct.defectDescription}</p>
+              )}
             </div>
           )}
           <EvaluationList
