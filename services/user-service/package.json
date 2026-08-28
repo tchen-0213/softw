@@ -3,8 +3,8 @@
   "version": "2.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "NODE_PATH=./node_modules node app.js",
-    "test": "NODE_PATH=./node_modules node --test"
+    "start": "cross-env NODE_PATH=./node_modules node app.js",
+    "test": "cross-env NODE_PATH=./node_modules node --test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -12,5 +12,8 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.11.5",
     "sequelize": "^6.37.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
