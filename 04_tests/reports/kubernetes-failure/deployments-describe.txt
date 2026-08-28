@@ -1,0 +1,285 @@
+Name:                   api-gateway
+Namespace:              softw-microservices
+CreationTimestamp:      Mon, 24 Aug 2026 16:31:08 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 4
+Selector:               app=api-gateway
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:       app=api-gateway
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+  Containers:
+   api-gateway:
+    Image:      softw/api-gateway:practice
+    Port:       8080/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:8080/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:8080/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                 8080
+      SERVICE_VERSION:      2.0.0
+      USER_SERVICE_URL:     http://user-service:3101
+      PRODUCT_SERVICE_URL:  http://product-service:3102
+      ORDER_SERVICE_URL:    http://order-service:3103
+    Mounts:                 <none>
+  Volumes:                  <none>
+  Node-Selectors:           <none>
+  Tolerations:              <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  api-gateway-bb56ddc56 (0/0 replicas created), api-gateway-65ddf69776 (0/0 replicas created), api-gateway-6c459df5bf (0/0 replicas created)
+NewReplicaSet:   api-gateway-654b9f6d86 (1/1 replicas created)
+
+
+Name:                   microservice-frontend
+Namespace:              softw-microservices
+CreationTimestamp:      Thu, 27 Aug 2026 11:42:57 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 2
+Selector:               app=microservice-frontend
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:       app=microservice-frontend
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+  Containers:
+   frontend:
+    Image:      softw/microservice-frontend:practice
+    Port:       80/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     250m
+      memory:  256Mi
+    Requests:
+      cpu:         50m
+      memory:      64Mi
+    Readiness:     http-get http://:80/ delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:   <none>
+    Mounts:        <none>
+  Volumes:         <none>
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  microservice-frontend-5948fdfd8 (0/0 replicas created)
+NewReplicaSet:   microservice-frontend-6b69c668c7 (1/1 replicas created)
+
+
+Name:                   microservice-mysql
+Namespace:              softw-microservices
+CreationTimestamp:      Thu, 27 Aug 2026 11:42:56 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=microservice-mysql
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=microservice-mysql
+  Containers:
+   mysql:
+    Image:      mysql:8.0
+    Port:       3306/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     500m
+      memory:  768Mi
+    Requests:
+      cpu:      100m
+      memory:   256Mi
+    Readiness:  exec [sh -c mysqladmin ping -h 127.0.0.1 -uroot -p[REDACTED]] delay=10s timeout=1s period=5s #success=1 #failure=3
+    Environment:
+      MYSQL_ROOT_PASSWORD: [REDACTED]
+      MYSQL_DATABASE:       softw_users
+      MYSQL_USER:           softw
+      MYSQL_PASSWORD: [REDACTED]
+    Mounts:
+      /docker-entrypoint-initdb.d from init (rw)
+      /var/lib/mysql from data (rw)
+  Volumes:
+   init:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      microservice-mysql-init
+    Optional:  false
+   data:
+    Type:          PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:     microservice-mysql-data
+    ReadOnly:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   microservice-mysql-7df6f677bb (1/1 replicas created)
+
+
+Name:                   order-service
+Namespace:              softw-microservices
+CreationTimestamp:      Mon, 24 Aug 2026 16:31:08 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 4
+Selector:               app=order-service
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:       app=order-service
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+  Containers:
+   order-service:
+    Image:      softw/order-service:practice
+    Port:       3103/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3103/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3103/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3103
+      SERVICE_NAME:            order-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_orders
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+      USER_SERVICE_URL:        http://user-service:3101
+      PRODUCT_SERVICE_URL:     http://product-service:3102
+    Mounts:                    <none>
+  Volumes:                     <none>
+  Node-Selectors:              <none>
+  Tolerations:                 <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  order-service-66ddb9fc58 (0/0 replicas created), order-service-6d8fc6695b (0/0 replicas created), order-service-6fb47fb879 (0/0 replicas created)
+NewReplicaSet:   order-service-774d57485c (1/1 replicas created)
+
+
+Name:                   product-service
+Namespace:              softw-microservices
+CreationTimestamp:      Mon, 24 Aug 2026 16:31:08 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 8
+Selector:               app=product-service
+Replicas:               1 desired | 1 updated | 2 total | 1 available | 1 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:       app=product-service
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+  Containers:
+   product-service:
+    Image:      softw/product-service:missing-demo-20260828
+    Port:       3102/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3102/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3102/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3102
+      SERVICE_NAME:            product-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_catalog
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+      USER_SERVICE_URL:        http://user-service:3101
+      ORDER_SERVICE_URL:       http://order-service:3103
+    Mounts:                    <none>
+  Volumes:                     <none>
+  Node-Selectors:              <none>
+  Tolerations:                 <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    ReplicaSetUpdated
+OldReplicaSets:  product-service-67745448f8 (0/0 replicas created), product-service-65b55bf9df (0/0 replicas created), product-service-6b59949db8 (0/0 replicas created), product-service-7c6b9959c8 (0/0 replicas created), product-service-5cf5589496 (1/1 replicas created)
+NewReplicaSet:   product-service-5897c88766 (1/1 replicas created)
+
+
+Name:                   user-service
+Namespace:              softw-microservices
+CreationTimestamp:      Mon, 24 Aug 2026 16:31:08 +0800
+Labels:                 <none>
+Annotations:            deployment.kubernetes.io/revision: 4
+Selector:               app=user-service
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:       app=user-service
+  Annotations:  kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+  Containers:
+   user-service:
+    Image:      softw/user-service:practice
+    Port:       3101/TCP
+    Host Port:  0/TCP
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3101/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3101/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3101
+      SERVICE_NAME:            user-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_users
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+    Mounts:                    <none>
+  Volumes:                     <none>
+  Node-Selectors:              <none>
+  Tolerations:                 <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  user-service-67dd667cc7 (0/0 replicas created), user-service-b7d7f4ccc (0/0 replicas created), user-service-78f5f8955b (0/0 replicas created)
+NewReplicaSet:   user-service-556d9bf467 (1/1 replicas created)

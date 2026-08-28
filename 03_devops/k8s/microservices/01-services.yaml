@@ -40,10 +40,16 @@ spec:
               memory: 512Mi
           readinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: 3101
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3101
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
@@ -101,10 +107,16 @@ spec:
               memory: 512Mi
           readinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: 3102
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3102
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service
@@ -163,10 +175,16 @@ spec:
               memory: 512Mi
           readinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: 3103
             initialDelaySeconds: 5
             periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3103
+            initialDelaySeconds: 15
+            periodSeconds: 20
 ---
 apiVersion: v1
 kind: Service

@@ -1,20 +1,30 @@
 function createService({ express, name, version, routes, isReady = () => true }) {
   const app = express();
+  const revision = process.env.SERVICE_REVISION || 'dev';
+  const buildTime = process.env.BUILD_TIME || 'unknown';
   app.use(express.json());
 
   app.get('/health', (req, res) => {
-    const ready = isReady();
-    res.status(ready ? 200 : 503).json({
-      status: ready ? 'ok' : 'starting',
+    res.json({
+      status: 'ok',
       service: name,
       version,
-      database: ready ? 'ok' : 'starting',
+      revision,
       uptime: process.uptime()
     });
   });
 
+  app.get('/ready', (req, res) => {
+    const ready = isReady();
+    res.status(ready ? 200 : 503).json({
+      status: ready ? 'ready' : 'not-ready',
+      service: name,
+      database: ready ? 'ok' : 'starting'
+    });
+  });
+
   app.get('/version', (req, res) => {
-    res.json({ service: name, version });
+    res.json({ service: name, version, revision, buildTime });
   });
 
   routes(app);

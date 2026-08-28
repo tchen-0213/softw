@@ -14,12 +14,14 @@
 - 后端单元、安全与 API 测试：`../backend/tests/`
 - 前端单元与 Playwright E2E：`../frontend/src/**/*.test.*`、`../frontend/e2e/`
 - 微服务测试：`../services/*/tests/`
+- 微服务公开 API 与业务 E2E：`microservices/api-e2e.test.js`
 
 常用命令应在仓库根目录执行：
 
 ```bash
 npm run verify
 npm run test:api
+npm run test:services:api
 API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
 npm run perf:k6
 ```

@@ -1,0 +1,70 @@
+LAST SEEN   TYPE      REASON                         OBJECT                                        MESSAGE
+54m         Warning   FailedGetScale                 horizontalpodautoscaler/product-service-hpa   Unauthorized
+10m         Normal    SuccessfulCreate               replicaset/order-service-774d57485c           Created pod: order-service-774d57485c-f7788
+10m         Normal    Scheduled                      pod/order-service-774d57485c-f7788            Successfully assigned softw-microservices/order-service-774d57485c-f7788 to softw-practice-control-plane
+10m         Normal    SuccessfulCreate               replicaset/user-service-556d9bf467            Created pod: user-service-556d9bf467-hnrmv
+10m         Normal    ScalingReplicaSet              deployment/user-service                       Scaled up replica set user-service-556d9bf467 from 0 to 1
+10m         Normal    Scheduled                      pod/user-service-556d9bf467-hnrmv             Successfully assigned softw-microservices/user-service-556d9bf467-hnrmv to softw-practice-control-plane
+10m         Normal    Scheduled                      pod/product-service-5cf5589496-sfnsb          Successfully assigned softw-microservices/product-service-5cf5589496-sfnsb to softw-practice-control-plane
+10m         Normal    ScalingReplicaSet              deployment/order-service                      Scaled up replica set order-service-774d57485c from 0 to 1
+10m         Normal    ScalingReplicaSet              deployment/product-service                    Scaled up replica set product-service-5cf5589496 from 0 to 1
+10m         Normal    SuccessfulCreate               replicaset/product-service-5cf5589496         Created pod: product-service-5cf5589496-sfnsb
+10m         Normal    Created                        pod/product-service-5cf5589496-sfnsb          Container created
+10m         Normal    Created                        pod/user-service-556d9bf467-hnrmv             Container created
+10m         Normal    Started                        pod/product-service-5cf5589496-sfnsb          Container started
+10m         Normal    SuccessfulCreate               replicaset/api-gateway-654b9f6d86             Created pod: api-gateway-654b9f6d86-jkb4f
+10m         Normal    Pulled                         pod/user-service-556d9bf467-hnrmv             Container image "softw/user-service:practice" already present on machine and can be accessed by the pod
+10m         Normal    Pulled                         pod/product-service-5cf5589496-sfnsb          Container image "softw/product-service:practice" already present on machine and can be accessed by the pod
+10m         Normal    Scheduled                      pod/api-gateway-654b9f6d86-jkb4f              Successfully assigned softw-microservices/api-gateway-654b9f6d86-jkb4f to softw-practice-control-plane
+10m         Normal    ScalingReplicaSet              deployment/api-gateway                        Scaled up replica set api-gateway-654b9f6d86 from 0 to 1
+10m         Normal    Started                        pod/user-service-556d9bf467-hnrmv             Container started
+10m         Normal    Started                        pod/api-gateway-654b9f6d86-jkb4f              Container started
+10m         Normal    Created                        pod/api-gateway-654b9f6d86-jkb4f              Container created
+10m         Normal    Pulled                         pod/order-service-774d57485c-f7788            Container image "softw/order-service:practice" already present on machine and can be accessed by the pod
+10m         Normal    Created                        pod/order-service-774d57485c-f7788            Container created
+10m         Normal    Started                        pod/order-service-774d57485c-f7788            Container started
+10m         Normal    Pulled                         pod/api-gateway-654b9f6d86-jkb4f              Container image "softw/api-gateway:practice" already present on machine and can be accessed by the pod
+10m         Normal    ScalingReplicaSet              deployment/product-service                    Scaled down replica set product-service-6b59949db8 from 1 to 0
+10m         Normal    SuccessfulDelete               replicaset/product-service-6b59949db8         Deleted pod: product-service-6b59949db8-v4gzp
+10m         Normal    Killing                        pod/user-service-78f5f8955b-wdqc4             Stopping container user-service
+10m         Normal    SuccessfulDelete               replicaset/order-service-6d8fc6695b           Deleted pod: order-service-6d8fc6695b-9z9bf
+10m         Normal    Killing                        pod/order-service-6d8fc6695b-9z9bf            Stopping container order-service
+10m         Normal    SuccessfulDelete               replicaset/user-service-78f5f8955b            Deleted pod: user-service-78f5f8955b-wdqc4
+10m         Normal    ScalingReplicaSet              deployment/user-service                       Scaled down replica set user-service-78f5f8955b from 1 to 0
+10m         Warning   Unhealthy                      pod/api-gateway-654b9f6d86-jkb4f              Readiness probe failed: HTTP probe failed with statuscode: 503
+10m         Normal    Killing                        pod/product-service-6b59949db8-v4gzp          Stopping container product-service
+10m         Normal    ScalingReplicaSet              deployment/order-service                      Scaled down replica set order-service-6d8fc6695b from 1 to 0
+10m         Normal    ScalingReplicaSet              deployment/api-gateway                        Scaled down replica set api-gateway-65ddf69776 from 1 to 0
+10m         Normal    SuccessfulDelete               replicaset/api-gateway-65ddf69776             Deleted pod: api-gateway-65ddf69776-wbn55
+10m         Normal    Killing                        pod/api-gateway-65ddf69776-wbn55              Stopping container api-gateway
+10m         Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/product-service-hpa   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+10m         Warning   FailedGetResourceMetric        horizontalpodautoscaler/product-service-hpa   failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+9m58s       Normal    Scheduled                      pod/observability-check-1787898535            Successfully assigned softw-microservices/observability-check-1787898535 to softw-practice-control-plane
+9m57s       Normal    Pulled                         pod/observability-check-1787898535            Container image "curlimages/curl:8.16.0" already present on machine and can be accessed by the pod
+9m57s       Normal    Created                        pod/observability-check-1787898535            Container created
+9m57s       Normal    Started                        pod/observability-check-1787898535            Container started
+8m53s       Normal    Created                        pod/observability-check-1787898600            Container created
+8m53s       Normal    Started                        pod/observability-check-1787898600            Container started
+8m53s       Normal    Scheduled                      pod/observability-check-1787898600            Successfully assigned softw-microservices/observability-check-1787898600 to softw-practice-control-plane
+8m53s       Normal    Pulled                         pod/observability-check-1787898600            Container image "curlimages/curl:8.16.0" already present on machine and can be accessed by the pod
+8m15s       Normal    SuccessfulCreate               replicaset/product-service-5897c88766         Created pod: product-service-5897c88766-z6cnp
+8m15s       Normal    Scheduled                      pod/product-service-5897c88766-z6cnp          Successfully assigned softw-microservices/product-service-5897c88766-z6cnp to softw-practice-control-plane
+8m12s       Warning   Failed                         pod/product-service-5897c88766-z6cnp          Error: ImagePullBackOff
+8m12s       Normal    BackOff                        pod/product-service-5897c88766-z6cnp          Back-off pulling image "softw/product-service:missing-demo-20260828"
+7m57s       Normal    Pulling                        pod/product-service-5897c88766-z6cnp          Pulling image "softw/product-service:missing-demo-20260828"
+7m55s       Warning   Failed                         pod/product-service-5897c88766-z6cnp          Error: ErrImagePull
+7m55s       Warning   Failed                         pod/product-service-5897c88766-z6cnp          Failed to pull image "softw/product-service:missing-demo-20260828": failed to pull and unpack image "docker.io/softw/product-service:missing-demo-20260828": failed to resolve reference "docker.io/softw/product-service:missing-demo-20260828": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed
+7m49s       Normal    Pulled                         pod/recovery-check                            Container image "curlimages/curl:8.16.0" already present on machine and can be accessed by the pod
+7m49s       Normal    Scheduled                      pod/recovery-check                            Successfully assigned softw-microservices/recovery-check to softw-practice-control-plane
+7m49s       Normal    SuccessfulDelete               replicaset/product-service-5897c88766         Deleted pod: product-service-5897c88766-z6cnp
+7m49s       Normal    Created                        pod/recovery-check                            Container created
+7m49s       Normal    Started                        pod/recovery-check                            Container started
+7m49s       Normal    ScalingReplicaSet              deployment/product-service                    Scaled down replica set product-service-5897c88766 from 1 to 0
+21s         Normal    Scheduled                      pod/product-service-5897c88766-5f4ng          Successfully assigned softw-microservices/product-service-5897c88766-5f4ng to softw-practice-control-plane
+21s         Normal    ScalingReplicaSet              deployment/product-service                    Scaled up replica set product-service-5897c88766 from 0 to 1
+21s         Normal    SuccessfulCreate               replicaset/product-service-5897c88766         Created pod: product-service-5897c88766-5f4ng
+16s         Normal    BackOff                        pod/product-service-5897c88766-5f4ng          Back-off pulling image "softw/product-service:missing-demo-20260828"
+16s         Warning   Failed                         pod/product-service-5897c88766-5f4ng          Error: ImagePullBackOff
+4s          Normal    Pulling                        pod/product-service-5897c88766-5f4ng          Pulling image "softw/product-service:missing-demo-20260828"
+1s          Warning   Failed                         pod/product-service-5897c88766-5f4ng          Error: ErrImagePull
+1s          Warning   Failed                         pod/product-service-5897c88766-5f4ng          Failed to pull image "softw/product-service:missing-demo-20260828": failed to pull and unpack image "docker.io/softw/product-service:missing-demo-20260828": failed to resolve reference "docker.io/softw/product-service:missing-demo-20260828": pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed

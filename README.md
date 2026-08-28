@@ -594,6 +594,16 @@ API 网关：http://localhost:8081/health
 订单服务：http://localhost:3103/health
 ```
 
+微服务公开 API/业务回归和 Kubernetes 可观测性检查：
+
+```bash
+npm run test:services:api
+npm run k8s:observe
+```
+
+每个后端组件均提供 `/health`、`/ready`、`/version`。CI 构建的 `/version` 会返回当前 Git 提交
+SHA；Kubernetes 部署失败时，Actions 自动保留 Pod describe、Events 和容器日志 14 天。
+
 三个服务分别使用 `softw_users`、`softw_catalog` 和 `softw_orders` 数据库。服务测试由 CI 的 `microservice-test` 作业在独立 MySQL 环境中执行；页面完整流程可运行：
 
 ```bash

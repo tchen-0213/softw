@@ -7,6 +7,7 @@
     "test": "npm --prefix backend test && npm --prefix frontend run test:unit",
     "test:api": "npm --prefix backend run test:api",
     "test:services": "npm --prefix services/user-service test && npm --prefix services/product-service test && npm --prefix services/order-service test && npm --prefix services/api-gateway test",
+    "test:services:api": "node --test 04_tests/microservices/api-e2e.test.js",
     "test:e2e": "npm --prefix frontend run test:e2e",
     "build": "npm --prefix frontend run build",
     "verify": "npm run test && npm run build",
@@ -16,6 +17,7 @@
     "compose:down": "docker compose -f 03_devops/docker-compose.yml down -v",
     "k8s:monolith": "kubectl apply -f 03_devops/k8s/monolith",
     "k8s:microservices": "kubectl apply -f 03_devops/k8s/microservices",
+    "k8s:observe": "sh 03_devops/scripts/k8s-observe-microservices.sh",
     "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} 04_tests/performance/k6-core-flow.js"
   }
 }

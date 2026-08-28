@@ -1,0 +1,503 @@
+Name:             api-gateway-654b9f6d86-jkb4f
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Fri, 28 Aug 2026 14:28:16 +0800
+Labels:           app=api-gateway
+                  pod-template-hash=654b9f6d86
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Running
+IP:               10.244.0.34
+IPs:
+  IP:           10.244.0.34
+Controlled By:  ReplicaSet/api-gateway-654b9f6d86
+Containers:
+  api-gateway:
+    Container ID:   containerd://f04a5a42aa731db3fe04f68fae7dd7f75ec30d5033f9ab0db4df1d230cae6d08
+    Image:          softw/api-gateway:practice
+    Image ID:       docker.io/library/import-2026-08-28@sha256:ea3cd44741d0d230a34affe9bf6463ccaff24eea49af0ed7cd94ad511ea6b362
+    Port:           8080/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 28 Aug 2026 14:28:16 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:8080/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:8080/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                 8080
+      SERVICE_VERSION:      2.0.0
+      USER_SERVICE_URL:     http://user-service:3101
+      PRODUCT_SERVICE_URL:  http://product-service:3102
+      ORDER_SERVICE_URL:    http://order-service:3103
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-svzlw (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-svzlw:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             frontend-healthcheck-manual
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Thu, 27 Aug 2026 11:43:35 +0800
+Labels:           run=frontend-healthcheck-manual
+Annotations:      <none>
+Status:           Succeeded
+IP:               10.244.0.30
+IPs:
+  IP:  10.244.0.30
+Containers:
+  frontend-healthcheck-manual:
+    Container ID:  containerd://7785e70f30ffde5866136338a8d0d85f9088275981883afe1caee63496b925ed
+    Image:         curlimages/curl:8.16.0
+    Image ID:      docker.io/curlimages/curl@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      curl
+      --fail
+      --silent
+      http://microservice-frontend/
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Thu, 27 Aug 2026 11:43:35 +0800
+      Finished:     Thu, 27 Aug 2026 11:43:35 +0800
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-9pfgv (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  kube-api-access-9pfgv:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             microservice-frontend-6b69c668c7-6tzqk
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Thu, 27 Aug 2026 11:42:57 +0800
+Labels:           app=microservice-frontend
+                  pod-template-hash=6b69c668c7
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Running
+IP:               10.244.0.23
+IPs:
+  IP:           10.244.0.23
+Controlled By:  ReplicaSet/microservice-frontend-6b69c668c7
+Containers:
+  frontend:
+    Container ID:   containerd://8c4dc90b17683c40687777217fb9c12ccbf75c883db7c74a4469c59bc2714efc
+    Image:          softw/microservice-frontend:practice
+    Image ID:       sha256:5996fba49a778e561bf403c571a8df355b3711f5114dfa80b689420306ed3b72
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Thu, 27 Aug 2026 11:42:58 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     250m
+      memory:  256Mi
+    Requests:
+      cpu:        50m
+      memory:     64Mi
+    Readiness:    http-get http://:80/ delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-gdn4n (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-gdn4n:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             microservice-mysql-7df6f677bb-m8c6l
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Thu, 27 Aug 2026 11:42:59 +0800
+Labels:           app=microservice-mysql
+                  pod-template-hash=7df6f677bb
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.28
+IPs:
+  IP:           10.244.0.28
+Controlled By:  ReplicaSet/microservice-mysql-7df6f677bb
+Containers:
+  mysql:
+    Container ID:   containerd://5d393450ae95583acc3c5c3ec54f260240042dc8a8610f9d07fb36b66ec543c6
+    Image:          mysql:8.0
+    Image ID:       sha256:b7e118f56c5963e079252e0d6e2978c9c010eb7fc7aaaec100e367796b5dd08f
+    Port:           3306/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Thu, 27 Aug 2026 11:43:00 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  768Mi
+    Requests:
+      cpu:      100m
+      memory:   256Mi
+    Readiness:  exec [sh -c mysqladmin ping -h 127.0.0.1 -uroot -p[REDACTED]] delay=10s timeout=1s period=5s #success=1 #failure=3
+    Environment:
+      MYSQL_ROOT_PASSWORD: [REDACTED]
+      MYSQL_DATABASE:       softw_users
+      MYSQL_USER:           softw
+      MYSQL_PASSWORD: [REDACTED]
+    Mounts:
+      /docker-entrypoint-initdb.d from init (rw)
+      /var/lib/mysql from data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-mz6vb (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  init:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      microservice-mysql-init
+    Optional:  false
+  data:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  microservice-mysql-data
+    ReadOnly:   false
+  kube-api-access-mz6vb:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             order-service-774d57485c-f7788
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Fri, 28 Aug 2026 14:28:15 +0800
+Labels:           app=order-service
+                  pod-template-hash=774d57485c
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Running
+IP:               10.244.0.33
+IPs:
+  IP:           10.244.0.33
+Controlled By:  ReplicaSet/order-service-774d57485c
+Containers:
+  order-service:
+    Container ID:   containerd://446cc7359fb6888b3216875f7175b8dc75918cff4e5bab685a64b2ffffccc896
+    Image:          softw/order-service:practice
+    Image ID:       sha256:4ca08f6c03c3630121eb360e67a6b94a00f7ca8e25257d37622e824f9a8df10a
+    Port:           3103/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 28 Aug 2026 14:28:16 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3103/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3103/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3103
+      SERVICE_NAME:            order-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_orders
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+      USER_SERVICE_URL:        http://user-service:3101
+      PRODUCT_SERVICE_URL:     http://product-service:3102
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-m56t2 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-m56t2:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             product-service-5897c88766-5f4ng
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Fri, 28 Aug 2026 14:38:32 +0800
+Labels:           app=product-service
+                  pod-template-hash=5897c88766
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Pending
+IP:               10.244.0.39
+IPs:
+  IP:           10.244.0.39
+Controlled By:  ReplicaSet/product-service-5897c88766
+Containers:
+  product-service:
+    Container ID:
+    Image:          softw/product-service:missing-demo-20260828
+    Image ID:
+    Port:           3102/TCP
+    Host Port:      0/TCP
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3102/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3102/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3102
+      SERVICE_NAME:            product-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_catalog
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+      USER_SERVICE_URL:        http://user-service:3101
+      ORDER_SERVICE_URL:       http://order-service:3103
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qfqp4 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       False
+  ContainersReady             False
+  PodScheduled                True
+Volumes:
+  kube-api-access-qfqp4:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             product-service-5cf5589496-sfnsb
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Fri, 28 Aug 2026 14:28:15 +0800
+Labels:           app=product-service
+                  pod-template-hash=5cf5589496
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Running
+IP:               10.244.0.32
+IPs:
+  IP:           10.244.0.32
+Controlled By:  ReplicaSet/product-service-5cf5589496
+Containers:
+  product-service:
+    Container ID:   containerd://8c607be8f35f7243f7a46fe5f659fd2959ea4a61e654ab0e67b23754f6c8cc31
+    Image:          softw/product-service:practice
+    Image ID:       sha256:9c9948a7f2eb1127bad4f2986cf87d4aa73b4e14e207cc3a38e828660923d003
+    Port:           3102/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 28 Aug 2026 14:28:16 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3102/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3102/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3102
+      SERVICE_NAME:            product-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_catalog
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+      USER_SERVICE_URL:        http://user-service:3101
+      ORDER_SERVICE_URL:       http://order-service:3103
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-lb6pz (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-lb6pz:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+
+
+Name:             user-service-556d9bf467-hnrmv
+Namespace:        softw-microservices
+Priority:         0
+Service Account:  default
+Node:             softw-practice-control-plane/172.19.0.2
+Start Time:       Fri, 28 Aug 2026 14:28:15 +0800
+Labels:           app=user-service
+                  pod-template-hash=556d9bf467
+Annotations:      kubectl.kubernetes.io/restartedAt: 2026-08-27T11:42:57+08:00
+Status:           Running
+IP:               10.244.0.31
+IPs:
+  IP:           10.244.0.31
+Controlled By:  ReplicaSet/user-service-556d9bf467
+Containers:
+  user-service:
+    Container ID:   containerd://45fd7567f63e212ea8533e99d6d907697f0091ad5706ca975d218969be12e120
+    Image:          softw/user-service:practice
+    Image ID:       sha256:ff0a6cb1f36530b0cd24ab142cde8e69d24c8654e58558f0bfe3775ee0b6ae86
+    Port:           3101/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 28 Aug 2026 14:28:16 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:      100m
+      memory:   128Mi
+    Liveness:   http-get http://:3101/health delay=15s timeout=1s period=20s #success=1 #failure=3
+    Readiness:  http-get http://:3101/ready delay=5s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      PORT:                    3101
+      SERVICE_NAME:            user-service
+      SERVICE_VERSION:         2.0.0
+      DB_HOST:                 microservice-mysql
+      DB_NAME:                 softw_users
+      DB_USER:                 softw
+      DB_PASSWORD: [REDACTED]
+      JWT_SECRET: [REDACTED]
+      INTERNAL_SERVICE_TOKEN: [REDACTED]
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kxchn (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True
+  Initialized                 True
+  Ready                       True
+  ContainersReady             True
+  PodScheduled                True
+Volumes:
+  kube-api-access-kxchn:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s

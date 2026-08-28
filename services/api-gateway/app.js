@@ -2,6 +2,8 @@ const express = require('express');
 
 const app = express();
 const version = process.env.SERVICE_VERSION || '1.0.0';
+const revision = process.env.SERVICE_REVISION || 'dev';
+const buildTime = process.env.BUILD_TIME || 'unknown';
 
 const routes = [
   { prefix: '/api/users', target: process.env.USER_SERVICE_URL || 'http://localhost:3101' },
@@ -27,11 +29,25 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'api-gateway', version });
+  res.json({ status: 'ok', service: 'api-gateway', version, revision, uptime: process.uptime() });
+});
+
+app.get('/ready', async (req, res) => {
+  const dependencies = [...new Set(routes.map(route => route.target))];
+  const checks = await Promise.all(dependencies.map(async target => {
+    try {
+      const response = await fetch(new URL('/ready', target), { signal: AbortSignal.timeout(2000) });
+      return { target, ready: response.ok };
+    } catch (error) {
+      return { target, ready: false };
+    }
+  }));
+  const ready = checks.every(check => check.ready);
+  res.status(ready ? 200 : 503).json({ status: ready ? 'ready' : 'not-ready', service: 'api-gateway', dependencies: checks });
 });
 
 app.get('/version', (req, res) => {
-  res.json({ service: 'api-gateway', version, routes });
+  res.json({ service: 'api-gateway', version, revision, buildTime, routes });
 });
 
 app.use(async (req, res) => {

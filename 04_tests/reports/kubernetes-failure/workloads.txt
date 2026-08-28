@@ -1,0 +1,51 @@
+NAME                                         READY   STATUS             RESTARTS   AGE   IP            NODE                           NOMINATED NODE   READINESS GATES
+pod/api-gateway-654b9f6d86-jkb4f             1/1     Running            0          10m   10.244.0.34   softw-practice-control-plane   <none>           <none>
+pod/frontend-healthcheck-manual              0/1     Completed          0          26h   10.244.0.30   softw-practice-control-plane   <none>           <none>
+pod/microservice-frontend-6b69c668c7-6tzqk   1/1     Running            0          26h   10.244.0.23   softw-practice-control-plane   <none>           <none>
+pod/microservice-mysql-7df6f677bb-m8c6l      1/1     Running            0          26h   10.244.0.28   softw-practice-control-plane   <none>           <none>
+pod/order-service-774d57485c-f7788           1/1     Running            0          10m   10.244.0.33   softw-practice-control-plane   <none>           <none>
+pod/product-service-5897c88766-5f4ng         0/1     ImagePullBackOff   0          20s   10.244.0.39   softw-practice-control-plane   <none>           <none>
+pod/product-service-5cf5589496-sfnsb         1/1     Running            0          10m   10.244.0.32   softw-practice-control-plane   <none>           <none>
+pod/user-service-556d9bf467-hnrmv            1/1     Running            0          10m   10.244.0.31   softw-practice-control-plane   <none>           <none>
+
+NAME                            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE     SELECTOR
+service/api-gateway             NodePort    10.96.148.223   <none>        8080:30081/TCP   3d22h   app=api-gateway
+service/microservice-frontend   NodePort    10.96.116.47    <none>        80:30082/TCP     26h     app=microservice-frontend
+service/microservice-mysql      ClusterIP   10.96.225.36    <none>        3306/TCP         26h     app=microservice-mysql
+service/order-service           ClusterIP   10.96.200.14    <none>        3103/TCP         3d22h   app=order-service
+service/product-service         ClusterIP   10.96.219.125   <none>        3102/TCP         3d22h   app=product-service
+service/user-service            ClusterIP   10.96.64.171    <none>        3101/TCP         3d22h   app=user-service
+
+NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS        IMAGES                                        SELECTOR
+deployment.apps/api-gateway             1/1     1            1           3d22h   api-gateway       softw/api-gateway:practice                    app=api-gateway
+deployment.apps/microservice-frontend   1/1     1            1           26h     frontend          softw/microservice-frontend:practice          app=microservice-frontend
+deployment.apps/microservice-mysql      1/1     1            1           26h     mysql             mysql:8.0                                     app=microservice-mysql
+deployment.apps/order-service           1/1     1            1           3d22h   order-service     softw/order-service:practice                  app=order-service
+deployment.apps/product-service         1/1     1            1           3d22h   product-service   softw/product-service:missing-demo-20260828   app=product-service
+deployment.apps/user-service            1/1     1            1           3d22h   user-service      softw/user-service:practice                   app=user-service
+
+NAME                                               DESIRED   CURRENT   READY   AGE     CONTAINERS        IMAGES                                        SELECTOR
+replicaset.apps/api-gateway-654b9f6d86             1         1         1       10m     api-gateway       softw/api-gateway:practice                    app=api-gateway,pod-template-hash=654b9f6d86
+replicaset.apps/api-gateway-65ddf69776             0         0         0       26h     api-gateway       softw/api-gateway:practice                    app=api-gateway,pod-template-hash=65ddf69776
+replicaset.apps/api-gateway-6c459df5bf             0         0         0       26h     api-gateway       softw/api-gateway:practice                    app=api-gateway,pod-template-hash=6c459df5bf
+replicaset.apps/api-gateway-bb56ddc56              0         0         0       3d22h   api-gateway       softw/api-gateway:practice                    app=api-gateway,pod-template-hash=bb56ddc56
+replicaset.apps/microservice-frontend-5948fdfd8    0         0         0       26h     frontend          softw/microservice-frontend:practice          app=microservice-frontend,pod-template-hash=5948fdfd8
+replicaset.apps/microservice-frontend-6b69c668c7   1         1         1       26h     frontend          softw/microservice-frontend:practice          app=microservice-frontend,pod-template-hash=6b69c668c7
+replicaset.apps/microservice-mysql-7df6f677bb      1         1         1       26h     mysql             mysql:8.0                                     app=microservice-mysql,pod-template-hash=7df6f677bb
+replicaset.apps/order-service-66ddb9fc58           0         0         0       3d22h   order-service     softw/order-service:practice                  app=order-service,pod-template-hash=66ddb9fc58
+replicaset.apps/order-service-6d8fc6695b           0         0         0       26h     order-service     softw/order-service:practice                  app=order-service,pod-template-hash=6d8fc6695b
+replicaset.apps/order-service-6fb47fb879           0         0         0       26h     order-service     softw/order-service:practice                  app=order-service,pod-template-hash=6fb47fb879
+replicaset.apps/order-service-774d57485c           1         1         1       10m     order-service     softw/order-service:practice                  app=order-service,pod-template-hash=774d57485c
+replicaset.apps/product-service-5897c88766         1         1         0       8m14s   product-service   softw/product-service:missing-demo-20260828   app=product-service,pod-template-hash=5897c88766
+replicaset.apps/product-service-5cf5589496         1         1         1       10m     product-service   softw/product-service:practice                app=product-service,pod-template-hash=5cf5589496
+replicaset.apps/product-service-65b55bf9df         0         0         0       3d22h   product-service   softw/product-service:practice                app=product-service,pod-template-hash=65b55bf9df
+replicaset.apps/product-service-67745448f8         0         0         0       3d22h   product-service   softw/product-service:practice                app=product-service,pod-template-hash=67745448f8
+replicaset.apps/product-service-6b59949db8         0         0         0       26h     product-service   softw/product-service:practice                app=product-service,pod-template-hash=6b59949db8
+replicaset.apps/product-service-7c6b9959c8         0         0         0       26h     product-service   softw/product-service:practice                app=product-service,pod-template-hash=7c6b9959c8
+replicaset.apps/user-service-556d9bf467            1         1         1       10m     user-service      softw/user-service:practice                   app=user-service,pod-template-hash=556d9bf467
+replicaset.apps/user-service-67dd667cc7            0         0         0       3d22h   user-service      softw/user-service:practice                   app=user-service,pod-template-hash=67dd667cc7
+replicaset.apps/user-service-78f5f8955b            0         0         0       26h     user-service      softw/user-service:practice                   app=user-service,pod-template-hash=78f5f8955b
+replicaset.apps/user-service-b7d7f4ccc             0         0         0       26h     user-service      softw/user-service:practice                   app=user-service,pod-template-hash=b7d7f4ccc
+
+NAME                                                      REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/product-service-hpa   Deployment/product-service   cpu: 1%/60%   1         5         1          3d22h

@@ -13,6 +13,7 @@
 | GitHub CI/CD | `../.github/workflows/ci-cd.yml` |
 | CI/CD 验证记录 | `2026-08-25-CI-CD验证记录.md` |
 | 微服务 Kubernetes 实测记录 | `2026-08-27-微服务Kubernetes验证记录.md` |
+| 微服务自动部署与可观测性 | `2026-08-28-微服务自动部署与可观测性验证记录.md` |
 | Pages + Codespaces 公网验证 | `2026-08-27-GitHub-Pages-Codespaces联通验证记录.md` |
 | Codespaces 启动 | `scripts/codespace-start.sh`、`../.devcontainer/devcontainer.json` |
 | 流水线截图 | `../05_management/流水线截图/` |
@@ -25,6 +26,8 @@ Dockerfile 需要与构建上下文一起使用，因此保留在 `../backend/`�
 npm run compose:up
 npm run compose:down
 docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+npm run test:services:api
+npm run k8s:observe
 ```
 
 微服务版本启动后，前端位于 `http://localhost:8082`，网关健康检查位于 `http://localhost:8081/health`。用户、商品交易和订单服务分别管理 `softw_users`、`softw_catalog`、`softw_orders`，完整边界和接口见 `../02_docs/微服务接口与数据归属.md`。

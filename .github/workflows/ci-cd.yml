@@ -200,9 +200,50 @@ jobs:
       - run: npm test
         working-directory: services/${{ matrix.service }}
 
+  microservice-api-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Build and start the complete microservice topology
+        run: docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+      - name: Run all public API and UC01-UC09 gateway regression
+        run: npm run test:services:api
+      - name: Run UC01-UC09 browser regression against microservices
+        env:
+          API_BASE_URL: http://127.0.0.1:8081
+          E2E_BASE_URL: http://127.0.0.1:8082
+        run: npm --prefix frontend run test:e2e
+      - name: Capture compose logs on failure
+        if: failure()
+        run: docker compose -f 03_devops/docker-compose.microservices.yml logs --no-color > microservice-compose.log
+      - name: Upload microservice API failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: microservice-api-failure-${{ github.sha }}
+          path: |
+            microservice-compose.log
+            frontend/test-results
+            04_tests/reports/playwright-html
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Stop test topology
+        if: always()
+        run: docker compose -f 03_devops/docker-compose.microservices.yml down -v
+
   docker-build:
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, browser-e2e, microservice-test]
+    needs: [backend-test, frontend-build, browser-e2e, microservice-test, microservice-api-e2e]
     permissions:
       contents: read
       packages: write
@@ -246,6 +287,10 @@ jobs:
           context: services
           file: services/api-gateway/Dockerfile
           push: ${{ github.event_name == 'push' }}
+          build-args: |
+            SERVICE_VERSION=2.0.0
+            SERVICE_REVISION=${{ github.sha }}
+            BUILD_TIME=${{ github.run_id }}
           tags: |
             ${{ env.IMAGE_PREFIX }}/api-gateway:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/api-gateway:practice
@@ -255,6 +300,10 @@ jobs:
           context: services
           file: services/user-service/Dockerfile
           push: ${{ github.event_name == 'push' }}
+          build-args: |
+            SERVICE_VERSION=2.0.0
+            SERVICE_REVISION=${{ github.sha }}
+            BUILD_TIME=${{ github.run_id }}
           tags: |
             ${{ env.IMAGE_PREFIX }}/user-service:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/user-service:practice
@@ -264,6 +313,10 @@ jobs:
           context: services
           file: services/product-service/Dockerfile
           push: ${{ github.event_name == 'push' }}
+          build-args: |
+            SERVICE_VERSION=2.0.0
+            SERVICE_REVISION=${{ github.sha }}
+            BUILD_TIME=${{ github.run_id }}
           tags: |
             ${{ env.IMAGE_PREFIX }}/product-service:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/product-service:practice
@@ -273,6 +326,10 @@ jobs:
           context: services
           file: services/order-service/Dockerfile
           push: ${{ github.event_name == 'push' }}
+          build-args: |
+            SERVICE_VERSION=2.0.0
+            SERVICE_REVISION=${{ github.sha }}
+            BUILD_TIME=${{ github.run_id }}
           tags: |
             ${{ env.IMAGE_PREFIX }}/order-service:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}/order-service:practice
@@ -342,8 +399,14 @@ jobs:
             --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
             --command -- curl --fail --silent http://backend:3001/api/health
           kubectl -n softw-microservices run microservices-healthcheck \
-            --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
-            --command -- curl --fail --silent http://api-gateway:8080/health
+            --image=curlimages/curl:8.16.0 --restart=Never --rm -i --env="EXPECTED_REVISION=${GITHUB_SHA}" \
+            --command -- sh -ec '
+              for endpoint in user-service:3101 product-service:3102 order-service:3103 api-gateway:8080; do
+                curl --fail --silent "http://${endpoint}/health"
+                curl --fail --silent "http://${endpoint}/ready"
+                curl --fail --silent "http://${endpoint}/version" | grep "${EXPECTED_REVISION}"
+              done
+            '
           kubectl -n softw-microservices run microservice-frontend-healthcheck \
             --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
             --command -- curl --fail --silent http://microservice-frontend/
@@ -352,3 +415,14 @@ jobs:
         run: |
           kubectl -n softw-practice get pods,deployments,services
           kubectl -n softw-microservices get pods,deployments,services,hpa
+      - name: Collect Kubernetes failure diagnostics
+        if: failure()
+        run: sh 03_devops/scripts/k8s-collect-failure.sh softw-microservices 04_tests/reports/kubernetes-failure
+      - name: Upload Kubernetes failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubernetes-failure-${{ github.sha }}
+          path: 04_tests/reports/kubernetes-failure
+          if-no-files-found: ignore
+          retention-days: 14
