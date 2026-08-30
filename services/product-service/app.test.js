@@ -26,6 +26,22 @@ test('product service owns products and performs idempotent stock reservation', 
     assert.equal(released.status, 200);
     await product.reload();
     assert.equal(product.stock, 3);
+
+    const bargainProduct = await models.Product.create({ name: '议价商品', description: '跨服务议价', price: 100, stock: 2, category: 'test', sellerId: 9, sellerName: '卖家' });
+    const conversation = await models.ChatConversation.create({ buyerId: 3, sellerId: 9, productId: bargainProduct.id });
+    const bargain = await models.ChatMessage.create({ conversationId: conversation.id, senderId: 3, type: 'bargain', amount: 80, requestStatus: 'accepted' });
+    const bargainBody = { reservationId: 'bargain-r-1', buyerId: 3, items: [{ productId: bargainProduct.id, quantity: 1, bargainMessageId: bargain.id }] };
+    const bargainResponse = await fetch(`${base}/internal/products/reservations`, { method: 'POST', headers, body: JSON.stringify(bargainBody) });
+    assert.equal(bargainResponse.status, 201);
+    const bargainReservation = await bargainResponse.json();
+    assert.equal(Number(bargainReservation.items[0].price), 80);
+    assert.equal(bargainReservation.items[0].priceSource, 'accepted_bargain');
+    assert.equal((await fetch(`${base}/internal/products/reservations`, { method: 'POST', headers, body: JSON.stringify({ ...bargainBody, reservationId: 'bargain-r-2' }) })).status, 400);
+
+    const restored = await fetch(`${base}/internal/products/reservations/bargain-r-1/release`, { method: 'POST', headers, body: JSON.stringify({ restoreBargains: true }) });
+    assert.equal(restored.status, 200);
+    await bargain.reload();
+    assert.equal(bargain.redeemedAt, null, '订单创建失败补偿时应恢复议价兑换资格');
   } finally {
     await new Promise(resolve => server.close(resolve));
     await sequelize.close();

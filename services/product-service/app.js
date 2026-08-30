@@ -53,7 +53,8 @@ const ChatConversation = sequelize.define('ChatConversation', {
 const ChatMessage = sequelize.define('ChatMessage', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true }, conversationId: { type: DataTypes.INTEGER, allowNull: false },
   senderId: { type: DataTypes.INTEGER, allowNull: false }, type: { type: DataTypes.STRING, defaultValue: 'text' }, content: { type: DataTypes.TEXT, defaultValue: '' },
-  amount: DataTypes.DECIMAL(10, 2), requestStatus: DataTypes.STRING, decidedAt: DataTypes.DATE, senderSnapshot: DataTypes.JSON
+  amount: DataTypes.DECIMAL(10, 2), requestStatus: DataTypes.STRING, decidedAt: DataTypes.DATE,
+  redeemedAt: DataTypes.DATE, redeemedByReservationId: DataTypes.STRING, senderSnapshot: DataTypes.JSON
 });
 const InventoryReservation = sequelize.define('InventoryReservation', {
   id: { type: DataTypes.STRING, primaryKey: true }, items: { type: DataTypes.JSON, allowNull: false },
@@ -70,6 +71,8 @@ const parsePaging = query => {
   return { page, limit, offset: (page - 1) * limit };
 };
 const parseBoolean = value => value === undefined ? undefined : value === true || value === 'true' || value === '1' || value === 1;
+const conditionLabels = { 1: '全新', 2: '9成新', 3: '8成新', 4: '7成新及以下' };
+const normalizeCondition = value => conditionLabels[value] || value;
 const userDto = user => ({ id: user.id, username: user.username, nickname: user.nickname || user.username, avatar: user.avatar || '', creditLevel: user.creditLevel, creditScore: user.creditScore, role: user.role });
 const productDto = row => {
   const data = row.toJSON ? row.toJSON() : row;
@@ -122,7 +125,7 @@ const createProduct = async (req, res, next) => { try {
   const shop = await Shop.findOne({ where: { userId: req.user.id } });
   if (!shop || shop.verificationStatus !== '已认证') return res.status(403).json({ message: '请先完成店铺验证后再发布商品' });
   const secondhand = req.body.isSecondhand === undefined ? Number(req.body.productType) === 2 : parseBoolean(req.body.isSecondhand);
-  const row = await Product.create({ ...req.body, sellerId: req.user.id, sellerName: req.user.nickname || req.user.username, sellerAvatar: req.user.avatar || '', sellerCreditLevel: req.user.creditLevel, sellerCreditScore: req.user.creditScore, isSecondhand: secondhand, stock: Number(req.body.stock || 1), bargainEnabled: parseBoolean(req.body.bargainEnabled) !== false });
+  const row = await Product.create({ ...req.body, condition: normalizeCondition(req.body.condition), sellerId: req.user.id, sellerName: req.user.nickname || req.user.username, sellerAvatar: req.user.avatar || '', sellerCreditLevel: req.user.creditLevel, sellerCreditScore: req.user.creditScore, isSecondhand: secondhand, stock: Number(req.body.stock || 1), bargainEnabled: parseBoolean(req.body.bargainEnabled) !== false });
   if (req.user.role === 'user') await requestJson(userServiceUrl, `/internal/users/${req.user.id}/role`, { method: 'POST', body: { role: 'seller' } });
   return res.status(201).json(productDto(row));
 } catch (error) { return next(error); } };
@@ -147,10 +150,30 @@ router.get('/api/shops/:id', async (req, res, next) => { try { const row = await
 router.post('/internal/products/reservations', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction(); try {
   const existing = await InventoryReservation.findByPk(req.body.reservationId, { transaction }); if (existing) { await transaction.commit(); return res.json({ reservationId: existing.id, items: existing.items, status: existing.status }); }
   const snapshots = [];
-  for (const input of req.body.items || []) { const quantity = Math.max(Number(input.quantity || 1), 1); const row = await Product.findByPk(input.productId || input.id, { transaction, lock: transaction.LOCK.UPDATE }); if (!row) { const error = new Error(`商品 ${input.productId || input.id} 不存在`); error.status = 404; throw error; } if (row.status !== '在售' || row.stock < quantity) { const error = new Error(`商品 ${row.name} 不可购买或库存不足`); error.status = 409; throw error; } const nextStock = row.stock - quantity; await row.update({ stock: nextStock, sales: row.sales + quantity, status: row.isSecondhand && nextStock <= 0 ? '已预订' : row.status }, { transaction }); snapshots.push({ productId: row.id, name: row.name, price: Number(row.price), quantity, image: row.images?.[0] || '', sellerId: row.sellerId, sellerName: row.sellerName, isSecondhand: row.isSecondhand }); }
+  for (const input of req.body.items || []) {
+    const quantity = Math.max(Number(input.quantity || 1), 1);
+    const row = await Product.findByPk(input.productId || input.id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!row) { const error = new Error(`商品 ${input.productId || input.id} 不存在`); error.status = 404; throw error; }
+    if (row.status !== '在售' || row.stock < quantity) { const error = new Error(`商品 ${row.name} 不可购买或库存不足`); error.status = 400; throw error; }
+    let price = Number(row.price), priceSource = 'product', bargainMessageId = null;
+    if (input.bargainMessageId) {
+      if (quantity !== 1) { const error = new Error('议价订单每次只能购买 1 件商品'); error.status = 400; throw error; }
+      const message = await ChatMessage.findByPk(input.bargainMessageId, { transaction, lock: transaction.LOCK.UPDATE });
+      const conversation = message && await ChatConversation.findByPk(message.conversationId, { transaction });
+      const valid = message && conversation && message.type === 'bargain' && message.requestStatus === 'accepted'
+        && Number(conversation.productId) === Number(row.id) && Number(conversation.buyerId) === Number(req.body.buyerId);
+      if (!valid) { const error = new Error('议价记录无效、未接受或不属于当前买家'); error.status = 403; throw error; }
+      if (message.redeemedAt) { const error = new Error('该议价已经兑换，不能重复下单'); error.status = 400; throw error; }
+      price = Number(message.amount); priceSource = 'accepted_bargain'; bargainMessageId = message.id;
+      await message.update({ redeemedAt: new Date(), redeemedByReservationId: req.body.reservationId }, { transaction });
+    }
+    const nextStock = row.stock - quantity;
+    await row.update({ stock: nextStock, sales: row.sales + quantity, status: row.isSecondhand && nextStock <= 0 ? '已预订' : row.status }, { transaction });
+    snapshots.push({ productId: row.id, name: row.name, price, priceSource, bargainMessageId, quantity, image: row.images?.[0] || '', sellerId: row.sellerId, sellerName: row.sellerName, isSecondhand: row.isSecondhand });
+  }
   await InventoryReservation.create({ id: req.body.reservationId, items: snapshots }, { transaction }); await transaction.commit(); return res.status(201).json({ reservationId: req.body.reservationId, items: snapshots, status: 'reserved' });
 } catch (error) { await transaction.rollback(); return next(error); } });
-router.post('/internal/products/reservations/:id/release', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction(); try { const reservation = await InventoryReservation.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE }); if (!reservation) { await transaction.commit(); return res.status(404).json({ message: '库存预留不存在' }); } if (reservation.status === 'reserved') { for (const item of reservation.items) { const row = await Product.findByPk(item.productId, { transaction, lock: transaction.LOCK.UPDATE }); if (row) await row.update({ stock: row.stock + item.quantity, sales: Math.max(row.sales - item.quantity, 0), status: row.isSecondhand && row.status === '已预订' ? '在售' : row.status }, { transaction }); } await reservation.update({ status: 'released' }, { transaction }); } await transaction.commit(); return res.json({ reservationId: reservation.id, status: reservation.status }); } catch (error) { await transaction.rollback(); return next(error); } });
+router.post('/internal/products/reservations/:id/release', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction(); try { const reservation = await InventoryReservation.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE }); if (!reservation) { await transaction.commit(); return res.status(404).json({ message: '库存预留不存在' }); } if (reservation.status === 'reserved') { for (const item of reservation.items) { const row = await Product.findByPk(item.productId, { transaction, lock: transaction.LOCK.UPDATE }); if (row) await row.update({ stock: row.stock + item.quantity, sales: Math.max(row.sales - item.quantity, 0), status: row.isSecondhand && row.status === '已预订' ? '在售' : row.status }, { transaction }); if (req.body.restoreBargains && item.bargainMessageId) { const message = await ChatMessage.findByPk(item.bargainMessageId, { transaction, lock: transaction.LOCK.UPDATE }); if (message?.redeemedByReservationId === reservation.id) await message.update({ redeemedAt: null, redeemedByReservationId: null }, { transaction }); } } await reservation.update({ status: 'released' }, { transaction }); } await transaction.commit(); return res.json({ reservationId: reservation.id, status: reservation.status }); } catch (error) { await transaction.rollback(); return next(error); } });
 router.post('/internal/products/reservations/:id/complete', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction(); try { const reservation = await InventoryReservation.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE }); if (!reservation) { await transaction.commit(); return res.status(404).json({ message: '库存预留不存在' }); } if (reservation.status === 'reserved') { for (const item of reservation.items) { const row = await Product.findByPk(item.productId, { transaction }); if (row?.isSecondhand && row.stock <= 0) await row.update({ status: '已售出' }, { transaction }); } await reservation.update({ status: 'completed' }, { transaction }); } await transaction.commit(); return res.json({ reservationId: reservation.id, status: reservation.status }); } catch (error) { await transaction.rollback(); return next(error); } });
 
 const evaluationDto = row => { const data = row.toJSON(); const replies = data.reply ? JSON.parse(data.reply) : []; return { ...data, user: data.userSnapshot, product: data.productSnapshot, replies, reply: [...replies].reverse().find(item => item.role === 'seller')?.content || '', pendingSellerReply: !replies.length || replies.at(-1).role !== 'seller' }; };
@@ -159,6 +182,7 @@ const listEvaluations = async (req, res, next, where) => { try { const { page, l
 router.get('/api/evaluations/product', (req,res,next) => listEvaluations(req,res,next,{ productId: req.query.productId }));
 router.get('/api/evaluations/user', requireUser, (req,res,next) => listEvaluations(req,res,next,{ userId: req.user.id }));
 router.get('/api/evaluations/seller', requireUser, (req,res,next) => listEvaluations(req,res,next,{ sellerId: req.user.id }));
+router.put('/api/evaluations/:id/approve', requireUser, async (req,res,next) => { try { if (req.user.role !== 'admin') return res.status(403).json({ message: '仅管理员可审核评价' }); const row = await Evaluation.findByPk(req.params.id); if (!row) return res.status(404).json({ message: '评价不存在' }); await row.update({ status: '已发布' }); return res.json(evaluationDto(row)); } catch (error) { return next(error); } });
 router.put('/api/evaluations/:id/reply', requireUser, async (req,res,next) => { try { const row = await Evaluation.findByPk(req.params.id); if (!row) return res.status(404).json({ message: '评价不存在' }); const role = Number(row.sellerId) === Number(req.user.id) ? 'seller' : Number(row.userId) === Number(req.user.id) ? 'buyer' : null; if (!role) return res.status(403).json({ message: '无权回复此评价' }); if (!String(req.body.reply || '').trim()) return res.status(400).json({ message: '回复内容不能为空' }); const replies = row.reply ? JSON.parse(row.reply) : []; replies.push({ id: `${row.id}-${Date.now()}`, role, userId: req.user.id, username: req.user.nickname || req.user.username, avatar: req.user.avatar || '', content: String(req.body.reply).trim(), createdAt: new Date().toISOString() }); await row.update({ reply: JSON.stringify(replies) }); return res.json(evaluationDto(row)); } catch (error) { return next(error); } });
 
 const conversationDto = row => ({ ...row.toJSON(), buyer: row.buyerSnapshot, seller: row.sellerSnapshot, product: row.productSnapshot });
@@ -169,7 +193,7 @@ router.post('/api/chats/conversations/:id/messages', requireUser, async (req,res
 router.put('/api/chats/messages/:id/decision', requireUser, async (req,res,next) => { try { const message = await ChatMessage.findByPk(req.params.id); if (!message) return res.status(404).json({ message: '申请消息不存在' }); const row = await ChatConversation.findByPk(message.conversationId); if (Number(row.sellerId) !== Number(req.user.id)) return res.status(403).json({ message: '只有商家可以处理申请' }); if (message.requestStatus !== 'pending') return res.status(400).json({ message: '该申请已处理或不可处理' }); const status = ['accepted','rejected'].includes(req.body.status) ? req.body.status : null; if (!status) return res.status(400).json({ message: '处理结果不合法' }); await message.update({ requestStatus: status, decidedAt: new Date() }); const systemMessage = await ChatMessage.create({ conversationId: row.id, senderId: req.user.id, type: 'system', content: `商家已${status === 'accepted' ? '同意' : '拒绝'}申请：¥${Number(message.amount).toFixed(2)}`, senderSnapshot: userDto(req.user) }); return res.json({ request: { ...message.toJSON(), sender: message.senderSnapshot }, systemMessage: { ...systemMessage.toJSON(), sender: systemMessage.senderSnapshot } }); } catch (error) { return next(error); } });
 
 const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads'); fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({ storage: multer.diskStorage({ destination: uploadDir, filename: (req,file,cb) => cb(null, `${Date.now()}-${Math.round(Math.random()*1e9)}${path.extname(file.originalname).toLowerCase()}`) }), limits: { fileSize: 5*1024*1024 }, fileFilter: (req,file,cb) => new Set(['image/jpeg','image/png','image/gif','image/webp']).has(file.mimetype) ? cb(null, true) : cb(new Error('只支持上传 jpg、png、gif、webp 图片文件')) });
+const upload = multer({ storage: multer.diskStorage({ destination: uploadDir, filename: (req,file,cb) => cb(null, `${Date.now()}-${Math.round(Math.random()*1e9)}${path.extname(file.originalname).toLowerCase()}`) }), limits: { fileSize: 5*1024*1024 }, fileFilter: (req,file,cb) => { if (new Set(['image/jpeg','image/png','image/gif','image/webp']).has(file.mimetype)) return cb(null, true); const error = new Error('只支持上传 jpg、png、gif、webp 图片文件'); error.status = 400; return cb(error); } });
 router.post('/api/uploads/images', requireUser, upload.array('images',10), (req,res) => res.status(201).json({ urls: (req.files || []).map(file => `/uploads/${file.filename}`) }));
 
 const app = createService({ express, name: serviceName, version, isReady: () => databaseReady, routes: instance => { instance.use('/uploads', express.static(uploadDir)); instance.use(router); } });

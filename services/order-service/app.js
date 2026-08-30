@@ -39,13 +39,13 @@ router.post('/api/orders', requireUser, async (req,res,next) => {
   const reservationId = String(req.get('idempotency-key') || randomUUID());
   let reservation;
   try {
-    reservation = await requestJson(productServiceUrl, '/internal/products/reservations', { method: 'POST', body: { reservationId, items: req.body.items } });
+    reservation = await requestJson(productServiceUrl, '/internal/products/reservations', { method: 'POST', body: { reservationId, buyerId: req.user.id, items: req.body.items } });
     const totalAmount = reservation.items.reduce((sum,item) => sum + Number(item.price) * Number(item.quantity), 0);
     const [order, created] = await Order.findOrCreate({ where: { reservationId }, defaults: { userId: req.user.id, reservationId, items: reservation.items, totalAmount, shippingAddress: req.body.shippingAddress, paymentMethod: paymentMethodMap[req.body.paymentMethod] || req.body.paymentMethod || '微信支付' } });
     if (!created && Number(order.userId) !== Number(req.user.id)) return res.status(409).json({ message: '幂等键已被其他订单使用' });
     return res.status(created ? 201 : 200).json(orderDto(order));
   } catch (error) {
-    if (reservation?.status === 'reserved') await requestJson(productServiceUrl, `/internal/products/reservations/${reservationId}/release`, { method: 'POST' }).catch(() => {});
+    if (reservation?.status === 'reserved') await requestJson(productServiceUrl, `/internal/products/reservations/${reservationId}/release`, { method: 'POST', body: { restoreBargains: true } }).catch(() => {});
     return next(error);
   }
 });
