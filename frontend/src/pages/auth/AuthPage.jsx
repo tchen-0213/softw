@@ -75,8 +75,9 @@ const AuthPage = ({ mode }) => {
             {isRegister && (
               <>
                 <div className="auth-field">
-                  <label>用户名</label>
+                  <label htmlFor="auth-username">用户名</label>
                   <input
+                    id="auth-username"
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
@@ -84,8 +85,9 @@ const AuthPage = ({ mode }) => {
                   />
                 </div>
                 <div className="auth-field">
-                  <label>手机号</label>
+                  <label htmlFor="auth-phone">手机号</label>
                   <input
+                    id="auth-phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
@@ -96,8 +98,9 @@ const AuthPage = ({ mode }) => {
             )}
 
             <div className="auth-field">
-              <label>邮箱</label>
+              <label htmlFor="auth-email">邮箱</label>
               <input
+                id="auth-email"
                 type="email"
                 name="email"
                 value={formData.email}
@@ -107,8 +110,9 @@ const AuthPage = ({ mode }) => {
             </div>
 
             <div className="auth-field">
-              <label>密码</label>
+              <label htmlFor="auth-password">密码</label>
               <input
+                id="auth-password"
                 type="password"
                 name="password"
                 value={formData.password}

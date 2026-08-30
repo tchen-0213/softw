@@ -501,8 +501,11 @@ npm run build
 ```bash
 npm --prefix backend test
 npm --prefix frontend run test:unit
+npm --prefix frontend run test:coverage
 npm --prefix frontend run build
 ```
+
+前端测试采用 Vitest + Testing Library，覆盖核心 Redux 状态、本地存储、API 客户端、商品检索组件、购物车、地址管理和认证页面；`test:coverage` 设置语句、分支、函数、行均不低于 80% 的门禁。Playwright E2E 与 Vitest 已分目录收集，互不误收集。
 
 需要 Docker 单体环境已启动时，可继续运行完整接口链路和浏览器 E2E：
 
