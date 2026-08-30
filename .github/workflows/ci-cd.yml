@@ -188,23 +188,38 @@ jobs:
     env:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-      DB_NAME: softw_test
       DB_USER: softw
       DB_PASSWORD: softw_password
       JWT_SECRET: test_microservice_secret
       INTERNAL_SERVICE_TOKEN: test_internal_token
     strategy:
       matrix:
-        service: [user-service, product-service, order-service, api-gateway]
+        include:
+          - service: user-service
+            database: softw_users_test
+          - service: product-service
+            database: softw_catalog_test
+          - service: order-service
+            database: softw_orders_test
+          - service: api-gateway
+            database: softw_gateway_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Create isolated service database
+        env:
+          MYSQL_PWD: root_password
+        run: |
+          mysql --host=127.0.0.1 --user=root \
+            --execute="CREATE DATABASE IF NOT EXISTS \`${{ matrix.database }}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON \`${{ matrix.database }}\`.* TO 'softw'@'%'; FLUSH PRIVILEGES;"
       - run: npm ci
         working-directory: services/${{ matrix.service }}
       - run: npm test
         working-directory: services/${{ matrix.service }}
+        env:
+          DB_NAME: ${{ matrix.database }}
 
   microservice-e2e:
     runs-on: ubuntu-latest

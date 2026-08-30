@@ -13,6 +13,7 @@
 | GitHub CI/CD | `../.github/workflows/ci-cd.yml` |
 | CI/CD 验证记录 | `2026-08-25-CI-CD验证记录.md` |
 | 微服务 Kubernetes 实测记录 | `2026-08-27-微服务Kubernetes验证记录.md` |
+| D6-01 三业务微服务验收记录 | `2026-08-30-D6-01三业务微服务验收记录.md` |
 | Pages + Codespaces 公网验证 | `2026-08-27-GitHub-Pages-Codespaces联通验证记录.md` |
 | Codespaces 启动 | `scripts/codespace-start.sh`、`../.devcontainer/devcontainer.json` |
 | 流水线截图 | `../05_management/流水线截图/` |

@@ -18,6 +18,7 @@ services:
       retries: 20
 
   user-service:
+    image: softw/user-service:2.0.0
     build:
       context: ../services
       dockerfile: user-service/Dockerfile
@@ -43,6 +44,7 @@ services:
       retries: 12
 
   product-service:
+    image: softw/product-service:2.0.0
     build:
       context: ../services
       dockerfile: product-service/Dockerfile
@@ -75,6 +77,7 @@ services:
       retries: 12
 
   order-service:
+    image: softw/order-service:2.0.0
     build:
       context: ../services
       dockerfile: order-service/Dockerfile
@@ -106,6 +109,7 @@ services:
       retries: 12
 
   api-gateway:
+    image: softw/api-gateway:2.0.0
     build:
       context: ../services
       dockerfile: api-gateway/Dockerfile
@@ -126,6 +130,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: softw/microservice-frontend:2.0.0
     build:
       context: ../frontend
       dockerfile: Dockerfile.microservices

@@ -28,7 +28,13 @@ async function requestJson(baseUrl, pathname, options = {}) {
       error.status = 503;
       throw error;
     }
-    throw cause;
+    if (cause.status) {
+      throw cause;
+    }
+    const error = new Error('依赖服务暂不可用');
+    error.status = 503;
+    error.cause = cause;
+    throw error;
   } finally {
     clearTimeout(timeout);
   }

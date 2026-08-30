@@ -18,7 +18,7 @@ test('order service persists order snapshots through product service API', async
   const productServer = await fixture((req, res) => { res.setHeader('content-type', 'application/json'); if (req.url === '/health') return res.end(JSON.stringify({ status: 'ok' })); let body = ''; req.on('data', chunk => { body += chunk; }); req.on('end', () => { reservationRequest = body ? JSON.parse(body) : null; res.statusCode = 201; res.end(JSON.stringify({ reservationId: 'order-reservation', status: 'reserved', items: [{ productId: 7, name: '跨服务商品', price: 40, priceSource: 'accepted_bargain', bargainMessageId: 21, quantity: 2, sellerId: 2, sellerName: 'seller' }] })); }); });
   process.env.USER_SERVICE_URL = `http://127.0.0.1:${userServer.address().port}`;
   process.env.PRODUCT_SERVICE_URL = `http://127.0.0.1:${productServer.address().port}`;
-  const { app, initialize, sequelize } = require('./app');
+  const { app, initialize, sequelize, models } = require('./app');
   await initialize();
   await sequelize.sync({ force: true });
   const server = await new Promise(resolve => { const value = app.listen(0, () => resolve(value)); });
@@ -32,10 +32,15 @@ test('order service persists order snapshots through product service API', async
     assert.equal(order.items[0].priceSource, 'accepted_bargain');
     assert.equal(reservationRequest.buyerId, 1);
     assert.equal(reservationRequest.items[0].bargainMessageId, 21);
+
+    await new Promise(resolve => productServer.close(resolve));
+    const failedResponse = await fetch(`http://127.0.0.1:${server.address().port}/api/orders`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'failed-reservation' }, body: JSON.stringify({ items: [{ productId: 7, quantity: 1 }], shippingAddress: { address: '测试地址' } }) });
+    assert.equal(failedResponse.status, 503);
+    assert.equal(await models.Order.count(), 1, '商品服务不可用时不能写入半成品订单');
   } finally {
     await new Promise(resolve => server.close(resolve));
     await new Promise(resolve => userServer.close(resolve));
-    await new Promise(resolve => productServer.close(resolve));
+    if (productServer.listening) await new Promise(resolve => productServer.close(resolve));
     await sequelize.close();
   }
 });
