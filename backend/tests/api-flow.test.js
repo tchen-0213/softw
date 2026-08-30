@@ -17,7 +17,11 @@ const request = async (method, path, { token, body, headers } = {}) => {
     body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)
   });
   const text = await response.text();
-  return { response, data: text ? JSON.parse(text) : null };
+  let data = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch { data = text; }
+  }
+  return { response, data };
 };
 
 const expectStatus = async (method, path, expected, options) => {
@@ -421,6 +425,70 @@ test('UC01-UC09 完整 API 主成功、备选和异常流程', { skip: !shouldRu
       token: outsider.token, body: [{ name: '缺少字段' }]
     });
     assert.deepEqual(filtered, []);
+  });
+
+  await t.test('INT-PUBLIC-01 商品与二手商品公开路由逐项回归', async () => {
+    const productSearch = await expectStatus('GET', `/api/products/search?keyword=${encodeURIComponent(runId)}`, 200);
+    assert.ok(productSearch.products.some(item => Number(item.id) === Number(product.id)));
+
+    const disposableProduct = await createProduct(seller, { name: `待更新删除商品 ${runId}`, stock: 1 });
+    const updatedProduct = await expectStatus('PUT', `/api/products/${disposableProduct.id}`, 200, {
+      token: seller.token, body: { name: `已更新商品 ${runId}`, price: 99 }
+    });
+    assert.equal(updatedProduct.name, `已更新商品 ${runId}`);
+    await expectStatus('DELETE', `/api/products/${disposableProduct.id}`, 200, { token: seller.token });
+    await expectStatus('GET', `/api/products/${disposableProduct.id}`, 404);
+
+    const disposableSecondhand = await expectStatus('POST', '/api/secondhand', 201, {
+      token: seller.token,
+      body: { name: `待删除二手商品 ${runId}`, description: '公开路由回归', price: 12, stock: 1,
+        category: 'books', condition: 3, bargainEnabled: true }
+    });
+    const secondhandSearch = await expectStatus('GET', `/api/secondhand/search?keyword=${encodeURIComponent(`待删除二手商品 ${runId}`)}`, 200);
+    assert.ok(secondhandSearch.products.some(item => Number(item.id) === Number(disposableSecondhand.id)));
+    await expectStatus('DELETE', `/api/secondhand/${disposableSecondhand.id}`, 200, { token: seller.token });
+    await expectStatus('GET', `/api/secondhand/${disposableSecondhand.id}`, 404);
+  });
+
+  await t.test('INT-PUBLIC-02 订单列表、详情与兼容状态更新路由逐项回归', async () => {
+    const orders = await expectStatus('GET', '/api/orders', 200, { token: buyer.token });
+    assert.ok(orders.orders.some(item => Number(item.id) === Number(completedOrder.id)));
+    const detail = await expectStatus('GET', `/api/orders/${completedOrder.id}`, 200, { token: buyer.token });
+    assert.equal(Number(detail.id), Number(completedOrder.id));
+
+    const compatibleProduct = await createProduct(seller, { name: `兼容更新订单商品 ${runId}`, stock: 1 });
+    const compatibleOrder = await createOrder(buyer, compatibleProduct);
+    await expectStatus('POST', `/api/orders/${compatibleOrder.id}/pay`, 200, { token: buyer.token });
+    const shipped = await expectStatus('PUT', `/api/orders/${compatibleOrder.id}`, 200, {
+      token: seller.token,
+      body: { status: '待收货', logisticsInfo: { company: '顺丰速运', trackingNumber: `PUT${runId}` } }
+    });
+    assert.equal(shipped.status, '待收货');
+    const confirmed = await expectStatus('PUT', `/api/orders/${compatibleOrder.id}`, 200, {
+      token: buyer.token, body: { status: '已完成' }
+    });
+    assert.equal(confirmed.status, '已完成');
+  });
+
+  await t.test('INT-PUBLIC-03 会话列表、评价审核权限、成功上传与健康检查', async () => {
+    const buyerConversations = await expectStatus('GET', '/api/chats/conversations?role=buyer', 200, { token: buyer.token });
+    const sellerConversations = await expectStatus('GET', '/api/chats/conversations?role=seller', 200, { token: seller.token });
+    assert.ok(buyerConversations.conversations.some(item => Number(item.id) === Number(conversation.id)));
+    assert.ok(sellerConversations.conversations.some(item => Number(item.id) === Number(conversation.id)));
+    await expectStatus('PUT', `/api/evaluations/${evaluation.id}/approve`, 403, { token: seller.token });
+
+    const validUpload = new FormData();
+    validUpload.append('images', new Blob(['png-test'], { type: 'image/png' }), 'test.png');
+    const uploaded = await expectStatus('POST', '/api/uploads/images', 201, { token: buyer.token, body: validUpload });
+    assert.equal(uploaded.urls.length, 1);
+    assert.match(uploaded.urls[0], /^\/uploads\//);
+    const uploadedAsset = await request('GET', uploaded.urls[0]);
+    assert.equal(uploadedAsset.response.status, 200);
+    assert.match(uploadedAsset.response.headers.get('content-type') || '', /^image\/png/);
+
+    const healthPath = process.env.HEALTH_PATH || (BASE_URL.includes(':8081') ? '/health' : '/api/health');
+    const health = await expectStatus('GET', healthPath, 200);
+    assert.equal(health.status, 'ok');
   });
 
   await t.test('INT-SEC-01 上传接口拒绝非图片文件', async () => {

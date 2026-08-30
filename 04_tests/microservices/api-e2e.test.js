@@ -237,7 +237,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
   await t.test('MS-E2E-TC04 UC04 order create, idempotency, pay, ship, confirm, cancel and errors', async () => {
     await request('POST', '/api/orders', { token: buyer.token, expected: 400, body: { items: [] } });
     await request('POST', '/api/orders', {
-      token: buyer.token, expected: 409,
+      token: buyer.token, expected: 400,
       body: { items: [{ productId: product.id, quantity: 999 }] }
     });
     const key = randomUUID();

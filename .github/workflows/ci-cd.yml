@@ -80,8 +80,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-      - run: npm run test:unit
+      - run: npm run test:coverage
         working-directory: frontend
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-${{ github.sha }}
+          path: 04_tests/reports/coverage/frontend
+          retention-days: 7
       - run: npm run build
         working-directory: frontend
 
