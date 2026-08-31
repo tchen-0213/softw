@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant UI as PublicShopPage
+  participant API as shopApi
+  participant R as shopRouter
+  participant C as shopController
+  participant S as Shop Model
+  participant P as Product Model
+  participant U as User Model
+  participant DB as MySQL
+  UI->>API: getByUser(userId)
+  API->>R: GET /api/shops/user/:userId
+  R->>C: getShopByUser(req,res)
+  C->>S: findOne(ownerId)
+  C->>P: findAll(sellerId, status=在售)
+  C->>U: 读取信用快照
+  S->>DB: SELECT shop/products/user
+  C-->>UI: shop + credit + products

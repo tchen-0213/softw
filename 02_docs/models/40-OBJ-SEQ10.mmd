@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant page as orderPage:OrderPage
+  participant api as orderApi:orderApi
+  participant ctrl as orderController
+  participant order as order:Order
+  participant db as db:MySQL
+  page->>api: getList()
+  api->>ctrl: getOrders(req,res)
+  ctrl->>order: findAll({userId})
+  order->>db: SELECT
+  db-->>order: rows
+  ctrl-->>page: orderDto(rows)
+  page->>page: normalizeOrder()
+  page->>page: render logistics.steps

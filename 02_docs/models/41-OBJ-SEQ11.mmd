@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant page as orderPage:OrderPage
+  participant api as orderApi:orderApi
+  participant ctrl as orderController
+  participant trx as transaction:Sequelize
+  participant order as order:Order
+  participant product as product:Product
+  page->>api: cancel(id)
+  api->>ctrl: cancelOrder(req,res)
+  ctrl->>trx: transaction()
+  ctrl->>order: findByPk(id, lock)
+  ctrl->>ctrl: assertOwnerAndCancellable()
+  loop 每个订单项
+    ctrl->>product: increment(stock, quantity)
+  end
+  ctrl->>order: update(status=已取消)
+  ctrl->>trx: commit()
+  ctrl-->>page: orderDto(order)

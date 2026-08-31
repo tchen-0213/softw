@@ -12,6 +12,9 @@ flowchart LR
     UC07((UC07 评价与回复))
     UC08((UC08 聊天议价))
     UC09((UC09 维护收货地址))
+    UC10((UC10 查询订单与物流))
+    UC11((UC11 取消订单并恢复库存))
+    UC12((UC12 查看公开店铺与信用))
   end
   Guest --> UC01
   Guest --> UC02
@@ -21,8 +24,13 @@ flowchart LR
   Buyer --> UC07
   Buyer --> UC08
   Buyer --> UC09
+  Buyer --> UC10
+  Buyer --> UC11
+  Guest --> UC12
+  Buyer --> UC12
   Seller --> UC04
   Seller --> UC05
   Seller --> UC06
   Seller --> UC07
   Seller --> UC08
+  Seller --> UC12

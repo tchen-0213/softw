@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant UI as OrderPage
+  participant API as orderApi
+  participant R as orderRouter
+  participant C as orderController
+  participant M as Order Model
+  participant DB as MySQL
+  UI->>API: getList()
+  API->>R: GET /api/orders
+  R->>C: getOrders(req,res)
+  C->>M: findAll(userId)
+  M->>DB: SELECT orders
+  DB-->>M: order rows
+  C-->>UI: orders + logisticsInfo
+  UI->>UI: normalizeOrder()并展示物流
