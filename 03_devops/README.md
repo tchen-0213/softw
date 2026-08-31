@@ -16,6 +16,7 @@
 | 微服务自动部署与可观测性 | `2026-08-28-微服务自动部署与可观测性验证记录.md` |
 | D6-01 三业务微服务验收记录 | `2026-08-30-D6-01三业务微服务验收记录.md` |
 | D6-02 公开 API 与网关回归记录 | `2026-08-31-D6-02微服务全量回归验收记录.md` |
+| D7-01 CI/CD、部署诊断与回滚 | `2026-08-31-D7-01-CI-CD部署与回滚验收记录.md` |
 | Pages + Codespaces 公网验证 | `2026-08-27-GitHub-Pages-Codespaces联通验证记录.md` |
 | Codespaces 启动 | `scripts/codespace-start.sh`、`../.devcontainer/devcontainer.json` |
 | 流水线截图 | `../05_management/流水线截图/` |
@@ -32,7 +33,9 @@ docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up 
 npm run test:services:inventory
 npm run test:services:api
 npm run k8s:observe
-npm run k8s:deploy
+IMAGE_TAG=$(git rev-parse HEAD)
+sh 03_devops/scripts/build-local-images.sh softw "$IMAGE_TAG"
+npm run k8s:deploy -- softw "$IMAGE_TAG"
 npm run k8s:rollback -- softw-microservices product-service
 npm run perf:compare
 npm run experiment:hpa
@@ -41,6 +44,10 @@ npm run experiment:fault
 
 Compose 从仓库根目录下被 Git 忽略的 `.env` 读取运行密钥。Kubernetes 部署前还需把同一组环境变量
 载入当前 shell，并执行 `sh 03_devops/scripts/create-k8s-secrets.sh`；密钥值不会写入 YAML。
+
+CI 的七镜像构建只发布 `${GITHUB_SHA}` 标签，不发布 `latest`。本地构建和部署同样拒绝 `latest` 与
+`practice`，以保证部署、健康检查和回滚证据能追溯到唯一提交。部署成功和失败的原始状态统一保存在
+`kubernetes-deployment-${GITHUB_SHA}` Actions 工件中。
 
 微服务版本启动后，前端位于 `http://localhost:8082`，网关健康检查位于 `http://localhost:8081/health`。用户、商品交易和订单服务分别管理 `softw_users`、`softw_catalog`、`softw_orders`，完整边界和接口见 `../02_docs/微服务接口与数据归属.md`。
 

@@ -1,8 +1,15 @@
 name: softw-ci-cd
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_failure_drill:
+        description: Deploy an invalid image, collect diagnostics, and roll back
+        required: false
+        type: boolean
+        default: false
   push:
-    branches: [main, develop, practice/**]
+    branches: [main, develop, practice/**, issue/**]
   pull_request:
     branches: [main, develop]
 
@@ -273,6 +280,31 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-build, browser-e2e, microservice-test, microservice-api-e2e]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: backend
+            context: backend
+            dockerfile: backend/Dockerfile
+          - image: frontend
+            context: frontend
+            dockerfile: frontend/Dockerfile
+          - image: microservice-frontend
+            context: frontend
+            dockerfile: frontend/Dockerfile.microservices
+          - image: api-gateway
+            context: services
+            dockerfile: services/api-gateway/Dockerfile
+          - image: user-service
+            context: services
+            dockerfile: services/user-service/Dockerfile
+          - image: product-service
+            context: services
+            dockerfile: services/product-service/Dockerfile
+          - image: order-service
+            context: services
+            dockerfile: services/order-service/Dockerfile
     permissions:
       contents: read
       packages: write
@@ -280,93 +312,30 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build backend image
+      - name: Build ${{ matrix.image }} image
         uses: docker/build-push-action@v6
         with:
-          context: backend
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/backend:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/backend:practice
-      - name: Build frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: frontend
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/frontend:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/frontend:practice
-      - name: Build microservice frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: frontend
-          file: frontend/Dockerfile.microservices
-          push: ${{ github.event_name == 'push' }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/microservice-frontend:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/microservice-frontend:practice
-      - name: Build api gateway image
-        uses: docker/build-push-action@v6
-        with:
-          context: services
-          file: services/api-gateway/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ github.event_name != 'pull_request' }}
           build-args: |
             SERVICE_VERSION=2.0.0
             SERVICE_REVISION=${{ github.sha }}
             BUILD_TIME=${{ github.run_id }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/api-gateway:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/api-gateway:practice
-      - name: Build user service image
-        uses: docker/build-push-action@v6
-        with:
-          context: services
-          file: services/user-service/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          build-args: |
-            SERVICE_VERSION=2.0.0
-            SERVICE_REVISION=${{ github.sha }}
-            BUILD_TIME=${{ github.run_id }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/user-service:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/user-service:practice
-      - name: Build product service image
-        uses: docker/build-push-action@v6
-        with:
-          context: services
-          file: services/product-service/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          build-args: |
-            SERVICE_VERSION=2.0.0
-            SERVICE_REVISION=${{ github.sha }}
-            BUILD_TIME=${{ github.run_id }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/product-service:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/product-service:practice
-      - name: Build order service image
-        uses: docker/build-push-action@v6
-        with:
-          context: services
-          file: services/order-service/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          build-args: |
-            SERVICE_VERSION=2.0.0
-            SERVICE_REVISION=${{ github.sha }}
-            BUILD_TIME=${{ github.run_id }}
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/order-service:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/order-service:practice
+          tags: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
   kubernetes-deploy:
     runs-on: ubuntu-latest
     needs: docker-build
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     permissions:
       contents: read
       packages: read
@@ -384,10 +353,9 @@ jobs:
           SOFTW_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
           SOFTW_JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
           SOFTW_INTERNAL_SERVICE_TOKEN: ${{ secrets.CI_INTERNAL_SERVICE_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           sh 03_devops/scripts/create-k8s-secrets.sh
-          kubectl apply -f 03_devops/k8s/monolith
-          kubectl apply -f 03_devops/k8s/microservices/00-namespace.yaml
           kubectl -n softw-practice create secret docker-registry ghcr-credentials \
             --docker-server=${REGISTRY} \
             --docker-username=${GITHUB_ACTOR} \
@@ -402,62 +370,28 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
           kubectl -n softw-microservices patch serviceaccount default \
             -p '{"imagePullSecrets":[{"name":"ghcr-credentials"}]}'
-          kubectl apply -f 03_devops/k8s/microservices
-          kubectl -n softw-practice set image deployment/backend \
-            backend=${IMAGE_PREFIX}/backend:${GITHUB_SHA}
-          kubectl -n softw-practice set image deployment/frontend \
-            frontend=${IMAGE_PREFIX}/frontend:${GITHUB_SHA}
-          kubectl -n softw-microservices set image deployment/api-gateway \
-            api-gateway=${IMAGE_PREFIX}/api-gateway:${GITHUB_SHA}
-          kubectl -n softw-microservices set image deployment/user-service \
-            user-service=${IMAGE_PREFIX}/user-service:${GITHUB_SHA}
-          kubectl -n softw-microservices set image deployment/product-service \
-            product-service=${IMAGE_PREFIX}/product-service:${GITHUB_SHA}
-          kubectl -n softw-microservices set image deployment/order-service \
-            order-service=${IMAGE_PREFIX}/order-service:${GITHUB_SHA}
-          kubectl -n softw-microservices set image deployment/microservice-frontend \
-            frontend=${IMAGE_PREFIX}/microservice-frontend:${GITHUB_SHA}
-      - name: Wait for deployments
+          sh 03_devops/scripts/deploy-k8s.sh "$IMAGE_PREFIX" "$IMAGE_TAG" \
+            04_tests/reports/kubernetes-deployment
+      - name: Run controlled deployment failure and rollback drill
+        if: inputs.run_failure_drill == true
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          kubectl -n softw-practice rollout status deployment/mysql --timeout=300s
-          kubectl -n softw-practice rollout status deployment/backend --timeout=300s
-          kubectl -n softw-practice rollout status deployment/frontend --timeout=300s
-          kubectl -n softw-microservices rollout status deployment/microservice-mysql --timeout=300s
-          kubectl -n softw-microservices rollout status deployment/user-service --timeout=180s
-          kubectl -n softw-microservices rollout status deployment/product-service --timeout=180s
-          kubectl -n softw-microservices rollout status deployment/order-service --timeout=180s
-          kubectl -n softw-microservices rollout status deployment/api-gateway --timeout=180s
-          kubectl -n softw-microservices rollout status deployment/microservice-frontend --timeout=180s
-      - name: Verify health from inside Kubernetes
-        run: |
-          kubectl -n softw-practice run monolith-healthcheck \
-            --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
-            --command -- curl --fail --silent http://backend:3001/api/health
-          kubectl -n softw-microservices run microservices-healthcheck \
-            --image=curlimages/curl:8.16.0 --restart=Never --rm -i --env="EXPECTED_REVISION=${GITHUB_SHA}" \
-            --command -- sh -ec '
-              for endpoint in user-service:3101 product-service:3102 order-service:3103 api-gateway:8080; do
-                curl --fail --silent "http://${endpoint}/health"
-                curl --fail --silent "http://${endpoint}/ready"
-                curl --fail --silent "http://${endpoint}/version" | grep "${EXPECTED_REVISION}"
-              done
-            '
-          kubectl -n softw-microservices run microservice-frontend-healthcheck \
-            --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
-            --command -- curl --fail --silent http://microservice-frontend/
-      - name: Show deployed workloads
+          sh 03_devops/scripts/run-deployment-failure-drill.sh \
+            "$IMAGE_PREFIX" "$IMAGE_TAG" \
+            04_tests/reports/kubernetes-deployment/failure-drill
+      - name: Collect final Kubernetes state
         if: always()
         run: |
-          kubectl -n softw-practice get pods,deployments,services
-          kubectl -n softw-microservices get pods,deployments,services,hpa
-      - name: Collect Kubernetes failure diagnostics
-        if: failure()
-        run: sh 03_devops/scripts/k8s-collect-failure.sh softw-microservices 04_tests/reports/kubernetes-failure
-      - name: Upload Kubernetes failure diagnostics
-        if: failure()
+          sh 03_devops/scripts/k8s-collect-failure.sh softw-practice \
+            04_tests/reports/kubernetes-deployment/monolith
+          sh 03_devops/scripts/k8s-collect-failure.sh softw-microservices \
+            04_tests/reports/kubernetes-deployment/microservices
+      - name: Upload Kubernetes deployment evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: kubernetes-failure-${{ github.sha }}
-          path: 04_tests/reports/kubernetes-failure
+          name: kubernetes-deployment-${{ github.sha }}
+          path: 04_tests/reports/kubernetes-deployment
           if-no-files-found: ignore
           retention-days: 14

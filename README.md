@@ -621,8 +621,9 @@ npm run k8s:observe
 `test:services:inventory` 无需启动容器，会检查 49 项公开业务 API 与源码、测试编号和文档映射
 完全一致；完整清单见 `02_docs/微服务公开API测试映射.md`。
 
-每个后端组件均提供 `/health`、`/ready`、`/version`。CI 构建的 `/version` 会返回当前 Git 提交
-SHA；Kubernetes 部署失败时，Actions 自动保留 Pod describe、Events 和容器日志 14 天。
+每个后端组件均提供 `/health`、`/ready`、`/version`。CI 中四个微服务各自安装依赖并测试，七个镜像
+由独立矩阵任务构建，只推送当前 Git 提交 SHA 标签。所有测试成功后才允许构建镜像，所有镜像成功后才允许
+部署。Actions 无论成功或失败都会保留 rollout、Pod、Service、镜像版本和日志工件 14 天。
 
 三个服务分别使用 `softw_users`、`softw_catalog` 和 `softw_orders` 数据库。服务测试由 CI 的 `microservice-test` 作业在独立 MySQL 环境中执行；页面完整流程可运行：
 
@@ -636,7 +637,9 @@ API_BASE_URL=http://127.0.0.1:8081 E2E_BASE_URL=http://localhost:8082 npm run te
 set -a
 . ./.env
 set +a
-npm run k8s:deploy
+IMAGE_TAG=$(git rev-parse HEAD)
+sh 03_devops/scripts/build-local-images.sh softw "$IMAGE_TAG"
+npm run k8s:deploy -- softw "$IMAGE_TAG"
 ```
 
 部署脚本会把环境变量写入集群 Secret，再应用单体和微服务 YAML、等待就绪并执行健康检查；仓库不保存
@@ -644,18 +647,28 @@ Secret 值。回滚单个 Deployment：
 
 ```bash
 npm run k8s:rollback -- softw-microservices product-service
-npm run k8s:rollback -- softw-microservices product-service 2
+npm run k8s:rollback -- softw-microservices product-service 2 "$IMAGE_TAG"
 ```
 
 检查命令：
 
 ```bash
 kind create cluster --name softw-practice --config 03_devops/k8s/kind-config.yaml
-sh 03_devops/scripts/build-local-images.sh
-sh 03_devops/scripts/k8s-health-check.sh softw-practice
-sh 03_devops/scripts/k8s-health-check.sh softw-microservices
+sh 03_devops/scripts/k8s-health-check.sh softw-practice "$IMAGE_TAG"
+sh 03_devops/scripts/k8s-health-check.sh softw-microservices "$IMAGE_TAG"
 kubectl -n softw-microservices get pods,svc,hpa
 ```
+
+受控部署失败与回滚演练会给 `user-service` 设置一个确定不存在的镜像标签，保存 Events、describe 和日志，
+随后回滚并重新执行就绪与版本检查：
+
+```bash
+sh 03_devops/scripts/run-deployment-failure-drill.sh softw "$IMAGE_TAG" \
+  04_tests/reports/kubernetes-deployment/failure-drill
+```
+
+也可在 Actions 手动运行 `softw-ci-cd` 并勾选 `run_failure_drill`。完整环境、端口、诊断、恢复和证据说明见
+`03_devops/2026-08-31-D7-01-CI-CD部署与回滚验收记录.md`。
 
 ### 原系统基线标签
 
