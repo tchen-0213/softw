@@ -348,6 +348,7 @@ exports.approveEvaluation = async (req, res) => {
 
 exports._internal = {
   parsePaging,
+  normalizeReplyItem,
   parseReplyThread,
   getLatestSellerReply,
   isPendingSellerReply,
