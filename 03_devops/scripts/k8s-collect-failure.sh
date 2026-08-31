@@ -14,8 +14,10 @@ kubectl -n "$NAMESPACE" get all -o wide 2>&1 | redact > "$OUTPUT_DIR/workloads.t
 kubectl -n "$NAMESPACE" get events --sort-by=.lastTimestamp 2>&1 | redact > "$OUTPUT_DIR/events.txt" || true
 kubectl -n "$NAMESPACE" describe pods 2>&1 | redact > "$OUTPUT_DIR/pods-describe.txt" || true
 kubectl -n "$NAMESPACE" describe deployments 2>&1 | redact > "$OUTPUT_DIR/deployments-describe.txt" || true
+kubectl -n "$NAMESPACE" get deployments -o yaml 2>&1 | redact > "$OUTPUT_DIR/deployments.yaml" || true
+kubectl -n "$NAMESPACE" get replicasets -o wide 2>&1 | redact > "$OUTPUT_DIR/replicasets.txt" || true
 
-for deployment in user-service product-service order-service api-gateway microservice-frontend; do
+kubectl -n "$NAMESPACE" get deployments -o name 2>/dev/null | sed 's#deployment.apps/##' | while IFS= read -r deployment; do
   kubectl -n "$NAMESPACE" logs "deployment/$deployment" --all-containers --prefix --tail=300 2>&1 \
     | redact > "$OUTPUT_DIR/${deployment}.log" || true
   kubectl -n "$NAMESPACE" logs "deployment/$deployment" --all-containers --prefix --tail=300 --previous 2>&1 \
