@@ -227,8 +227,26 @@ jobs:
         working-directory: frontend
       - name: Build and start the complete microservice topology
         run: docker compose -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+      - name: Record D6-02 test environment
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/d6-02"
+          {
+            echo "commit=$GITHUB_SHA"
+            echo "runner_os=$RUNNER_OS"
+            echo "gateway=http://127.0.0.1:8081"
+            echo "frontend=http://127.0.0.1:8082"
+            echo "schemas=softw_users,softw_catalog,softw_orders"
+            node --version
+            npm --version
+            docker --version
+            docker compose version
+          } > "$RUNNER_TEMP/d6-02/environment.txt"
       - name: Run all public API and UC01-UC09 gateway regression
-        run: npm run test:services:api
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:services:api 2>&1 | tee "$RUNNER_TEMP/d6-02/microservice-api-e2e.txt"
       - name: Run UC01-UC09 browser regression against microservices
         env:
           API_BASE_URL: http://127.0.0.1:8081
@@ -236,14 +254,14 @@ jobs:
         run: npm --prefix frontend run test:e2e
       - name: Capture compose logs on failure
         if: failure()
-        run: docker compose -f 03_devops/docker-compose.microservices.yml logs --no-color > microservice-compose.log
-      - name: Upload microservice API failure evidence
-        if: failure()
+        run: docker compose -f 03_devops/docker-compose.microservices.yml logs --no-color > "$RUNNER_TEMP/d6-02/microservice-compose.log"
+      - name: Upload D6-02 API and browser evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: microservice-api-failure-${{ github.sha }}
+          name: d6-02-microservice-regression-${{ github.sha }}
           path: |
-            microservice-compose.log
+            ${{ runner.temp }}/d6-02
             frontend/test-results
             04_tests/reports/playwright-html
           if-no-files-found: ignore

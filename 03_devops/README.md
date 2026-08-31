@@ -14,6 +14,8 @@
 | CI/CD 验证记录 | `2026-08-25-CI-CD验证记录.md` |
 | 微服务 Kubernetes 实测记录 | `2026-08-27-微服务Kubernetes验证记录.md` |
 | 微服务自动部署与可观测性 | `2026-08-28-微服务自动部署与可观测性验证记录.md` |
+| D6-01 三业务微服务验收记录 | `2026-08-30-D6-01三业务微服务验收记录.md` |
+| D6-02 公开 API 与网关回归记录 | `2026-08-31-D6-02微服务全量回归验收记录.md` |
 | Pages + Codespaces 公网验证 | `2026-08-27-GitHub-Pages-Codespaces联通验证记录.md` |
 | Codespaces 启动 | `scripts/codespace-start.sh`、`../.devcontainer/devcontainer.json` |
 | 流水线截图 | `../05_management/流水线截图/` |
@@ -27,6 +29,7 @@ sh 03_devops/scripts/init-local-env.sh
 npm run compose:up
 npm run compose:down
 docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up -d --build --wait
+npm run test:services:inventory
 npm run test:services:api
 npm run k8s:observe
 npm run k8s:deploy

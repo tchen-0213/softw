@@ -613,9 +613,13 @@ API 网关：http://localhost:8081/health
 微服务公开 API/业务回归和 Kubernetes 可观测性检查：
 
 ```bash
+npm run test:services:inventory
 npm run test:services:api
 npm run k8s:observe
 ```
+
+`test:services:inventory` 无需启动容器，会检查 49 项公开业务 API 与源码、测试编号和文档映射
+完全一致；完整清单见 `02_docs/微服务公开API测试映射.md`。
 
 每个后端组件均提供 `/health`、`/ready`、`/version`。CI 构建的 `/version` 会返回当前 Git 提交
 SHA；Kubernetes 部署失败时，Actions 自动保留 Pod describe、Events 和容器日志 14 天。
