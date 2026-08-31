@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
+const { publicApis, routeKey } = require('./public-api-manifest');
 
 const gateway = process.env.MICROSERVICE_GATEWAY_URL || 'http://127.0.0.1:8081';
 const services = {
@@ -10,8 +11,24 @@ const services = {
   'api-gateway': gateway
 };
 const runId = `${Date.now()}-${process.pid}`;
+const observedPublicApis = new Set();
+
+function routePattern(path) {
+  const segments = path.split('/').map(segment => segment.startsWith(':')
+    ? '[^/]+'
+    : segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp(`^${segments.join('/')}$`);
+}
+
+function recordPublicApi(method, pathname) {
+  const cleanPath = new URL(pathname, 'http://gateway.invalid').pathname;
+  const match = publicApis.find(api => api.method === method.toUpperCase() && routePattern(api.path).test(cleanPath));
+  assert.ok(match, `D6-02 公开 API 清单缺少 ${method.toUpperCase()} ${cleanPath}`);
+  observedPublicApis.add(routeKey(match));
+}
 
 async function request(method, pathname, { token, body, headers = {}, expected = 200 } = {}) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/uploads/')) recordPublicApi(method, pathname);
   const response = await fetch(`${gateway}${pathname}`, {
     method,
     headers: {
@@ -113,13 +130,17 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     await request('GET', '/not-configured', { expected: 404 });
   });
 
-  await t.test('MS-E2E-TC01 UC01 registration, login, profile and password branches', async () => {
+  await t.test('MS-E2E-TC01 UC01 registration MAIN/ALT/ERR, login, profile and password branches', async () => {
     seller = await register('seller');
     buyer = await register('buyer');
     outsider = await register('outsider');
     await request('POST', '/api/users/register', {
       expected: 400,
       body: { username: seller.username, email: seller.email, phone: seller.phone, password: 'Pass123456' }
+    });
+    await request('POST', '/api/users/login', {
+      expected: 401,
+      body: { email: buyer.email, password: 'wrong-password' }
     });
     const login = await request('POST', '/api/users/login', {
       body: { email: buyer.email, password: 'Pass123456' }
@@ -145,7 +166,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     })).token;
   });
 
-  await t.test('MS-E2E-TC09 UC09 address save, list, replace and authorization', async () => {
+  await t.test('MS-E2E-TC09 UC09 address MAIN/ALT/ERR save, list, replace and authorization', async () => {
     const saved = await request('PUT', '/api/addresses', {
       token: buyer.token,
       body: { addresses: [
@@ -165,7 +186,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     assert.equal(replaced.length, 1);
   });
 
-  await t.test('MS-E2E-TC06 UC06 shop creation, verification, update and public queries', async () => {
+  await t.test('MS-E2E-TC06 UC06 shop MAIN/ALT/ERR creation, verification, update and public queries', async () => {
     const initial = await request('GET', '/api/shops/mine', { token: seller.token });
     assert.equal(initial.verificationStatus, '未认证');
     await request('POST', '/api/shops/mine/verification', {
@@ -187,6 +208,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
   await t.test('MS-API-UPLOAD public upload and static file interfaces', async () => {
     const form = new FormData();
     form.append('images', new Blob([Buffer.from('microservice-image')], { type: 'image/png' }), 'test.png');
+    recordPublicApi('POST', '/api/uploads/images');
     const response = await fetch(`${gateway}/api/uploads/images`, {
       method: 'POST', headers: { authorization: `Bearer ${seller.token}` }, body: form
     });
@@ -194,10 +216,11 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     assert.equal(response.status, 201, responseText);
     const payload = JSON.parse(responseText);
     assert.equal(payload.urls.length, 1);
+    recordPublicApi('GET', payload.urls[0]);
     assert.equal((await fetch(`${gateway}${payload.urls[0]}`)).status, 200);
   });
 
-  await t.test('MS-E2E-TC02/03 UC02-03 product CRUD, search, recommendation and authorization', async () => {
+  await t.test('MS-E2E-TC02/03 UC02-03 product MAIN/ALT/ERR CRUD, search, recommendation and authorization', async () => {
     product = await createProduct(seller);
     const list = await request('GET', `/api/products?keyword=${encodeURIComponent(runId)}&category=books&sortBy=price_asc`);
     assert.ok(list.products.some(item => item.id === product.id));
@@ -215,7 +238,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     await request('GET', `/api/products/${disposable.id}`, { expected: 404 });
   });
 
-  await t.test('MS-E2E-TC05 UC05 secondhand publish, list, update, errors and delete', async () => {
+  await t.test('MS-E2E-TC05 UC05 secondhand MAIN/ALT/ERR publish, list, update, errors and delete', async () => {
     const secondhand = await request('POST', '/api/secondhand', {
       token: seller.token,
       expected: 201,
@@ -234,7 +257,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     await request('GET', `/api/secondhand/${secondhand.id}`, { expected: 404 });
   });
 
-  await t.test('MS-E2E-TC04 UC04 order create, idempotency, pay, ship, confirm, cancel and errors', async () => {
+  await t.test('MS-E2E-TC04 UC04 order MAIN/ALT/ERR create, idempotency, pay, ship, confirm, cancel and errors', async () => {
     await request('POST', '/api/orders', { token: buyer.token, expected: 400, body: { items: [] } });
     await request('POST', '/api/orders', {
       token: buyer.token, expected: 400,
@@ -276,7 +299,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     assert.equal((await request('GET', '/api/orders/health/dependencies')).status, 'ok');
   });
 
-  await t.test('MS-E2E-TC07 UC07 evaluation create, three lists, reply and errors', async () => {
+  await t.test('MS-E2E-TC07 UC07 evaluation MAIN/ALT/ERR create, three lists, approve, reply and errors', async () => {
     evaluation = await request('POST', '/api/evaluations', {
       token: buyer.token,
       expected: 201,
@@ -290,6 +313,9 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     assert.ok((await request('GET', `/api/evaluations/product?productId=${product.id}`)).evaluations.length >= 1);
     assert.ok((await request('GET', '/api/evaluations/user', { token: buyer.token })).evaluations.length >= 1);
     assert.ok((await request('GET', '/api/evaluations/seller', { token: seller.token })).evaluations.length >= 1);
+    await request('PUT', `/api/evaluations/${evaluation.id}/approve`, {
+      token: seller.token, expected: 403, body: {}
+    });
     await request('PUT', `/api/evaluations/${evaluation.id}/reply`, { token: outsider.token, expected: 403, body: { reply: '越权' } });
     const replied = await request('PUT', `/api/evaluations/${evaluation.id}/reply`, {
       token: seller.token, body: { reply: '感谢支持' }
@@ -297,7 +323,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     assert.equal(replied.reply, '感谢支持');
   });
 
-  await t.test('MS-E2E-TC08 UC08 chat, text, bargain, refund, decisions and authorization', async () => {
+  await t.test('MS-E2E-TC08 UC08 chat MAIN/ALT/ERR, text, bargain, refund, decisions and authorization', async () => {
     conversation = await request('POST', '/api/chats/conversations', {
       token: buyer.token, expected: 201, body: { productId: product.id }
     });
@@ -328,5 +354,10 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     });
     assert.equal(refund.type, 'refund');
     assert.ok((await request('GET', `/api/chats/conversations/${conversation.id}`, { token: buyer.token })).messages.length >= 4);
+  });
+
+  await t.test('MS-COVERAGE D6-02 public API inventory has no uncovered route', () => {
+    const missing = publicApis.map(routeKey).filter(key => !observedPublicApis.has(key));
+    assert.deepEqual(missing, []);
   });
 });
