@@ -70,15 +70,18 @@ test('AUTH-05: 角色中间件允许指定角色并拒绝其他角色', () => {
   assert.equal(res.body.message, '无权执行此操作');
 });
 
-test('AUTH-06: 开发环境提供默认密钥，生产环境拒绝弱密钥', (t) => {
+test('AUTH-06: 所有环境都拒绝缺失密钥并返回显式配置', (t) => {
   const previousEnv = process.env.NODE_ENV;
   const previousSecret = process.env.JWT_SECRET;
   t.after(() => { process.env.NODE_ENV = previousEnv; process.env.JWT_SECRET = previousSecret; });
   process.env.NODE_ENV = 'test';
   delete process.env.JWT_SECRET;
-  assert.equal(getJwtSecret(), 'your-secret-key');
+  assert.throws(() => getJwtSecret(), /JWT_SECRET 未配置/);
+  process.env.JWT_SECRET = 'configured-test-secret';
+  assert.equal(getJwtSecret(), 'configured-test-secret');
   process.env.NODE_ENV = 'production';
-  assert.throws(() => getJwtSecret(), /JWT_SECRET/);
+  delete process.env.JWT_SECRET;
+  assert.throws(() => getJwtSecret(), /JWT_SECRET 未配置/);
 });
 
 test('SECURITY-REQUEST-ID-01: 复用合法请求标识并限制长度', () => {

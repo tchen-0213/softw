@@ -5,6 +5,13 @@ const express = require('express');
 const { createService } = require('../common/createService');
 const { requestJson } = require('../common/httpClient');
 
+const originalInternalToken = process.env.INTERNAL_SERVICE_TOKEN;
+test.beforeEach(() => { process.env.INTERNAL_SERVICE_TOKEN = 'internal-test'; });
+test.after(() => {
+  if (originalInternalToken === undefined) delete process.env.INTERNAL_SERVICE_TOKEN;
+  else process.env.INTERNAL_SERVICE_TOKEN = originalInternalToken;
+});
+
 async function withServer(app, callback) {
   const server = await new Promise(resolve => {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
@@ -17,20 +24,23 @@ async function withServer(app, callback) {
   }
 }
 
-test('MS-COMMON-01: 健康检查区分就绪和启动中状态', async () => {
+test('MS-COMMON-01: 健康检查与就绪检查各自表达存活和依赖状态', async () => {
   let ready = false;
   const app = createService({ express, name: 'sample', version: '1.2.3', routes: () => {}, isReady: () => ready });
   await withServer(app, async baseUrl => {
-    const starting = await fetch(`${baseUrl}/health`);
+    const health = await fetch(`${baseUrl}/health`);
+    assert.equal(health.status, 200);
+    assert.equal((await health.json()).status, 'ok');
+    const starting = await fetch(`${baseUrl}/ready`);
     assert.equal(starting.status, 503);
     const startingBody = await starting.json();
-    assert.equal(startingBody.status, 'starting');
+    assert.equal(startingBody.status, 'not-ready');
     assert.equal(startingBody.database, 'starting');
     ready = true;
-    const healthy = await fetch(`${baseUrl}/health`);
+    const healthy = await fetch(`${baseUrl}/ready`);
     const body = await healthy.json();
     assert.equal(healthy.status, 200);
-    assert.equal(body.status, 'ok');
+    assert.equal(body.status, 'ready');
     assert.equal(body.service, 'sample');
     assert.equal(body.database, 'ok');
   });
@@ -40,7 +50,9 @@ test('MS-COMMON-02: 版本端点返回服务名和版本', async () => {
   const app = createService({ express, name: 'gateway', version: '2.0.0', routes: () => {} });
   await withServer(app, async baseUrl => {
     const response = await fetch(`${baseUrl}/version`);
-    assert.deepEqual(await response.json(), { service: 'gateway', version: '2.0.0' });
+    assert.deepEqual(await response.json(), {
+      service: 'gateway', version: '2.0.0', revision: 'dev', buildTime: 'unknown'
+    });
   });
 });
 
@@ -58,9 +70,7 @@ test('MS-COMMON-03: 统一错误处理中间件保留业务状态码和消息', 
 
 test('MS-HTTP-01: GET 请求注入内部服务凭据并解析 JSON', async (t) => {
   const originalFetch = global.fetch;
-  const originalToken = process.env.INTERNAL_SERVICE_TOKEN;
-  t.after(() => { global.fetch = originalFetch; process.env.INTERNAL_SERVICE_TOKEN = originalToken; });
-  process.env.INTERNAL_SERVICE_TOKEN = 'internal-test';
+  t.after(() => { global.fetch = originalFetch; });
   let captured;
   global.fetch = async (url, options) => {
     captured = { url: String(url), options };
@@ -96,13 +106,13 @@ test('MS-HTTP-03: 非 2xx 响应向上游传递状态和业务载荷', async (t)
   );
 });
 
-test('MS-HTTP-04: 网络异常统一转换为 503', async (t) => {
+test('MS-HTTP-04: 网络异常保留原始错误供上层诊断', async (t) => {
   const originalFetch = global.fetch;
   t.after(() => { global.fetch = originalFetch; });
   global.fetch = async () => { throw new Error('ECONNREFUSED'); };
   await assert.rejects(
     requestJson('http://service.local', '/health'),
-    error => error.status === 503 && error.message === '依赖服务暂不可用' && error.cause.message === 'ECONNREFUSED'
+    error => error.message === 'ECONNREFUSED'
   );
 });
 
