@@ -33,6 +33,8 @@ const Address = sequelize.define('Address', {
   phone: { type: DataTypes.STRING, allowNull: false },
   address: { type: DataTypes.TEXT, allowNull: false },
   isDefault: { type: DataTypes.BOOLEAN, defaultValue: false }
+}, {
+  indexes: [{ name: 'idx_addresses_user_default_updated', fields: ['userId', 'isDefault', 'updatedAt'] }]
 });
 
 User.hasMany(Address, { foreignKey: 'userId', onDelete: 'CASCADE' });

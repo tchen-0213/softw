@@ -25,6 +25,8 @@
     "experiment:hpa": "sh 03_devops/scripts/run-hpa-experiment.sh",
     "experiment:fault": "sh 03_devops/scripts/run-fault-isolation-experiment.sh",
     "perf:compare": "bash 03_devops/scripts/run-performance-comparison.sh",
+    "perf:orders": "npm --prefix services/order-service run benchmark:query",
+    "perf:indexes": "npm --prefix services/order-service run evidence:indexes",
     "perf:k6": "k6 run -e BASE_URL=${BASE_URL:-http://localhost:3001} 04_tests/performance/k6-core-flow.js"
   }
 }

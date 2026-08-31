@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const { DataTypes, Op } = require('sequelize');
+const { DataTypes, Op, Transaction } = require('sequelize');
 const { createService } = require('../common/createService');
 const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, requireInternalToken } = require('../common/auth');
@@ -29,6 +29,12 @@ const Product = sequelize.define('Product', {
   isSecondhand: { type: DataTypes.BOOLEAN, defaultValue: false }, condition: DataTypes.STRING, usageTime: DataTypes.STRING,
   hasDefect: { type: DataTypes.BOOLEAN, defaultValue: false }, defectDescription: DataTypes.TEXT, location: DataTypes.STRING,
   bargainEnabled: { type: DataTypes.BOOLEAN, defaultValue: true }
+}, {
+  indexes: [
+    { name: 'idx_products_catalog_filter', fields: ['status', 'category', 'isSecondhand', 'price'] },
+    { name: 'idx_products_recommended', fields: ['status', 'sales', 'rating'] },
+    { name: 'idx_products_seller_updated', fields: ['sellerId', 'status', 'updatedAt'] }
+  ]
 });
 const Shop = sequelize.define('Shop', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true }, userId: { type: DataTypes.INTEGER, allowNull: false, unique: true },
@@ -38,13 +44,19 @@ const Shop = sequelize.define('Shop', {
   idNumber: { type: DataTypes.STRING, defaultValue: '' }, verificationAddress: { type: DataTypes.STRING, defaultValue: '' },
   businessLicenseImage: { type: DataTypes.STRING, defaultValue: '' }, idCardImage: { type: DataTypes.STRING, defaultValue: '' },
   verificationSubmittedAt: DataTypes.DATE, ownerSnapshot: { type: DataTypes.JSON }
+}, {
+  indexes: [{ name: 'idx_shops_verification_status', fields: ['verificationStatus', 'updatedAt'] }]
 });
 const Evaluation = sequelize.define('Evaluation', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true }, orderId: { type: DataTypes.INTEGER, allowNull: false },
   userId: { type: DataTypes.INTEGER, allowNull: false }, productId: { type: DataTypes.INTEGER, allowNull: false }, sellerId: { type: DataTypes.INTEGER, allowNull: false },
   rating: { type: DataTypes.INTEGER, allowNull: false }, content: { type: DataTypes.TEXT, allowNull: false }, images: { type: DataTypes.JSON, defaultValue: [] },
   status: { type: DataTypes.STRING, defaultValue: '已发布' }, reply: DataTypes.TEXT, userSnapshot: DataTypes.JSON, productSnapshot: DataTypes.JSON
-}, { indexes: [{ unique: true, fields: ['orderId', 'userId', 'productId'] }] });
+}, { indexes: [
+  { unique: true, fields: ['orderId', 'userId', 'productId'] },
+  { name: 'idx_evaluations_seller_status', fields: ['sellerId', 'status', 'createdAt'] },
+  { name: 'idx_evaluations_product_status', fields: ['productId', 'status', 'createdAt'] }
+] });
 const ChatConversation = sequelize.define('ChatConversation', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true }, buyerId: { type: DataTypes.INTEGER, allowNull: false },
   sellerId: { type: DataTypes.INTEGER, allowNull: false }, productId: { type: DataTypes.INTEGER, allowNull: false }, status: { type: DataTypes.STRING, defaultValue: 'active' },
@@ -55,6 +67,8 @@ const ChatMessage = sequelize.define('ChatMessage', {
   senderId: { type: DataTypes.INTEGER, allowNull: false }, type: { type: DataTypes.STRING, defaultValue: 'text' }, content: { type: DataTypes.TEXT, defaultValue: '' },
   amount: DataTypes.DECIMAL(10, 2), requestStatus: DataTypes.STRING, decidedAt: DataTypes.DATE,
   redeemedAt: DataTypes.DATE, redeemedByReservationId: DataTypes.STRING, senderSnapshot: DataTypes.JSON
+}, {
+  indexes: [{ name: 'idx_chat_messages_conversation_created', fields: ['conversationId', 'createdAt'] }]
 });
 const InventoryReservation = sequelize.define('InventoryReservation', {
   id: { type: DataTypes.STRING, primaryKey: true }, items: { type: DataTypes.JSON, allowNull: false },
@@ -163,12 +177,19 @@ router.post('/api/shops/mine/verification', requireUser, async (req, res, next) 
 router.get('/api/shops/user/:userId', async (req, res, next) => { try { const user = await requestJson(userServiceUrl, `/internal/users/${req.params.userId}`); return res.json(await shopDto(await getOrCreateShop(user))); } catch (error) { return next(error); } });
 router.get('/api/shops/:id', async (req, res, next) => { try { const row = await Shop.findByPk(req.params.id); return row ? res.json(await shopDto(row)) : res.status(404).json({ message: '店铺不存在' }); } catch (error) { return next(error); } });
 
-router.post('/internal/products/reservations', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction(); try {
+router.post('/internal/products/reservations', requireInternalToken, async (req, res, next) => { const transaction = await sequelize.transaction({ isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED }); try {
   const existing = await InventoryReservation.findByPk(req.body.reservationId, { transaction }); if (existing) { await transaction.commit(); return res.json({ reservationId: existing.id, items: existing.items, status: existing.status }); }
   const snapshots = [];
   for (const input of req.body.items || []) {
     const quantity = Math.max(Number(input.quantity || 1), 1);
     const row = await Product.findByPk(input.productId || input.id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!snapshots.length) {
+      const concurrentExisting = await InventoryReservation.findByPk(req.body.reservationId, { transaction });
+      if (concurrentExisting) {
+        await transaction.commit();
+        return res.json({ reservationId: concurrentExisting.id, items: concurrentExisting.items, status: concurrentExisting.status });
+      }
+    }
     if (!row) { const error = new Error(`商品 ${input.productId || input.id} 不存在`); error.status = 404; throw error; }
     if (row.status !== '在售' || row.stock < quantity) { const error = new Error(`商品 ${row.name} 不可购买或库存不足`); error.status = 400; throw error; }
     let price = Number(row.price), priceSource = 'product', bargainMessageId = null;
