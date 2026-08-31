@@ -1,0 +1,10 @@
+sequenceDiagram
+  actor B as 买家
+  participant S as 购物平台
+  B->>S: 取消本人待付款订单
+  alt 订单状态允许取消
+    S->>S: 在事务中恢复库存并更新订单状态
+    S-->>B: 返回已取消订单
+  else 越权、订单不存在或状态不允许
+    S-->>B: 拒绝取消且不改变库存
+  end

@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor V as 游客或买家
+  participant S as 购物平台
+  V->>S: 打开卖家公开店铺
+  alt 店铺存在
+    S-->>V: 展示店铺资料、信用和在售商品
+    V->>S: 选择商品
+    S-->>V: 进入对应商品详情
+  else 店铺不存在
+    S-->>V: 返回明确的不存在提示
+  end

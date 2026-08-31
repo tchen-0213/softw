@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor B as 买家
+  participant S as 购物平台
+  B->>S: 打开我的订单
+  alt 身份有效
+    S-->>B: 返回订单、状态和金额
+    B->>S: 查看待收货订单
+    S-->>B: 展示物流公司、单号、状态和轨迹
+  else 未登录或订单不属于当前用户
+    S-->>B: 拒绝访问并提示登录或无权查看
+  end

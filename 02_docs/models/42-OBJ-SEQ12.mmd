@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant page as publicShopPage:PublicShopPage
+  participant api as shopApi:shopApi
+  participant ctrl as shopController
+  participant shop as shop:Shop
+  participant product as products:Product[]
+  participant user as owner:User
+  page->>api: getByUser(userId)
+  api->>ctrl: getShopByUser(req,res)
+  ctrl->>shop: findOne({userId})
+  ctrl->>product: findAll({sellerId,status=在售})
+  ctrl->>user: read creditLevel/creditScore
+  ctrl-->>page: shopDto(shop,products,credit)
+  page->>page: normalizeShop()
+  page->>page: render public profile and products

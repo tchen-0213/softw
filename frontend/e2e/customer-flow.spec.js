@@ -286,3 +286,73 @@ test('E2E-TC08: 买家页面议价且卖家页面接受申请', async ({ browser
   await buyerContext.close();
   await sellerContext.close();
 });
+
+test('E2E-TC10/11: 买家查询订单物流并取消待付款订单恢复库存', async ({ page }) => {
+  const id = unique();
+  const { seller, product: cancellableProduct } = await createListedProduct(id);
+  const buyer = await registerViaApi('order_buyer', id);
+
+  const cancellableOrder = await apiRequest('POST', '/api/orders', {
+    token: buyer.token,
+    body: {
+      items: [{ productId: cancellableProduct.id, quantity: 1 }],
+      shippingAddress: { name: '订单买家', phone: '13800138000', address: '订单测试路 1 号' },
+      paymentMethod: 'wechat'
+    }
+  });
+
+  const logisticsProduct = await apiRequest('POST', '/api/products', {
+    token: seller.token,
+    body: {
+      name: `E2E 物流商品 ${id}`,
+      description: '用于订单与物流查询端到端测试',
+      images: ['/images/moyu-logo.png'],
+      price: 77,
+      stock: 2,
+      category: 'books'
+    }
+  });
+  const logisticsOrder = await apiRequest('POST', '/api/orders', {
+    token: buyer.token,
+    body: {
+      items: [{ productId: logisticsProduct.id, quantity: 1 }],
+      shippingAddress: { name: '物流买家', phone: '13800138001', address: '物流测试路 2 号' },
+      paymentMethod: 'wechat'
+    }
+  });
+  await apiRequest('POST', `/api/orders/${logisticsOrder.id}/pay`, { token: buyer.token });
+  await apiRequest('POST', `/api/orders/${logisticsOrder.id}/ship`, {
+    token: seller.token,
+    body: { company: '顺丰速运', trackingNumber: `SF${id}` }
+  });
+
+  await signIn(page, buyer);
+  await page.goto(appPath('/order'));
+
+  const logisticsCard = page.locator('.order-card').filter({ hasText: logisticsProduct.name });
+  await expect(logisticsCard.getByText('待收货')).toBeVisible();
+  await expect(logisticsCard.getByText(new RegExp(`顺丰速运 SF${id}`))).toBeVisible();
+
+  const cancellableCard = page.locator('.order-card').filter({ hasText: cancellableProduct.name });
+  await expect(cancellableCard.getByText('待付款')).toBeVisible();
+  await cancellableCard.getByRole('button', { name: '取消订单' }).click();
+  await expect(cancellableCard.getByText('已取消')).toBeVisible();
+
+  const restored = await apiRequest('GET', `/api/products/${cancellableProduct.id}`);
+  expect(restored.stock).toBe(3);
+  const cancelled = await apiRequest('GET', `/api/orders/${cancellableOrder.id}`, { token: buyer.token });
+  expect(cancelled.status).toBe('已取消');
+});
+
+test('E2E-TC12: 游客查看公开店铺、卖家信用和在售商品', async ({ page }) => {
+  const id = unique();
+  const { seller, product } = await createListedProduct(id);
+  const shop = await apiRequest('GET', `/api/shops/user/${seller.id}`);
+
+  await page.goto(appPath(`/shop/user/${seller.id}`));
+
+  await expect(page.getByRole('heading', { name: shop.name })).toBeVisible();
+  await expect(page.getByText(product.name)).toBeVisible();
+  await expect(page.getByText(/在售商品 1 件/)).toBeVisible();
+  await expect(page.locator('.credit-badge').first()).toBeVisible();
+});

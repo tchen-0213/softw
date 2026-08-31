@@ -32,8 +32,10 @@ export default defineConfig({
         'src/pages/auth/AuthPage.jsx',
         'src/pages/cart/CartPage.jsx',
         'src/pages/checkout/CheckoutPage.jsx',
+        'src/pages/order/OrderPage.jsx',
         'src/pages/product/ProductDetailPage.jsx',
-        'src/pages/search/SearchPage.jsx'
+        'src/pages/search/SearchPage.jsx',
+        'src/pages/shop/PublicShopPage.jsx'
       ],
       thresholds: {
         statements: 80,

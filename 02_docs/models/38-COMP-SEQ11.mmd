@@ -1,0 +1,17 @@
+sequenceDiagram
+  participant UI as OrderPage
+  participant API as orderApi
+  participant R as orderRouter
+  participant C as orderController
+  participant O as Order Model
+  participant P as Product Model
+  participant DB as MySQL
+  UI->>API: cancel(orderId)
+  API->>R: POST /api/orders/:id/cancel
+  R->>C: cancelOrder(req,res)
+  C->>DB: BEGIN
+  C->>O: findByPk(orderId, lock)
+  C->>P: increment(stock)
+  C->>O: update(status=已取消)
+  C->>DB: COMMIT
+  C-->>UI: updated order
