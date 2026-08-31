@@ -1,0 +1,627 @@
+{
+  "runAt": "2026-08-31T14:53:49.768Z",
+  "environment": {
+    "platform": "win32 10.0.26200 x64",
+    "cpu": "AMD Ryzen 7 5800H with Radeon Graphics          / 16 logical cores",
+    "memoryGiB": 15.356,
+    "node": "v24.14.1",
+    "mysql": "8.0.46",
+    "database": "softw_d703_benchmark"
+  },
+  "conditions": {
+    "orderCount": 20000,
+    "sellerCount": 200,
+    "targetSellerId": 42,
+    "pageSize": 20,
+    "measuredRuns": 7,
+    "sameDatabase": true,
+    "sameDataset": true,
+    "sameProcess": true
+  },
+  "queries": {
+    "baselineSql": "SELECT * FROM Orders ORDER BY createdAt DESC",
+    "optimizedSql": "SELECT o.* FROM OrderSellers os JOIN Orders o ON o.id = os.orderId WHERE os.sellerId = ? ORDER BY o.createdAt DESC LIMIT 20"
+  },
+  "baseline": [
+    {
+      "run": 1,
+      "elapsedMs": 341.074,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 2,
+      "elapsedMs": 330.725,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 3,
+      "elapsedMs": 320.612,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 4,
+      "elapsedMs": 293.878,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 5,
+      "elapsedMs": 289.031,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 6,
+      "elapsedMs": 292.945,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 7,
+      "elapsedMs": 284.613,
+      "loadedRows": 20000,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    }
+  ],
+  "optimized": [
+    {
+      "run": 1,
+      "elapsedMs": 5.1,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 2,
+      "elapsedMs": 4.703,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 3,
+      "elapsedMs": 5.188,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 4,
+      "elapsedMs": 5.201,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 5,
+      "elapsedMs": 4.332,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 6,
+      "elapsedMs": 3.455,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    },
+    {
+      "run": 7,
+      "elapsedMs": 4.127,
+      "loadedRows": 20,
+      "matchedRows": 100,
+      "ids": [
+        19841,
+        19641,
+        19441,
+        19241,
+        19041,
+        18841,
+        18641,
+        18441,
+        18241,
+        18041,
+        17841,
+        17641,
+        17441,
+        17241,
+        17041,
+        16841,
+        16641,
+        16441,
+        16241,
+        16041
+      ]
+    }
+  ],
+  "summary": {
+    "baselineMeanMs": 307.554,
+    "baselineP95Ms": 341.074,
+    "optimizedMeanMs": 4.587,
+    "optimizedP95Ms": 5.201,
+    "meanLatencyReductionPercent": 98.509,
+    "rowsLoadedReductionPercent": 99.9,
+    "sameResultIdsEveryRun": true
+  },
+  "indexes": {
+    "Orders": [
+      {
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "id",
+        "unique": true
+      },
+      {
+        "name": "reservationId",
+        "sequence": 1,
+        "column": "reservationId",
+        "unique": true
+      },
+      {
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 1,
+        "column": "userId",
+        "unique": false
+      },
+      {
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 2,
+        "column": "status",
+        "unique": false
+      },
+      {
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 3,
+        "column": "createdAt",
+        "unique": false
+      },
+      {
+        "name": "idx_orders_status_created",
+        "sequence": 1,
+        "column": "status",
+        "unique": false
+      },
+      {
+        "name": "idx_orders_status_created",
+        "sequence": 2,
+        "column": "createdAt",
+        "unique": false
+      }
+    ],
+    "OrderSellers": [
+      {
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "orderId",
+        "unique": true
+      },
+      {
+        "name": "PRIMARY",
+        "sequence": 2,
+        "column": "sellerId",
+        "unique": true
+      },
+      {
+        "name": "idx_order_seller_lookup",
+        "sequence": 1,
+        "column": "sellerId",
+        "unique": false
+      },
+      {
+        "name": "idx_order_seller_lookup",
+        "sequence": 2,
+        "column": "orderId",
+        "unique": false
+      }
+    ]
+  },
+  "explain": {
+    "baseline": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "22004.00"
+        },
+        "ordering_operation": {
+          "using_filesort": true,
+          "cost_info": {
+            "sort_cost": "20000.00"
+          },
+          "table": {
+            "table_name": "Orders",
+            "access_type": "ALL",
+            "rows_examined_per_scan": 20000,
+            "rows_produced_per_join": 20000,
+            "filtered": "100.00",
+            "cost_info": {
+              "read_cost": "4.00",
+              "eval_cost": "2000.00",
+              "prefix_cost": "2004.00",
+              "data_read_per_join": "79M"
+            },
+            "used_columns": [
+              "id",
+              "userId",
+              "reservationId",
+              "items",
+              "totalAmount",
+              "status",
+              "paymentMethod",
+              "paymentStatus",
+              "shippingAddress",
+              "logisticsInfo",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        }
+      }
+    },
+    "optimized": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "145.30"
+        },
+        "ordering_operation": {
+          "using_temporary_table": true,
+          "using_filesort": true,
+          "cost_info": {
+            "sort_cost": "100.00"
+          },
+          "nested_loop": [
+            {
+              "table": {
+                "table_name": "os",
+                "access_type": "ref",
+                "possible_keys": [
+                  "PRIMARY",
+                  "idx_order_seller_lookup"
+                ],
+                "key": "idx_order_seller_lookup",
+                "used_key_parts": [
+                  "sellerId"
+                ],
+                "key_length": "4",
+                "ref": [
+                  "const"
+                ],
+                "rows_examined_per_scan": 100,
+                "rows_produced_per_join": 100,
+                "filtered": "100.00",
+                "using_index": true,
+                "cost_info": {
+                  "read_cost": "0.30",
+                  "eval_cost": "10.00",
+                  "prefix_cost": "10.30",
+                  "data_read_per_join": "1K"
+                },
+                "used_columns": [
+                  "orderId",
+                  "sellerId"
+                ]
+              }
+            },
+            {
+              "table": {
+                "table_name": "o",
+                "access_type": "eq_ref",
+                "possible_keys": [
+                  "PRIMARY"
+                ],
+                "key": "PRIMARY",
+                "used_key_parts": [
+                  "id"
+                ],
+                "key_length": "4",
+                "ref": [
+                  "softw_d703_benchmark.os.orderId"
+                ],
+                "rows_examined_per_scan": 1,
+                "rows_produced_per_join": 100,
+                "filtered": "100.00",
+                "cost_info": {
+                  "read_cost": "25.00",
+                  "eval_cost": "10.00",
+                  "prefix_cost": "45.30",
+                  "data_read_per_join": "405K"
+                },
+                "used_columns": [
+                  "id",
+                  "userId",
+                  "reservationId",
+                  "items",
+                  "totalAmount",
+                  "status",
+                  "paymentMethod",
+                  "paymentStatus",
+                  "shippingAddress",
+                  "logisticsInfo",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -19,6 +19,19 @@ function createDatabase(defaultName) {
 async function initializeDatabase(sequelize) {
   await sequelize.authenticate();
   await sequelize.sync();
+  const queryInterface = sequelize.getQueryInterface();
+  for (const model of Object.values(sequelize.models)) {
+    const expected = (model.options.indexes || []).filter(index => index.name);
+    if (!expected.length) continue;
+    const existing = new Set((await queryInterface.showIndex(model.getTableName())).map(index => index.name));
+    for (const index of expected) {
+      if (existing.has(index.name)) continue;
+      await queryInterface.addIndex(model.getTableName(), index.fields, {
+        name: index.name,
+        unique: Boolean(index.unique)
+      });
+    }
+  }
 }
 
 module.exports = { createDatabase, initializeDatabase };

@@ -1,0 +1,501 @@
+{
+  "collectedAt": "2026-08-31T15:06:47.118Z",
+  "mysql": "8.0.46",
+  "databases": {
+    "orders": "softw_orders_test",
+    "catalog": "softw_catalog_test",
+    "users": "softw_users_test"
+  },
+  "indexes": {
+    "Orders": [
+      {
+        "table": "Orders",
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "id",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Orders",
+        "name": "reservationId",
+        "sequence": 1,
+        "column": "reservationId",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Orders",
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 1,
+        "column": "userId",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Orders",
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 2,
+        "column": "status",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Orders",
+        "name": "idx_orders_buyer_status_created",
+        "sequence": 3,
+        "column": "createdAt",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Orders",
+        "name": "idx_orders_status_created",
+        "sequence": 1,
+        "column": "status",
+        "unique": false,
+        "cardinality": 1
+      },
+      {
+        "table": "Orders",
+        "name": "idx_orders_status_created",
+        "sequence": 2,
+        "column": "createdAt",
+        "unique": false,
+        "cardinality": 1
+      }
+    ],
+    "OrderSellers": [
+      {
+        "table": "OrderSellers",
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "orderId",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "OrderSellers",
+        "name": "PRIMARY",
+        "sequence": 2,
+        "column": "sellerId",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "OrderSellers",
+        "name": "idx_order_seller_lookup",
+        "sequence": 1,
+        "column": "sellerId",
+        "unique": false,
+        "cardinality": 1
+      },
+      {
+        "table": "OrderSellers",
+        "name": "idx_order_seller_lookup",
+        "sequence": 2,
+        "column": "orderId",
+        "unique": false,
+        "cardinality": 2
+      }
+    ],
+    "Products": [
+      {
+        "table": "Products",
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "id",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_catalog_filter",
+        "sequence": 1,
+        "column": "status",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_catalog_filter",
+        "sequence": 2,
+        "column": "category",
+        "unique": false,
+        "cardinality": 3
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_catalog_filter",
+        "sequence": 3,
+        "column": "isSecondhand",
+        "unique": false,
+        "cardinality": 3
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_catalog_filter",
+        "sequence": 4,
+        "column": "price",
+        "unique": false,
+        "cardinality": 34
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_recommended",
+        "sequence": 1,
+        "column": "status",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_recommended",
+        "sequence": 2,
+        "column": "sales",
+        "unique": false,
+        "cardinality": 30
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_recommended",
+        "sequence": 3,
+        "column": "rating",
+        "unique": false,
+        "cardinality": 32
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_seller_updated",
+        "sequence": 1,
+        "column": "sellerId",
+        "unique": false,
+        "cardinality": 1
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_seller_updated",
+        "sequence": 2,
+        "column": "status",
+        "unique": false,
+        "cardinality": 2
+      },
+      {
+        "table": "Products",
+        "name": "idx_products_seller_updated",
+        "sequence": 3,
+        "column": "updatedAt",
+        "unique": false,
+        "cardinality": 2
+      }
+    ],
+    "Users": [
+      {
+        "table": "Users",
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "id",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Users",
+        "name": "username",
+        "sequence": 1,
+        "column": "username",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Users",
+        "name": "email",
+        "sequence": 1,
+        "column": "email",
+        "unique": true,
+        "cardinality": 0
+      }
+    ],
+    "Addresses": [
+      {
+        "table": "Addresses",
+        "name": "PRIMARY",
+        "sequence": 1,
+        "column": "id",
+        "unique": true,
+        "cardinality": 0
+      },
+      {
+        "table": "Addresses",
+        "name": "idx_addresses_user_default_updated",
+        "sequence": 1,
+        "column": "userId",
+        "unique": false,
+        "cardinality": 1
+      },
+      {
+        "table": "Addresses",
+        "name": "idx_addresses_user_default_updated",
+        "sequence": 2,
+        "column": "isDefault",
+        "unique": false,
+        "cardinality": 1
+      },
+      {
+        "table": "Addresses",
+        "name": "idx_addresses_user_default_updated",
+        "sequence": 3,
+        "column": "updatedAt",
+        "unique": false,
+        "cardinality": 1
+      }
+    ]
+  },
+  "explain": {
+    "sellerOrders": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "3.10"
+        },
+        "ordering_operation": {
+          "using_temporary_table": true,
+          "using_filesort": true,
+          "cost_info": {
+            "sort_cost": "2.00"
+          },
+          "nested_loop": [
+            {
+              "table": {
+                "table_name": "os",
+                "access_type": "ref",
+                "possible_keys": [
+                  "PRIMARY",
+                  "idx_order_seller_lookup"
+                ],
+                "key": "idx_order_seller_lookup",
+                "used_key_parts": [
+                  "sellerId"
+                ],
+                "key_length": "4",
+                "ref": [
+                  "const"
+                ],
+                "rows_examined_per_scan": 2,
+                "rows_produced_per_join": 2,
+                "filtered": "100.00",
+                "using_index": true,
+                "cost_info": {
+                  "read_cost": "0.25",
+                  "eval_cost": "0.20",
+                  "prefix_cost": "0.45",
+                  "data_read_per_join": "32"
+                },
+                "used_columns": [
+                  "orderId",
+                  "sellerId"
+                ]
+              }
+            },
+            {
+              "table": {
+                "table_name": "o",
+                "access_type": "ALL",
+                "possible_keys": [
+                  "PRIMARY"
+                ],
+                "rows_examined_per_scan": 2,
+                "rows_produced_per_join": 2,
+                "filtered": "50.00",
+                "using_join_buffer": "hash join",
+                "cost_info": {
+                  "read_cost": "0.25",
+                  "eval_cost": "0.20",
+                  "prefix_cost": "1.10",
+                  "data_read_per_join": "8K"
+                },
+                "used_columns": [
+                  "id",
+                  "userId",
+                  "reservationId",
+                  "items",
+                  "totalAmount",
+                  "status",
+                  "paymentMethod",
+                  "paymentStatus",
+                  "shippingAddress",
+                  "logisticsInfo",
+                  "createdAt",
+                  "updatedAt"
+                ],
+                "attached_condition": "(`softw_orders_test`.`o`.`id` = `softw_orders_test`.`os`.`orderId`)"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "productFilter": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "3.25"
+        },
+        "ordering_operation": {
+          "using_filesort": true,
+          "table": {
+            "table_name": "Products",
+            "access_type": "ref",
+            "possible_keys": [
+              "idx_products_catalog_filter",
+              "idx_products_recommended"
+            ],
+            "key": "idx_products_catalog_filter",
+            "used_key_parts": [
+              "status",
+              "category"
+            ],
+            "key_length": "2045",
+            "ref": [
+              "const",
+              "const"
+            ],
+            "rows_examined_per_scan": 25,
+            "rows_produced_per_join": 25,
+            "filtered": "100.00",
+            "cost_info": {
+              "read_cost": "0.75",
+              "eval_cost": "2.50",
+              "prefix_cost": "3.25",
+              "data_read_per_join": "276K"
+            },
+            "used_columns": [
+              "id",
+              "name",
+              "description",
+              "images",
+              "videos",
+              "price",
+              "stock",
+              "category",
+              "subCategory",
+              "brand",
+              "sellerId",
+              "sellerName",
+              "sellerAvatar",
+              "sellerCreditLevel",
+              "sellerCreditScore",
+              "status",
+              "sales",
+              "views",
+              "rating",
+              "reviewCount",
+              "isSecondhand",
+              "condition",
+              "usageTime",
+              "hasDefect",
+              "defectDescription",
+              "location",
+              "bargainEnabled",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        }
+      }
+    },
+    "userLogin": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "1.00"
+        },
+        "table": {
+          "table_name": "Users",
+          "access_type": "const",
+          "possible_keys": [
+            "email"
+          ],
+          "key": "email",
+          "used_key_parts": [
+            "email"
+          ],
+          "key_length": "1022",
+          "ref": [
+            "const"
+          ],
+          "rows_examined_per_scan": 1,
+          "rows_produced_per_join": 1,
+          "filtered": "100.00",
+          "cost_info": {
+            "read_cost": "0.00",
+            "eval_cost": "0.10",
+            "prefix_cost": "0.00",
+            "data_read_per_join": "7K"
+          },
+          "used_columns": [
+            "id",
+            "username",
+            "password",
+            "phone",
+            "email",
+            "avatar",
+            "nickname",
+            "gender",
+            "birthday",
+            "creditScore",
+            "creditLevel",
+            "role",
+            "createdAt",
+            "updatedAt"
+          ]
+        }
+      }
+    },
+    "userAddresses": {
+      "query_block": {
+        "select_id": 1,
+        "cost_info": {
+          "query_cost": "0.35"
+        },
+        "ordering_operation": {
+          "using_filesort": false,
+          "table": {
+            "table_name": "Addresses",
+            "access_type": "ref",
+            "possible_keys": [
+              "idx_addresses_user_default_updated"
+            ],
+            "key": "idx_addresses_user_default_updated",
+            "used_key_parts": [
+              "userId"
+            ],
+            "key_length": "4",
+            "ref": [
+              "const"
+            ],
+            "rows_examined_per_scan": 1,
+            "rows_produced_per_join": 1,
+            "filtered": "100.00",
+            "backward_index_scan": true,
+            "cost_info": {
+              "read_cost": "0.25",
+              "eval_cost": "0.10",
+              "prefix_cost": "0.35",
+              "data_read_per_join": "3K"
+            },
+            "used_columns": [
+              "id",
+              "userId",
+              "name",
+              "phone",
+              "address",
+              "isDefault",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
