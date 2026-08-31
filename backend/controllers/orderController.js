@@ -338,8 +338,15 @@ exports.getSellerOrders = async (req, res) => {
 
 exports._internal = {
   getBargainValidationError,
+  parsePaging,
   toOrderDto,
-  toSellerOrderDto
+  toSellerOrderDto,
+  hasSellerItem,
+  getOrderSellerIds,
+  getWritableSellerIds,
+  appendLogisticsStep,
+  mergeLogisticsInfo,
+  hasCompleteLogisticsInfo
 };
 
 // 获取订单详情

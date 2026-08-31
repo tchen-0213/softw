@@ -22,12 +22,18 @@ export default defineConfig({
         'src/store/productSlice.js',
         'src/utils/accountStorage.js',
         'src/services/api.js',
+        'src/App.jsx',
+        'src/components/Header.jsx',
         'src/components/product/*.jsx',
         'src/components/cart/CartItem.jsx',
+        'src/components/cart/FloatingCart.jsx',
         'src/components/credit/CreditBadge.jsx',
         'src/components/user/AddressManager.jsx',
         'src/pages/auth/AuthPage.jsx',
-        'src/pages/cart/CartPage.jsx'
+        'src/pages/cart/CartPage.jsx',
+        'src/pages/checkout/CheckoutPage.jsx',
+        'src/pages/product/ProductDetailPage.jsx',
+        'src/pages/search/SearchPage.jsx'
       ],
       thresholds: {
         statements: 80,
