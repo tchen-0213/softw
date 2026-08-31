@@ -52,8 +52,8 @@ npm run experiment:fault
 | 后端单元/安全/控制器 | 61 | 61 通过，0 失败；API 总入口按设计跳过 1 项 |
 | 前端 Vitest | 93 | 16 个文件，93/93 通过 |
 | 单体 API 集成 | 32 | 由 `test:api` 在 MySQL 环境执行 |
-| Playwright E2E | 6 | 原 4 条已有通过记录；新增 UC10-UC12 两条，待下次 MySQL/CI 环境执行 |
+| Playwright E2E | 6 | GitHub Actions 隔离 MySQL 环境 6/6 通过，覆盖 UC01-UC12 |
 | 微服务/网关 | 25 | 13 条服务/公共层测试 + 1 条公开 API 清单测试 + 11 条公开 API E2E |
-| **完整自动化合计** | **217** | 其中新增 Vitest 3 条已本机通过；新增 Playwright 2 条已完成代码与断言，待最新 CI 运行证据 |
+| **完整自动化合计** | **217** | 新增 Vitest 3 条已本机通过；新增 Playwright 2 条已由 GitHub Actions 验证通过 |
 
-本轮将订单页和公开店铺页纳入覆盖范围后实测：语句 92.77%、分支 81.11%、函数 88.52%、行 92.77%，四项均超过 80% 门禁。`npm run verify` 已完成后端 61/61、前端 16 个文件 93/93 和 Vite 1880 个模块生产构建；新增页面 E2E 需在可用的 MySQL/Docker 或 GitHub Actions 环境运行后补充 6/6 证据。
+本轮将订单页和公开店铺页纳入覆盖范围后实测：语句 92.77%、分支 81.11%、函数 88.52%、行 92.77%，四项均超过 80% 门禁。`npm run verify` 已完成后端 61/61、前端 16 个文件 93/93 和 Vite 1880 个模块生产构建；新增页面 E2E 已在 GitHub Actions 隔离 MySQL 环境中与原 4 条一起运行并 [6/6 通过](https://github.com/tchen-0213/softw/actions/runs/33365634714/job/99405580347)。
