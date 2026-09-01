@@ -34,6 +34,7 @@ async function request(method, pathname, { token, body, headers = {}, expected =
     headers: {
       ...(body === undefined ? {} : { 'content-type': 'application/json' }),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      'x-request-id': `ms-e2e-${runId}`,
       ...headers
     },
     body: body === undefined ? undefined : JSON.stringify(body)
@@ -111,6 +112,9 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
 
   await t.test('OPS-TC01 health, readiness and immutable version are observable', async () => {
     for (const [name, baseUrl] of Object.entries(services)) {
+      const live = await fetch(`${baseUrl}/live`);
+      assert.equal(live.status, 200, `${name} liveness`);
+      assert.equal((await live.json()).status, 'alive');
       const health = await fetch(`${baseUrl}/health`);
       assert.equal(health.status, 200, `${name} health`);
       assert.equal((await health.json()).service, name);
@@ -127,6 +131,14 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     });
     assert.equal(preflight.status, 204);
     assert.match(preflight.headers.get('access-control-allow-methods') || '', /GET/);
+    const traceId = `ops-trace-${runId}`;
+    const traced = await fetch(`${gateway}/api/products`, { headers: { 'x-request-id': traceId } });
+    assert.equal(traced.status, 200);
+    assert.equal(traced.headers.get('x-request-id'), traceId);
+    assert.equal(traced.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(traced.headers.get('x-frame-options'), 'DENY');
+    const blockedOrigin = await fetch(`${gateway}/api/products`, { headers: { origin: 'https://evil.example' } });
+    assert.equal(blockedOrigin.status, 403);
     await request('GET', '/not-configured', { expected: 404 });
   });
 
@@ -207,10 +219,11 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
 
   await t.test('MS-API-UPLOAD public upload and static file interfaces', async () => {
     const form = new FormData();
-    form.append('images', new Blob([Buffer.from('microservice-image')], { type: 'image/png' }), 'test.png');
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
+    form.append('images', new Blob([png], { type: 'image/png' }), 'test.png');
     recordPublicApi('POST', '/api/uploads/images');
     const response = await fetch(`${gateway}/api/uploads/images`, {
-      method: 'POST', headers: { authorization: `Bearer ${seller.token}` }, body: form
+      method: 'POST', headers: { authorization: `Bearer ${seller.token}`, 'x-request-id': `ms-e2e-${runId}` }, body: form
     });
     const responseText = await response.text();
     assert.equal(response.status, 201, responseText);

@@ -5,6 +5,9 @@ const { createService } = require('../common/createService');
 const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, requireInternalToken } = require('../common/auth');
 const { requestJson } = require('../common/httpClient');
+const { validateProductionSecrets } = require('../common/security');
+
+validateProductionSecrets();
 
 const serviceName = process.env.SERVICE_NAME || 'order-service';
 const version = process.env.SERVICE_VERSION || '2.0.0';
@@ -130,7 +133,8 @@ router.get('/internal/orders/:orderId/purchases/:productId', requireInternalToke
 router.get('/internal/orders/purchases/:productId', requireInternalToken, verifyPurchase);
 router.get('/api/orders/health/dependencies', async (req,res) => { try { await requestJson(productServiceUrl,'/health'); return res.json({service:serviceName,status:'ok',dependencies:{productService:'ok'}}); } catch(error){return res.status(206).json({service:serviceName,status:'degraded',dependencies:{productService:'degraded'},fallback:'商品信息暂不可用，订单查询保持可用'});} });
 
-const app=createService({express,name:serviceName,version,isReady:()=>databaseReady,routes:instance=>instance.use(router)});
+const checkDatabaseReady=async()=>{if(!databaseReady)return false;await sequelize.authenticate();return true;};
+const app=createService({express,name:serviceName,version,isReady:checkDatabaseReady,routes:instance=>instance.use(router)});
 async function backfillOrderSellerLinks(){
   let lastId=0;
   while(true){

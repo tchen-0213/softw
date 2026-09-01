@@ -30,6 +30,12 @@ spec:
               value: http://product-service:3102
             - name: ORDER_SERVICE_URL
               value: http://order-service:3103
+            - name: CORS_ORIGINS
+              value: http://localhost:8082,http://127.0.0.1:8082,http://localhost:30082,http://127.0.0.1:30082,https://tchen-0213.github.io,https://*.app.github.dev
+            - { name: RATE_LIMIT_WINDOW_MS, value: "60000" }
+            - { name: RATE_LIMIT_MAX, value: "120" }
+            - { name: GATEWAY_BODY_LIMIT, value: "2mb" }
+            - { name: PROXY_TIMEOUT_MS, value: "3000" }
           resources:
             requests:
               cpu: 100m
@@ -45,10 +51,20 @@ spec:
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: /live
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /live
+              port: 8080
+            periodSeconds: 2
+            failureThreshold: 30
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
 ---
 apiVersion: v1
 kind: Service
