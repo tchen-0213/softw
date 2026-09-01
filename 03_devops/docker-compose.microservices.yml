@@ -37,7 +37,7 @@ services:
       mysql:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3101/health | grep -q 'ok'"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3101/ready | grep -q 'ready'"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -70,7 +70,7 @@ services:
       user-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3102/health | grep -q 'ok'"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3102/ready | grep -q 'ready'"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -101,7 +101,7 @@ services:
       product-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3103/health | grep -q 'ok'"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3103/ready | grep -q 'ready'"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -116,6 +116,11 @@ services:
       USER_SERVICE_URL: http://user-service:3101
       PRODUCT_SERVICE_URL: http://product-service:3102
       ORDER_SERVICE_URL: http://order-service:3103
+      CORS_ORIGINS: http://localhost:8082,http://127.0.0.1:8082,http://localhost:30082,http://127.0.0.1:30082,https://tchen-0213.github.io,https://*.app.github.dev
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-120}
+      GATEWAY_BODY_LIMIT: 2mb
+      PROXY_TIMEOUT_MS: "3000"
     ports:
       - "8081:8080"
     depends_on:

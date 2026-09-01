@@ -1,0 +1,204 @@
+{
+  "generatedAt": "2026-09-01T01:53:45.338Z",
+  "traceId": "d8-01-trace-1788227624088",
+  "orderId": 3,
+  "services": [
+    "api-gateway",
+    "order-service",
+    "product-service",
+    "user-service"
+  ],
+  "logs": [
+    {
+      "timestamp": "2026-09-01T01:53:44.218Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/register",
+      "statusCode": 201,
+      "durationMs": 83.419
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.307Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/login",
+      "statusCode": 200,
+      "durationMs": 76.705
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.390Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/register",
+      "statusCode": 201,
+      "durationMs": 80.653
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.468Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/login",
+      "statusCode": 200,
+      "durationMs": 74.968
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.505Z",
+      "service": "product-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/shops/mine/verification",
+      "statusCode": 200,
+      "durationMs": 32.156
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.538Z",
+      "service": "product-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/products",
+      "statusCode": 201,
+      "durationMs": 26.205
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.571Z",
+      "service": "product-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/internal/products/reservations",
+      "statusCode": 201,
+      "durationMs": 14.765
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.216Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/register",
+      "statusCode": 201,
+      "durationMs": 78.616
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.305Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/login",
+      "statusCode": 200,
+      "durationMs": 72.913
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.389Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/register",
+      "statusCode": 201,
+      "durationMs": 78.429
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.466Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/users/login",
+      "statusCode": 200,
+      "durationMs": 72.049
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.480Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "GET",
+      "path": "/internal/users/2",
+      "statusCode": 200,
+      "durationMs": 2.059
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.516Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "GET",
+      "path": "/internal/users/2",
+      "statusCode": 200,
+      "durationMs": 1.99
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.587Z",
+      "service": "order-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/orders",
+      "statusCode": 201,
+      "durationMs": 42.641
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.536Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/internal/users/2/role",
+      "statusCode": 200,
+      "durationMs": 8.153
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.552Z",
+      "service": "user-service",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "GET",
+      "path": "/internal/users/3",
+      "statusCode": 200,
+      "durationMs": 2.203
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.506Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/shops/mine/verification",
+      "statusCode": 200,
+      "durationMs": 35.756
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.539Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/products",
+      "statusCode": 201,
+      "durationMs": 28.807
+    },
+    {
+      "timestamp": "2026-09-01T01:53:44.588Z",
+      "service": "api-gateway",
+      "event": "http_request",
+      "requestId": "d8-01-trace-1788227624088",
+      "method": "POST",
+      "path": "/api/orders",
+      "statusCode": 201,
+      "durationMs": 46.407
+    }
+  ],
+  "passed": true
+}

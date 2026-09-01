@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-09-01T01:46:36.752Z",
+  "composeProject": "softw-d801",
+  "baseline": [
+    {
+      "service": "user-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "product-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "order-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "api-gateway",
+      "live": 200,
+      "ready": 200
+    }
+  ],
+  "databaseStoppedAt": "2026-09-01T01:46:38.687Z",
+  "databaseUnavailable": [
+    {
+      "service": "user-service",
+      "live": 200,
+      "ready": 503
+    },
+    {
+      "service": "product-service",
+      "live": 200,
+      "ready": 503
+    },
+    {
+      "service": "order-service",
+      "live": 200,
+      "ready": 503
+    },
+    {
+      "service": "api-gateway",
+      "live": 200,
+      "ready": 503
+    }
+  ],
+  "databaseRestartedAt": "2026-09-01T01:46:40.818Z",
+  "recovered": [
+    {
+      "service": "user-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "product-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "order-service",
+      "live": 200,
+      "ready": 200
+    },
+    {
+      "service": "api-gateway",
+      "live": 200,
+      "ready": 200
+    }
+  ],
+  "passed": true
+}

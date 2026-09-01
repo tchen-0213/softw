@@ -5,6 +5,9 @@ const { DataTypes, Op } = require('sequelize');
 const { createService } = require('../common/createService');
 const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, getJwtSecret, requireInternalToken } = require('../common/auth');
+const { validateProductionSecrets } = require('../common/security');
+
+validateProductionSecrets();
 
 const serviceName = process.env.SERVICE_NAME || 'user-service';
 const version = process.env.SERVICE_VERSION || '2.0.0';
@@ -156,7 +159,12 @@ router.post('/internal/users/:id/role', requireInternalToken, async (req, res) =
   return res.json(safeUser(user));
 });
 
-const app = createService({ express, name: serviceName, version, isReady: () => databaseReady, routes: instance => instance.use(router) });
+const checkDatabaseReady = async () => {
+  if (!databaseReady) return false;
+  await sequelize.authenticate();
+  return true;
+};
+const app = createService({ express, name: serviceName, version, isReady: checkDatabaseReady, routes: instance => instance.use(router) });
 async function initialize() { await initializeDatabase(sequelize); databaseReady = true; }
 if (require.main === module) initialize().then(() => app.listen(Number(process.env.PORT || 3101), () => console.log(`${serviceName} listening`))).catch(error => { console.error(error); process.exit(1); });
 

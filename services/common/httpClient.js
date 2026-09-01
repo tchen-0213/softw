@@ -1,7 +1,10 @@
+const { getRequestId, normalizeRequestId } = require('./observability');
+
 async function requestJson(baseUrl, pathname, options = {}) {
   if (!process.env.INTERNAL_SERVICE_TOKEN) throw new Error('INTERNAL_SERVICE_TOKEN is required');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(options.timeoutMs || 3000));
+  const requestId = normalizeRequestId(options.requestId || getRequestId());
 
   try {
     const response = await fetch(new URL(pathname, baseUrl), {
@@ -10,6 +13,7 @@ async function requestJson(baseUrl, pathname, options = {}) {
         accept: 'application/json',
         'content-type': 'application/json',
         'x-internal-token': process.env.INTERNAL_SERVICE_TOKEN,
+        'x-request-id': requestId,
         ...(options.headers || {})
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),

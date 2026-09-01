@@ -1,5 +1,4 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { DataTypes, Op, Transaction } = require('sequelize');
@@ -7,6 +6,10 @@ const { createService } = require('../common/createService');
 const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, requireInternalToken } = require('../common/auth');
 const { requestJson } = require('../common/httpClient');
+const { createImageUpload, validateUploadedImages } = require('../common/uploadSecurity');
+const { validateProductionSecrets } = require('../common/security');
+
+validateProductionSecrets();
 
 const serviceName = process.env.SERVICE_NAME || 'product-service';
 const version = process.env.SERVICE_VERSION || '2.0.0';
@@ -229,11 +232,23 @@ router.get('/api/chats/conversations/:id', requireUser, async (req,res,next) => 
 router.post('/api/chats/conversations/:id/messages', requireUser, async (req,res,next) => { try { const row = await ChatConversation.findByPk(req.params.id); if (!row) return res.status(404).json({ message: '私聊不存在' }); if (![row.buyerId,row.sellerId].map(Number).includes(Number(req.user.id))) return res.status(403).json({ message: '无权在该私聊中发言' }); const type = ['bargain','refund'].includes(req.body.type) ? req.body.type : 'text'; if (type !== 'text' && Number(row.buyerId) !== Number(req.user.id)) return res.status(403).json({ message: '只有买家可以发起该申请' }); if (type === 'refund') await requestJson(orderServiceUrl, `/internal/orders/purchases/${row.productId}?userId=${req.user.id}&paid=true`); const amount = type === 'text' ? null : Number(req.body.amount); if (type !== 'text' && (!Number.isFinite(amount) || amount <= 0)) return res.status(400).json({ message: '请输入有效金额' }); const message = await ChatMessage.create({ conversationId: row.id, senderId: req.user.id, type, content: String(req.body.content || (type === 'bargain' ? `买家希望以 ¥${amount.toFixed(2)} 成交` : `买家申请退款 ¥${amount.toFixed(2)}`)).trim(), amount, requestStatus: type === 'text' ? null : 'pending', senderSnapshot: userDto(req.user) }); await row.update({ lastMessageAt: new Date() }); return res.status(201).json({ ...message.toJSON(), sender: message.senderSnapshot, amount }); } catch (error) { return next(error); } });
 router.put('/api/chats/messages/:id/decision', requireUser, async (req,res,next) => { try { const message = await ChatMessage.findByPk(req.params.id); if (!message) return res.status(404).json({ message: '申请消息不存在' }); const row = await ChatConversation.findByPk(message.conversationId); if (Number(row.sellerId) !== Number(req.user.id)) return res.status(403).json({ message: '只有商家可以处理申请' }); if (message.requestStatus !== 'pending') return res.status(400).json({ message: '该申请已处理或不可处理' }); const status = ['accepted','rejected'].includes(req.body.status) ? req.body.status : null; if (!status) return res.status(400).json({ message: '处理结果不合法' }); await message.update({ requestStatus: status, decidedAt: new Date() }); const systemMessage = await ChatMessage.create({ conversationId: row.id, senderId: req.user.id, type: 'system', content: `商家已${status === 'accepted' ? '同意' : '拒绝'}申请：¥${Number(message.amount).toFixed(2)}`, senderSnapshot: userDto(req.user) }); return res.json({ request: { ...message.toJSON(), sender: message.senderSnapshot }, systemMessage: { ...systemMessage.toJSON(), sender: systemMessage.senderSnapshot } }); } catch (error) { return next(error); } });
 
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads'); fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({ storage: multer.diskStorage({ destination: uploadDir, filename: (req,file,cb) => cb(null, `${Date.now()}-${Math.round(Math.random()*1e9)}${path.extname(file.originalname).toLowerCase()}`) }), limits: { fileSize: 5*1024*1024 }, fileFilter: (req,file,cb) => { if (new Set(['image/jpeg','image/png','image/gif','image/webp']).has(file.mimetype)) return cb(null, true); const error = new Error('只支持上传 jpg、png、gif、webp 图片文件'); error.status = 400; return cb(error); } });
-router.post('/api/uploads/images', requireUser, upload.array('images',10), (req,res) => res.status(201).json({ urls: (req.files || []).map(file => `/uploads/${file.filename}`) }));
+const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
+const upload = createImageUpload({ multer, uploadDir, maxFileSize: 5 * 1024 * 1024, maxFiles: 10 });
+const handleImageUpload = (req, res, next) => upload.array('images', 10)(req, res, error => {
+  if (error) error.status = 400;
+  return error ? next(error) : next();
+});
+router.post('/api/uploads/images', requireUser, handleImageUpload, validateUploadedImages, (req,res) => {
+  if (!req.files?.length) return res.status(400).json({ message: '至少上传一张图片', requestId: req.requestId });
+  return res.status(201).json({ urls: req.files.map(file => `/uploads/${file.filename}`) });
+});
 
-const app = createService({ express, name: serviceName, version, isReady: () => databaseReady, routes: instance => { instance.use('/uploads', express.static(uploadDir)); instance.use(router); } });
+const checkDatabaseReady = async () => {
+  if (!databaseReady) return false;
+  await sequelize.authenticate();
+  return true;
+};
+const app = createService({ express, name: serviceName, version, isReady: checkDatabaseReady, routes: instance => { instance.use('/uploads', express.static(uploadDir)); instance.use(router); } });
 async function initialize() { await initializeDatabase(sequelize); databaseReady = true; }
 if (require.main === module) initialize().then(() => app.listen(Number(process.env.PORT || 3102), () => console.log(`${serviceName} listening`))).catch(error => { console.error(error); process.exit(1); });
 module.exports = { app, initialize, sequelize, models: { Product, Shop, Evaluation, ChatConversation, ChatMessage, InventoryReservation }, experiment: { parseExperimentBurnMs } };

@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-09-01T01:55:37.908Z",
+  "revision": "033d506349e05fb2fd2edca8ec8f3483e6d67d61",
+  "secretScan": {
+    "trackedFiles": 449,
+    "findings": []
+  },
+  "dependencyAudit": [
+    {
+      "directory": "backend",
+      "high": 0,
+      "critical": 0,
+      "moderate": 2,
+      "total": 2
+    },
+    {
+      "directory": "frontend",
+      "high": 0,
+      "critical": 0,
+      "moderate": 0,
+      "total": 0
+    },
+    {
+      "directory": "services/api-gateway",
+      "high": 0,
+      "critical": 0,
+      "moderate": 0,
+      "total": 0
+    },
+    {
+      "directory": "services/user-service",
+      "high": 0,
+      "critical": 0,
+      "moderate": 2,
+      "total": 2
+    },
+    {
+      "directory": "services/product-service",
+      "high": 0,
+      "critical": 0,
+      "moderate": 2,
+      "total": 2
+    },
+    {
+      "directory": "services/order-service",
+      "high": 0,
+      "critical": 0,
+      "moderate": 2,
+      "total": 2
+    }
+  ],
+  "passed": true
+}
