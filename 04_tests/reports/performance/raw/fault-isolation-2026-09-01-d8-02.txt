@@ -1,0 +1,134 @@
+故障隔离实验 2026-09-01-d8-02
+context=kind-softw-practice
+started_at=2026-09-01T11:49:49+08:00
+== 故障前 HPA、Pod 与资源 ==
+NAME                                                      REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/product-service-hpa   Deployment/product-service   cpu: 7%/60%   1         5         1          40s
+
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE                           NOMINATED NODE   READINESS GATES
+pod/api-gateway-65896cd79b-jvt9d          1/1     Running   0          64m   10.244.0.16   softw-practice-control-plane   <none>           <none>
+pod/microservice-mysql-76b984d8ff-274vn   1/1     Running   0          52m   10.244.0.22   softw-practice-control-plane   <none>           <none>
+pod/order-service-8549855f44-rqcmx        1/1     Running   0          48m   10.244.0.25   softw-practice-control-plane   <none>           <none>
+pod/product-service-59cfd4897c-hjj8d      1/1     Running   0          54s   10.244.0.36   softw-practice-control-plane   <none>           <none>
+pod/user-service-749c5b7dd-6bnz5          1/1     Running   0          48m   10.244.0.24   softw-practice-control-plane   <none>           <none>
+NAME                                  CPU(cores)   MEMORY(bytes)
+api-gateway-65896cd79b-jvt9d          2m           25Mi
+microservice-mysql-76b984d8ff-274vn   12m          408Mi
+order-service-8549855f44-rqcmx        1m           32Mi
+product-service-59cfd4897c-hjj8d      7m           24Mi
+user-service-749c5b7dd-6bnz5          1m           30Mi
+== 故障前网关就绪 ==
+{"status":"ready","service":"api-gateway","dependencies":[{"service":"user-service","ready":true},{"service":"product-service","ready":true},{"service":"order-service","ready":true}]}
+HTTP_STATUS=200
+== 注入故障：暂停 HPA 并将商品服务缩至 0 ==
+horizontalpodautoscaler.autoscaling "product-service-hpa" deleted from softw-microservices namespace
+deployment.apps/product-service scaled
+== 商品接口隔离返回 ==
+{"message":"依赖服务暂不可用","requestId":"09c90241-8b03-4830-81db-328b28c081d0"}
+HTTP_STATUS=503
+== 订单依赖检查预设降级 ==
+{"service":"order-service","status":"degraded","dependencies":{"productService":"degraded"},"fallback":"商品信息暂不可用，订单查询保持可用"}
+HTTP_STATUS=206
+== 网关存活探针 ==
+{"status":"alive","service":"api-gateway","uptime":2708.485091416}
+HTTP_STATUS=200
+== 用户与订单服务存活探针 ==
+{"status":"alive","service":"user-service","uptime":1712.312764127}
+{"status":"alive","service":"order-service","uptime":1712.361492271}
+== 故障期间 Deployment 状态 ==
+NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
+api-gateway          1/1     1            1           67m
+microservice-mysql   1/1     1            1           68m
+order-service        1/1     1            1           67m
+product-service      0/0     0            0           67m
+user-service         1/1     1            1           67m
+== 故障期间网关与订单日志 ==
+{"timestamp":"2026-09-01T03:48:31.689Z","level":"info","event":"http_request","service":"api-gateway","requestId":"20d59331-e10a-40e3-935c-6bbe202bc00e","method":"GET","path":"/ready","statusCode":200,"durationMs":6.855}
+{"timestamp":"2026-09-01T03:48:34.328Z","level":"info","event":"http_request","service":"api-gateway","requestId":"93a00c33-58d5-4c2f-9a13-91d4cdc3bbd4","method":"GET","path":"/live","statusCode":200,"durationMs":0.532}
+{"timestamp":"2026-09-01T03:48:41.686Z","level":"info","event":"http_request","service":"api-gateway","requestId":"13d1920d-9a7f-45dc-bc67-359e1fd0f1c3","method":"GET","path":"/ready","statusCode":200,"durationMs":4.806}
+{"timestamp":"2026-09-01T03:48:51.687Z","level":"error","event":"http_request","service":"api-gateway","requestId":"97ed1987-f9da-4827-b7d7-c99f4bf46ae8","method":"GET","path":"/ready","statusCode":503,"durationMs":5.622}
+{"timestamp":"2026-09-01T03:48:54.148Z","level":"error","event":"request_error","service":"api-gateway","requestId":"08a22ddc-475e-4313-952d-3861460a6826","statusCode":503,"errorName":"Error","errorMessage":"upstream unavailable"}
+{"timestamp":"2026-09-01T03:48:54.149Z","level":"error","event":"http_request","service":"api-gateway","requestId":"08a22ddc-475e-4313-952d-3861460a6826","method":"GET","path":"/api/products","statusCode":503,"durationMs":3.124}
+{"timestamp":"2026-09-01T03:48:54.207Z","level":"info","event":"http_request","service":"api-gateway","requestId":"085a57ea-5845-4361-9e7a-cd4a398c6d4b","method":"GET","path":"/api/orders/health/dependencies","statusCode":206,"durationMs":8.324}
+{"timestamp":"2026-09-01T03:48:54.256Z","level":"info","event":"http_request","service":"api-gateway","requestId":"e9ea9480-2e28-42ae-a22f-e6fcfdc46a04","method":"GET","path":"/live","statusCode":200,"durationMs":0.491}
+{"timestamp":"2026-09-01T03:48:54.327Z","level":"info","event":"http_request","service":"api-gateway","requestId":"06eeb253-6d10-4cd7-9229-522094602b9b","method":"GET","path":"/live","statusCode":200,"durationMs":0.506}
+{"timestamp":"2026-09-01T03:49:01.686Z","level":"error","event":"http_request","service":"api-gateway","requestId":"9058697f-c1c6-408d-9a00-49197e813598","method":"GET","path":"/ready","statusCode":503,"durationMs":4.032}
+{"timestamp":"2026-09-01T03:49:09.167Z","level":"info","event":"http_request","service":"api-gateway","requestId":"ed8be334-95c1-4026-9a12-c0d1667f6791","method":"GET","path":"/ready","statusCode":200,"durationMs":8.035}
+{"timestamp":"2026-09-01T03:49:09.362Z","level":"info","event":"http_request","service":"api-gateway","requestId":"383a4ec3-4dd6-43ca-b4f8-10e250f82b69","method":"GET","path":"/api/products","statusCode":200,"durationMs":14.848}
+{"timestamp":"2026-09-01T03:49:09.417Z","level":"info","event":"http_request","service":"api-gateway","requestId":"17134293-0682-4ff7-802e-5e4cabfb8308","method":"GET","path":"/ready","statusCode":200,"durationMs":4.391}
+{"timestamp":"2026-09-01T03:49:11.684Z","level":"info","event":"http_request","service":"api-gateway","requestId":"6f7cd27f-3294-4ef0-bc58-de45babbd7f7","method":"GET","path":"/ready","statusCode":200,"durationMs":3.201}
+{"timestamp":"2026-09-01T03:49:14.326Z","level":"info","event":"http_request","service":"api-gateway","requestId":"d705c068-2fc6-4969-af4a-ebe23f8ba999","method":"GET","path":"/live","statusCode":200,"durationMs":0.468}
+{"timestamp":"2026-09-01T03:49:21.692Z","level":"info","event":"http_request","service":"api-gateway","requestId":"0928be11-096a-4e67-9560-ccd15f639934","method":"GET","path":"/ready","statusCode":200,"durationMs":11.586}
+{"timestamp":"2026-09-01T03:49:31.686Z","level":"info","event":"http_request","service":"api-gateway","requestId":"351ddb44-f575-4294-81c2-219a69741db5","method":"GET","path":"/ready","statusCode":200,"durationMs":5.088}
+{"timestamp":"2026-09-01T03:49:34.327Z","level":"info","event":"http_request","service":"api-gateway","requestId":"b459a573-58ea-4ce4-9ecc-c615a6ab5d54","method":"GET","path":"/live","statusCode":200,"durationMs":0.497}
+{"timestamp":"2026-09-01T03:49:41.688Z","level":"info","event":"http_request","service":"api-gateway","requestId":"05c02cdd-e8c0-4e3f-9675-36fa91731999","method":"GET","path":"/ready","statusCode":200,"durationMs":7.085}
+{"timestamp":"2026-09-01T03:49:49.200Z","level":"info","event":"http_request","service":"api-gateway","requestId":"0942516d-1915-4a47-ab62-71f57ab0af77","method":"GET","path":"/live","statusCode":200,"durationMs":0.741}
+{"timestamp":"2026-09-01T03:49:49.620Z","level":"info","event":"http_request","service":"api-gateway","requestId":"3ed7deb7-9186-49d6-8d2e-c211301553c6","method":"GET","path":"/ready","statusCode":200,"durationMs":5.499}
+{"timestamp":"2026-09-01T03:49:51.685Z","level":"info","event":"http_request","service":"api-gateway","requestId":"79a01663-b8c3-4f96-9948-f9c11e3c6edd","method":"GET","path":"/ready","statusCode":200,"durationMs":4.847}
+{"timestamp":"2026-09-01T03:49:54.326Z","level":"info","event":"http_request","service":"api-gateway","requestId":"e56ef49d-457a-4e29-9a22-3400424d130f","method":"GET","path":"/live","statusCode":200,"durationMs":0.485}
+{"timestamp":"2026-09-01T03:50:01.685Z","level":"info","event":"http_request","service":"api-gateway","requestId":"c75091ee-3377-4574-88e9-c4f49ae3d0fd","method":"GET","path":"/ready","statusCode":200,"durationMs":4.64}
+{"timestamp":"2026-09-01T03:50:11.685Z","level":"info","event":"http_request","service":"api-gateway","requestId":"d75fea5c-264e-4d4e-b3bd-e5135874e3cc","method":"GET","path":"/ready","statusCode":200,"durationMs":6.055}
+{"timestamp":"2026-09-01T03:50:14.325Z","level":"info","event":"http_request","service":"api-gateway","requestId":"6be39017-00c7-4b9f-9417-6fbdab02793a","method":"GET","path":"/live","statusCode":200,"durationMs":0.571}
+{"timestamp":"2026-09-01T03:50:21.683Z","level":"error","event":"http_request","service":"api-gateway","requestId":"594cc9aa-e56c-4e72-bb9e-bb7735e5b940","method":"GET","path":"/ready","statusCode":503,"durationMs":3.883}
+{"timestamp":"2026-09-01T03:50:23.202Z","level":"error","event":"request_error","service":"api-gateway","requestId":"09c90241-8b03-4830-81db-328b28c081d0","statusCode":503,"errorName":"Error","errorMessage":"upstream unavailable"}
+{"timestamp":"2026-09-01T03:50:23.202Z","level":"error","event":"http_request","service":"api-gateway","requestId":"09c90241-8b03-4830-81db-328b28c081d0","method":"GET","path":"/api/products","statusCode":503,"durationMs":2.517}
+{"timestamp":"2026-09-01T03:50:23.255Z","level":"info","event":"http_request","service":"api-gateway","requestId":"d77bb9f1-97cb-4984-9f98-39ae0182bff3","method":"GET","path":"/api/orders/health/dependencies","statusCode":206,"durationMs":7.119}
+{"timestamp":"2026-09-01T03:50:23.299Z","level":"info","event":"http_request","service":"api-gateway","requestId":"ea9a388b-17d9-45aa-b913-32e499485e8f","method":"GET","path":"/live","statusCode":200,"durationMs":0.641}
+{"timestamp":"2026-09-01T03:48:25.801Z","level":"info","event":"http_request","service":"order-service","requestId":"71f2e16c-780a-41f8-a462-c6fafa74910d","method":"GET","path":"/ready","statusCode":200,"durationMs":1.455}
+{"timestamp":"2026-09-01T03:48:30.801Z","level":"info","event":"http_request","service":"order-service","requestId":"ae13650c-ae57-43c8-86d2-b4daf6a0ca64","method":"GET","path":"/live","statusCode":200,"durationMs":0.76}
+{"timestamp":"2026-09-01T03:48:31.687Z","level":"info","event":"http_request","service":"order-service","requestId":"de7f4a23-92cc-458c-929e-3f83722b35da","method":"GET","path":"/ready","statusCode":200,"durationMs":1.957}
+{"timestamp":"2026-09-01T03:48:35.801Z","level":"info","event":"http_request","service":"order-service","requestId":"0b03debf-b14a-4507-8334-a70ba0a1c7b9","method":"GET","path":"/ready","statusCode":200,"durationMs":1.767}
+{"timestamp":"2026-09-01T03:48:41.685Z","level":"info","event":"http_request","service":"order-service","requestId":"b799462a-9dbe-45d5-9efd-4a665b465dd0","method":"GET","path":"/ready","statusCode":200,"durationMs":1.23}
+{"timestamp":"2026-09-01T03:48:45.801Z","level":"info","event":"http_request","service":"order-service","requestId":"e3dda426-c15e-4f21-9fb6-3cefbfa95bfb","method":"GET","path":"/ready","statusCode":200,"durationMs":2.5}
+{"timestamp":"2026-09-01T03:48:50.799Z","level":"info","event":"http_request","service":"order-service","requestId":"9670ad98-5cd4-47a8-bb88-5f4ec5cb1b2e","method":"GET","path":"/live","statusCode":200,"durationMs":0.489}
+{"timestamp":"2026-09-01T03:48:51.687Z","level":"info","event":"http_request","service":"order-service","requestId":"c4822569-727a-497d-abe8-a5e02e27d627","method":"GET","path":"/ready","statusCode":200,"durationMs":1.147}
+{"timestamp":"2026-09-01T03:48:54.206Z","level":"info","event":"http_request","service":"order-service","requestId":"085a57ea-5845-4361-9e7a-cd4a398c6d4b","method":"GET","path":"/api/orders/health/dependencies","statusCode":206,"durationMs":6.442}
+{"timestamp":"2026-09-01T03:48:54.674Z","level":"info","event":"http_request","service":"order-service","requestId":"fff61754-7828-4b3b-a25c-b76a340ea197","method":"GET","path":"/live","statusCode":200,"durationMs":0.467}
+{"timestamp":"2026-09-01T03:48:55.800Z","level":"info","event":"http_request","service":"order-service","requestId":"efbddaa1-a2d3-4c67-9234-c4c8e2c790ec","method":"GET","path":"/ready","statusCode":200,"durationMs":1.397}
+{"timestamp":"2026-09-01T03:49:01.685Z","level":"info","event":"http_request","service":"order-service","requestId":"8416b461-ff82-4b82-909a-fc7a1ee828b0","method":"GET","path":"/ready","statusCode":200,"durationMs":1.094}
+{"timestamp":"2026-09-01T03:49:05.799Z","level":"info","event":"http_request","service":"order-service","requestId":"310d3d30-5d83-4de6-b576-66d1b876759d","method":"GET","path":"/ready","statusCode":200,"durationMs":1.221}
+{"timestamp":"2026-09-01T03:49:09.164Z","level":"info","event":"http_request","service":"order-service","requestId":"3a1c3ee4-7f67-4dd3-a2ee-d1048d8c7fba","method":"GET","path":"/ready","statusCode":200,"durationMs":1.191}
+{"timestamp":"2026-09-01T03:49:09.415Z","level":"info","event":"http_request","service":"order-service","requestId":"047541a0-c189-4cc9-84e1-7e35d95bd3e9","method":"GET","path":"/ready","statusCode":200,"durationMs":1.167}
+{"timestamp":"2026-09-01T03:49:10.798Z","level":"info","event":"http_request","service":"order-service","requestId":"8b48ea73-cc01-4e94-bacd-dfa1c0d70766","method":"GET","path":"/live","statusCode":200,"durationMs":0.619}
+{"timestamp":"2026-09-01T03:49:11.683Z","level":"info","event":"http_request","service":"order-service","requestId":"098f5d82-2dd6-4d21-be87-5c115e483498","method":"GET","path":"/ready","statusCode":200,"durationMs":1.359}
+{"timestamp":"2026-09-01T03:49:15.799Z","level":"info","event":"http_request","service":"order-service","requestId":"e6aa4948-3f14-424d-b3cd-5413883f46f8","method":"GET","path":"/ready","statusCode":200,"durationMs":1.541}
+{"timestamp":"2026-09-01T03:49:21.685Z","level":"info","event":"http_request","service":"order-service","requestId":"791a2182-ba45-4961-869a-131dc5d7e95d","method":"GET","path":"/ready","statusCode":200,"durationMs":1.492}
+{"timestamp":"2026-09-01T03:49:25.899Z","level":"info","event":"http_request","service":"order-service","requestId":"13bcd596-b066-4f88-8366-392c669e948b","method":"GET","path":"/ready","statusCode":200,"durationMs":1.457}
+{"timestamp":"2026-09-01T03:49:30.797Z","level":"info","event":"http_request","service":"order-service","requestId":"5731d615-7f3d-4301-a1ad-479b2b52ec31","method":"GET","path":"/live","statusCode":200,"durationMs":0.451}
+{"timestamp":"2026-09-01T03:49:31.684Z","level":"info","event":"http_request","service":"order-service","requestId":"ff3da7c9-ae06-42aa-b44f-1f828f5a171e","method":"GET","path":"/ready","statusCode":200,"durationMs":1.387}
+{"timestamp":"2026-09-01T03:49:35.800Z","level":"info","event":"http_request","service":"order-service","requestId":"916d599a-6398-4e2c-a37d-7716aa65903c","method":"GET","path":"/ready","statusCode":200,"durationMs":2.087}
+{"timestamp":"2026-09-01T03:49:41.685Z","level":"info","event":"http_request","service":"order-service","requestId":"0f6eeb93-d21e-4cfe-9d3e-aea0f5057531","method":"GET","path":"/ready","statusCode":200,"durationMs":1.883}
+{"timestamp":"2026-09-01T03:49:45.798Z","level":"info","event":"http_request","service":"order-service","requestId":"3d600bee-08ac-4c7a-8e6b-2b6343229a5e","method":"GET","path":"/ready","statusCode":200,"durationMs":1.249}
+{"timestamp":"2026-09-01T03:49:49.619Z","level":"info","event":"http_request","service":"order-service","requestId":"f9014809-d645-4549-ba9c-354c77a6a57f","method":"GET","path":"/ready","statusCode":200,"durationMs":1.208}
+{"timestamp":"2026-09-01T03:49:50.797Z","level":"info","event":"http_request","service":"order-service","requestId":"a89f6c4d-e34a-44ad-a5c5-fbe06fad9996","method":"GET","path":"/live","statusCode":200,"durationMs":0.516}
+{"timestamp":"2026-09-01T03:49:51.683Z","level":"info","event":"http_request","service":"order-service","requestId":"cae6f2a4-343b-4946-89a3-42b2eaa9fad6","method":"GET","path":"/ready","statusCode":200,"durationMs":1.963}
+{"timestamp":"2026-09-01T03:49:55.799Z","level":"info","event":"http_request","service":"order-service","requestId":"51640df5-7cac-46a3-884b-29e77e6f84f9","method":"GET","path":"/ready","statusCode":200,"durationMs":1.887}
+{"timestamp":"2026-09-01T03:50:01.684Z","level":"info","event":"http_request","service":"order-service","requestId":"034d5391-69ea-47ed-83ca-b75f059d3e90","method":"GET","path":"/ready","statusCode":200,"durationMs":1.118}
+{"timestamp":"2026-09-01T03:50:05.799Z","level":"info","event":"http_request","service":"order-service","requestId":"a28a13c7-fdbf-43e2-81fe-ca152ac62a87","method":"GET","path":"/ready","statusCode":200,"durationMs":2.636}
+{"timestamp":"2026-09-01T03:50:10.796Z","level":"info","event":"http_request","service":"order-service","requestId":"bfebf63a-becf-466d-8c60-c901c5aaceb1","method":"GET","path":"/live","statusCode":200,"durationMs":0.477}
+{"timestamp":"2026-09-01T03:50:11.683Z","level":"info","event":"http_request","service":"order-service","requestId":"0a34d170-fe53-4a6d-8ce3-628abafa0016","method":"GET","path":"/ready","statusCode":200,"durationMs":1.069}
+{"timestamp":"2026-09-01T03:50:15.797Z","level":"info","event":"http_request","service":"order-service","requestId":"f4dc1747-f2dd-4bdd-95f5-e78ce86e45c3","method":"GET","path":"/ready","statusCode":200,"durationMs":1.428}
+{"timestamp":"2026-09-01T03:50:21.682Z","level":"info","event":"http_request","service":"order-service","requestId":"9d427b82-0779-41a8-8109-33222e1a2c80","method":"GET","path":"/ready","statusCode":200,"durationMs":1.022}
+{"timestamp":"2026-09-01T03:50:23.253Z","level":"info","event":"http_request","service":"order-service","requestId":"d77bb9f1-97cb-4984-9f98-39ae0182bff3","method":"GET","path":"/api/orders/health/dependencies","statusCode":206,"durationMs":4.466}
+{"timestamp":"2026-09-01T03:50:23.698Z","level":"info","event":"http_request","service":"order-service","requestId":"aa295d12-0b81-4f56-9b7e-4dbc559fc502","method":"GET","path":"/live","statusCode":200,"durationMs":0.797}
+== 恢复商品服务与 HPA ==
+deployment.apps/product-service scaled
+Waiting for deployment "product-service" rollout to finish: 0 of 1 updated replicas are available...
+deployment "product-service" successfully rolled out
+horizontalpodautoscaler.autoscaling/product-service-hpa created
+NAME                                                      REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/product-service-hpa   Deployment/product-service   cpu: 1%/60%   1         5         1          46s
+
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE                           NOMINATED NODE   READINESS GATES
+pod/api-gateway-65896cd79b-jvt9d          1/1     Running   0          66m   10.244.0.16   softw-practice-control-plane   <none>           <none>
+pod/microservice-mysql-76b984d8ff-274vn   1/1     Running   0          54m   10.244.0.22   softw-practice-control-plane   <none>           <none>
+pod/order-service-8549855f44-rqcmx        1/1     Running   0          49m   10.244.0.25   softw-practice-control-plane   <none>           <none>
+pod/product-service-59cfd4897c-82xsf      1/1     Running   0          60s   10.244.0.37   softw-practice-control-plane   <none>           <none>
+pod/user-service-749c5b7dd-6bnz5          1/1     Running   0          49m   10.244.0.24   softw-practice-control-plane   <none>           <none>
+== 恢复后商品接口 ==
+{"products":[],"pagination":{"total":0,"page":1,"limit":20,"pages":0}}
+HTTP_STATUS=200
+== 恢复后网关就绪 ==
+{"status":"ready","service":"api-gateway","dependencies":[{"service":"user-service","ready":true},{"service":"product-service","ready":true},{"service":"order-service","ready":true}]}
+HTTP_STATUS=200
+finished_at=2026-09-01T11:51:24+08:00

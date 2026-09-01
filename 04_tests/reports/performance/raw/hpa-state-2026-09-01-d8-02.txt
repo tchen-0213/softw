@@ -1,0 +1,80 @@
+run_id=2026-09-01-d8-02
+started_at=2026-09-01T11:17:26+08:00
+context=kind-softw-practice
+kubernetes={  "clientVersion": {    "major": "1",    "minor": "34",    "gitVersion": "v1.34.1",    "gitCommit": "93248f9ae092f571eb870b7664c534bfc7d00f03",    "gitTreeState": "clean",    "buildDate": "2025-09-09T19:44:50Z",    "goVersion": "go1.24.6",    "compiler": "gc",    "platform": "windows/amd64"  },  "kustomizeVersion": "v5.7.1",  "serverVersion": {    "major": "1",    "minor": "34",    "emulationMajor": "1",    "emulationMinor": "34",    "minCompatibilityMajor": "1",    "minCompatibilityMinor": "33",    "gitVersion": "v1.34.3",    "gitCommit": "df11db1c0f08fab3c0baee1e5ce6efbf816af7f1",    "gitTreeState": "clean",    "buildDate": "2025-12-09T14:59:13Z",    "goVersion": "go1.24.11",    "compiler": "gc",    "platform": "linux/amd64"  }}
+metrics_server=softw/metrics-server:v0.8.1-local
+product_image=softw/product-service:d8-02-20260901-r4
+product_resources={"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}}
+== before hpa,pods ==
+NAME                                                      REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/product-service-hpa   Deployment/product-service   cpu: 2%/60%   1         5         1          104s
+
+NAME                                      READY   STATUS    RESTARTS   AGE    IP            NODE                           NOMINATED NODE   READINESS GATES
+pod/api-gateway-65896cd79b-jvt9d          1/1     Running   0          32m    10.244.0.16   softw-practice-control-plane   <none>           <none>
+pod/microservice-mysql-76b984d8ff-274vn   1/1     Running   0          20m    10.244.0.22   softw-practice-control-plane   <none>           <none>
+pod/order-service-8549855f44-rqcmx        1/1     Running   0          15m    10.244.0.25   softw-practice-control-plane   <none>           <none>
+pod/product-service-59cfd4897c-jm6c7      1/1     Running   0          118s   10.244.0.30   softw-practice-control-plane   <none>           <none>
+pod/user-service-749c5b7dd-6bnz5          1/1     Running   0          15m    10.244.0.24   softw-practice-control-plane   <none>           <none>
+== before resource usage ==
+NAME                                  CPU(cores)   MEMORY(bytes)
+api-gateway-65896cd79b-jvt9d          2m           19Mi
+microservice-mysql-76b984d8ff-274vn   14m          400Mi
+order-service-8549855f44-rqcmx        1m           28Mi
+product-service-59cfd4897c-jm6c7      1m           25Mi
+user-service-749c5b7dd-6bnz5          2m           27Mi
+== after hpa,pods ==
+NAME                                                      REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/product-service-hpa   Deployment/product-service   cpu: 2%/60%   1         5         1          4m7s
+
+NAME                                      READY   STATUS    RESTARTS   AGE    IP            NODE                           NOMINATED NODE   READINESS GATES
+pod/api-gateway-65896cd79b-jvt9d          1/1     Running   0          34m    10.244.0.16   softw-practice-control-plane   <none>           <none>
+pod/microservice-mysql-76b984d8ff-274vn   1/1     Running   0          22m    10.244.0.22   softw-practice-control-plane   <none>           <none>
+pod/order-service-8549855f44-rqcmx        1/1     Running   0          18m    10.244.0.25   softw-practice-control-plane   <none>           <none>
+pod/product-service-59cfd4897c-khkdq      1/1     Running   0          112s   10.244.0.32   softw-practice-control-plane   <none>           <none>
+pod/user-service-749c5b7dd-6bnz5          1/1     Running   0          18m    10.244.0.24   softw-practice-control-plane   <none>           <none>
+== after resource usage ==
+NAME                                  CPU(cores)   MEMORY(bytes)
+api-gateway-65896cd79b-jvt9d          1m           21Mi
+microservice-mysql-76b984d8ff-274vn   14m          402Mi
+order-service-8549855f44-rqcmx        1m           29Mi
+product-service-59cfd4897c-khkdq      2m           24Mi
+user-service-749c5b7dd-6bnz5          1m           28Mi
+== hpa events ==
+Name:                                                  product-service-hpa
+Namespace:                                             softw-microservices
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Tue, 01 Sep 2026 11:15:43 +0800
+Reference:                                             Deployment/product-service
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  2% (2m) / 60%
+Min replicas:                                          1
+Max replicas:                                          5
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 2  Period: 15 seconds
+  Scale Down:
+    Stabilization Window: 30 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods  Value: 4  Period: 30 seconds
+Deployment pods:    1 current / 1 desired
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    ReadyForNewScale    recommended size matches current size
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+Events:
+  Type     Reason                        Age                    From                       Message
+  ----     ------                        ----                   ----                       -------
+  Warning  FailedGetResourceMetric       3m37s (x2 over 3m52s)  horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  3m37s (x2 over 3m52s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             112s                   horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             97s                    horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             37s                    horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+finished_at=2026-09-01T11:19:50+08:00
+peak_replicas=5
