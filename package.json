@@ -10,6 +10,7 @@
     "test:services:inventory": "node --test 04_tests/microservices/public-api-coverage.test.js",
     "test:services:api": "node --test 04_tests/microservices/public-api-coverage.test.js 04_tests/microservices/api-e2e.test.js",
     "test:security": "node --test 04_tests/security/config-security.test.js && node 04_tests/security/run-security-scan.js",
+    "test:experiments": "node --test 04_tests/performance/hpa-fault-config.test.js",
     "test:readiness-recovery": "node 04_tests/security/readiness-recovery.js",
     "test:trace-evidence": "node 04_tests/security/trace-evidence.js",
     "test:e2e": "npm --prefix frontend run test:e2e",

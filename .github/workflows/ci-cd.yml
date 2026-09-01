@@ -109,6 +109,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Verify security and cloud-native experiment configuration
+        run: node --test 04_tests/security/config-security.test.js 04_tests/performance/hpa-fault-config.test.js
       - name: Scan tracked files and production dependencies
         run: node 04_tests/security/run-security-scan.js --output=04_tests/reports/security/security-scan.json
       - name: Run Git history secret scan

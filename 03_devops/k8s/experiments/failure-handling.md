@@ -6,9 +6,10 @@
 npm run experiment:fault
 ```
 
-脚本停止商品服务后验证：商品路由返回 HTTP 503 隔离提示，订单依赖检查返回 HTTP 206 和备用结果，
-网关、用户服务、订单服务继续运行；最后自动恢复商品服务与 HPA。2026-08-28 原始输出位于
-`04_tests/reports/performance/raw/fault-isolation-2026-08-28.txt`。
+脚本临时暂停 HPA 并停止商品服务后验证：商品路由返回 HTTP 503 隔离提示，订单依赖检查返回
+HTTP 206 和备用结果，网关、用户服务、订单服务继续运行；最后自动恢复商品服务和 HPA，并校验
+没有 0 副本或 HPA 缺失残留。2026-09-01 重做原始输出位于
+`04_tests/reports/performance/raw/fault-isolation-2026-09-01-d8-02.txt`。
 
 ## 错误镜像与部署失败排查（补充实验）
 

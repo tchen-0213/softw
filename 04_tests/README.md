@@ -47,7 +47,8 @@ npm run experiment:fault
 `reports/performance/D7-03订单查询与索引优化报告.md`。
 
 两项云原生实验的正式结论见 `reports/performance/HPA与故障处理实验记录.md`，机器可读汇总、
-副本时间线和故障原始响应位于 `reports/performance/raw/`。
+CPU/内存/实际 Pod 时间线和故障原始响应位于 `reports/performance/raw/`。HPA 脚本在本机没有
+k6 时会使用 Docker k6；两项脚本均带自动恢复和无残留校验。
 
 前端覆盖率报告由 `test:coverage` 生成到 `reports/coverage/frontend/`。覆盖范围包括应用路由、公共头部、浮动购物车、购物车与商品 Redux 状态、账户存储、API 客户端、商品筛选/排序/搜索、购物车项、信用徽章、地址管理，以及认证、购物车、结算、商品详情、搜索、订单和公开店铺页面；四项全局门禁均为 80%。
 

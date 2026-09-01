@@ -31,7 +31,7 @@ test('D8-CONFIG-02: 工作负载使用非 root 容器且秘密只引用 Kubernet
   assert.match(database, /name: MYSQL_ROOT_PASSWORD[\s\S]{0,120}secretKeyRef:/);
   assert.doesNotMatch(`${services}\n${database}`, /(?:DB_PASSWORD|JWT_SECRET|INTERNAL_SERVICE_TOKEN).*value:\s*["']?[^$\s{]/);
   for (const dockerfile of ['api-gateway', 'user-service', 'product-service', 'order-service']) {
-    assert.match(read(`services/${dockerfile}/Dockerfile`), /USER node/);
+    assert.match(read(`services/${dockerfile}/Dockerfile`), /USER 1000/);
   }
 });
 
