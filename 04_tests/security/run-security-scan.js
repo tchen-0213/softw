@@ -3,7 +3,7 @@ const path = require('path');
 const { execFileSync, spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..', '..');
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmCommand = process.platform === 'win32' ? (process.env.ComSpec || 'cmd.exe') : 'npm';
 const packageDirectories = [
   'backend',
   'frontend',
@@ -56,14 +56,27 @@ function scanSecrets() {
 
 function auditDependencies() {
   return packageDirectories.map(directory => {
-    const result = spawnSync(npmCommand, [
-      'audit', '--omit=dev', '--audit-level=high', '--registry=https://registry.npmjs.org', '--json'
-    ], { cwd: path.join(root, directory), encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+    const npmArguments = ['audit', '--omit=dev', '--audit-level=high', '--registry=https://registry.npmjs.org', '--json'];
+    const commandArguments = process.platform === 'win32'
+      ? ['/d', '/s', '/c', `npm ${npmArguments.join(' ')}`]
+      : npmArguments;
+    const result = spawnSync(npmCommand, commandArguments, {
+      cwd: path.join(root, directory),
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024
+    });
+    if (result.error) {
+      return { directory, error: result.error.message, high: null, critical: null };
+    }
     let report;
     try {
       report = JSON.parse(result.stdout || '{}');
     } catch (error) {
       return { directory, error: String(result.stderr || error.message).trim(), high: null, critical: null };
+    }
+    if (!report.metadata?.vulnerabilities) {
+      const message = report.error?.summary || result.stderr || `npm audit exited ${result.status}`;
+      return { directory, error: String(message).trim(), high: null, critical: null };
     }
     const vulnerabilities = report.metadata?.vulnerabilities || {};
     return {
