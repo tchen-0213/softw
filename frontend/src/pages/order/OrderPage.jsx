@@ -89,13 +89,14 @@ const OrderPage = () => {
 
   const isCompletedOrder = (status) => status === 4 || status === '已完成';
 
-  const handleEvaluateOrder = (order) => {
+  const handleEvaluateOrder = (order, productId) => {
     if (!isCompletedOrder(order.status)) {
       alert('订单完成后才能评价，请先确认收货。');
       return;
     }
 
-    navigate(`/evaluation/${order.id}`);
+    const search = productId ? `?productId=${productId}` : '';
+    navigate(`/evaluation/${order.id}${search}`);
   };
 
   if (loading) {
@@ -144,8 +145,8 @@ const OrderPage = () => {
                       key={item.id}
                       type="button"
                       className="biz-line-item biz-line-item-btn"
-                      onClick={() => handleEvaluateOrder(order)}
-                      title={isCompletedOrder(order.status) ? '评价该订单' : '确认收货后可评价'}
+                      onClick={() => handleEvaluateOrder(order, item.productId)}
+                      title={isCompletedOrder(order.status) ? '评价该商品' : '确认收货后可评价'}
                     >
                       <img
                         src={item.image || fallbackImages.product}

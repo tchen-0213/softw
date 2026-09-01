@@ -3989,6 +3989,38 @@ html[data-theme='dark'] .home-categories button:nth-child(4) {
   border-bottom: 1px solid var(--border-color);
 }
 
+.eval-block.is-focus {
+  padding: 16px;
+  margin-left: -16px;
+  margin-right: -16px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--primary-color) 6%, var(--surface-bg));
+}
+
+.eval-badge {
+  display: inline-block;
+  margin: 6px 0 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-color) 12%, white);
+  color: var(--primary-color);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.eval-content-readonly {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-soft, #f6f7fb);
+  color: var(--text-main);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.eval-star.is-readonly {
+  cursor: default;
+}
+
 .eval-block:last-of-type {
   border-bottom: none;
 }
