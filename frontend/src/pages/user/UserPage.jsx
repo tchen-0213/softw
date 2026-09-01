@@ -270,13 +270,14 @@ const UserPage = () => {
 
   const isCompletedOrder = (status) => status === 4 || status === '已完成';
 
-  const handleEvaluateOrder = (order) => {
+  const handleEvaluateOrder = (order, productId) => {
     if (!isCompletedOrder(order.status)) {
       alert('订单完成后才能评价，请先确认收货。');
       return;
     }
 
-    navigate(`/evaluation/${order.id}`);
+    const search = productId ? `?productId=${productId}` : '';
+    navigate(`/evaluation/${order.id}${search}`);
   };
 
   const renderOrderDetail = (selectedOrder) => {
@@ -300,14 +301,17 @@ const UserPage = () => {
               key={item.id}
               type="button"
               className="biz-line-item biz-line-item-btn"
-              onClick={() => handleEvaluateOrder(selectedOrder)}
-              title={isCompletedOrder(selectedOrder.status) ? '评价该订单' : '确认收货后可评价'}
+              onClick={() => handleEvaluateOrder(selectedOrder, item.productId)}
+              title={isCompletedOrder(selectedOrder.status) ? '评价该商品' : '确认收货后可评价'}
             >
               <img src={item.image} alt={item.name} className="biz-thumb" />
               <div className="biz-line-body">
                 <div className="biz-line-name">{item.name}</div>
                 <div className="biz-line-meta">
                   <div>¥{Number(item.price).toFixed(2)} x {item.quantity}</div>
+                  {isCompletedOrder(selectedOrder.status) && (
+                    <div>评价该商品</div>
+                  )}
                 </div>
               </div>
             </button>
