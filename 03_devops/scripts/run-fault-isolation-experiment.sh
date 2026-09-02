@@ -23,7 +23,7 @@ restore() {
   [ -z "$PORT_FORWARD_PID" ] || kill "$PORT_FORWARD_PID" 2>/dev/null || true
   [ -z "$PORT_FORWARD_PID" ] || wait "$PORT_FORWARD_PID" 2>/dev/null || true
 }
-trap restore EXIT
+trap restore EXIT INT TERM
 
 kubectl get hpa product-service-hpa -n "$NAMESPACE" >/dev/null
 kubectl scale deployment/product-service -n "$NAMESPACE" --replicas=1 >/dev/null
