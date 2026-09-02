@@ -39,7 +39,7 @@ test('DELIVERY-COMPOSE-02: Compose 不绑定全局容器名，可并行创建隔
   for (const filename of composeFiles) {
     assert.doesNotMatch(read(filename), /^\s*container_name:/m, `${filename} 不应声明 container_name`);
   }
-  assert.match(read(composeFiles[0]), /MONOLITH_MYSQL_PORT:-3306/);
+  assert.match(read(composeFiles[0]), /MONOLITH_MYSQL_PORT:-3309/);
 });
 
 test('DELIVERY-TEST-RUNNER-01: 微服务集成测试使用随机口令、随机端口并保证清理', () => {
