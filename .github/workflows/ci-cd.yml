@@ -114,7 +114,7 @@ jobs:
       - name: Verify security and cloud-native experiment configuration
         run: node --test 04_tests/security/config-security.test.js 04_tests/performance/hpa-fault-config.test.js
       - name: Scan tracked files and production dependencies
-        run: node 04_tests/security/run-security-scan.js --output=04_tests/reports/security/security-scan.json
+        run: node 04_tests/security/run-security-scan.js 
       - name: Run Git history secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -124,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: security-scan-${{ github.sha }}
-          path: 04_tests/reports/security/security-scan.json
+          path: 04_tests/reports/security/security-scan-*.json
           if-no-files-found: error
           retention-days: 14
 
