@@ -10,7 +10,7 @@ services:
       MYSQL_USER: softw
       MYSQL_PASSWORD: ${SOFTW_DB_PASSWORD:?run sh 03_devops/scripts/init-local-env.sh}
     ports:
-      - "${MONOLITH_MYSQL_PORT:-3309}:3306"
+      - "${MONOLITH_MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database/init:/docker-entrypoint-initdb.d:ro

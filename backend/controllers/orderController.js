@@ -93,7 +93,7 @@ const getOrderSellerIds = (order) => ([
   ...new Set(
     (order.items || [])
       .map(item => Number(item.sellerId))
-      .filter(id => Number.isFinite(id))
+      .filter(id => Number.isInteger(id) && id > 0)
   )
 ]);
 

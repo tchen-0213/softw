@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const Address = require('../models/Address');
+const Evaluation = require('../models/Evaluation');
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
@@ -113,6 +114,134 @@ test('CONTROLLER-PRODUCT-06: 商品部分更新拒绝负库存且不写数据库
   assert.equal(updated, false);
 });
 
+test('CONTROLLER-PRODUCT-07: 发布二手商品会转换类型、成色和议价开关', async (t) => {
+  const originals = {
+    findShop: Shop.findOne,
+    createProduct: Product.create,
+    findProduct: Product.findByPk
+  };
+  let createdPayload;
+  let userUpdatePayload;
+
+  Shop.findOne = async () => ({ verificationStatus: '已认证' });
+  Product.create = async (payload) => {
+    createdPayload = payload;
+    return { id: 88 };
+  };
+  Product.findByPk = async (id) => ({
+    toJSON: () => ({
+      id,
+      ...createdPayload,
+      reviewCount: 0,
+      User: {
+        id: 5,
+        username: 'seller',
+        nickname: '摊主',
+        avatar: 'avatar.png',
+        creditLevel: '银牌',
+        creditScore: 120
+      }
+    })
+  });
+  t.after(() => {
+    Shop.findOne = originals.findShop;
+    Product.create = originals.createProduct;
+    Product.findByPk = originals.findProduct;
+  });
+
+  const res = response();
+  await productController.createProduct({
+    body: {
+      name: '复古键盘',
+      description: '九成新，自用闲置',
+      category: '数码',
+      price: '199.5',
+      stock: '1',
+      productType: '2',
+      condition: '2',
+      bargainEnabled: 'false'
+    },
+    user: {
+      id: 5,
+      role: 'user',
+      username: 'seller',
+      nickname: '摊主',
+      update: async (payload) => { userUpdatePayload = payload; }
+    }
+  }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(createdPayload.sellerId, 5);
+  assert.equal(createdPayload.sellerName, '摊主');
+  assert.equal(createdPayload.isSecondhand, true);
+  assert.equal(createdPayload.condition, '9成新');
+  assert.equal(createdPayload.bargainEnabled, false);
+  assert.deepEqual(userUpdatePayload, { role: 'seller' });
+  assert.equal(res.body.productType, 2);
+  assert.equal(res.body.bargainEnabled, false);
+  assert.equal(res.body.seller.creditScore, 120);
+});
+
+test('CONTROLLER-PRODUCT-08: 商品更新只允许白名单字段并忽略派生和统计字段', async (t) => {
+  const original = Product.findByPk;
+  let findCount = 0;
+  let updatePayload;
+
+  Product.findByPk = async (id) => {
+    findCount += 1;
+    if (findCount === 1) {
+      return {
+        id,
+        sellerId: 7,
+        update: async (payload) => { updatePayload = payload; }
+      };
+    }
+    return {
+      toJSON: () => ({
+        id,
+        sellerId: 7,
+        sellerName: 'seller',
+        name: updatePayload.name,
+        price: updatePayload.price,
+        isSecondhand: updatePayload.isSecondhand,
+        condition: updatePayload.condition,
+        bargainEnabled: updatePayload.bargainEnabled,
+        images: null,
+        videos: null,
+        reviewCount: 4
+      })
+    };
+  };
+  t.after(() => { Product.findByPk = original; });
+
+  const res = response();
+  await productController.updateProduct({
+    params: { id: 1 },
+    user: { id: 7 },
+    body: {
+      name: '改名商品',
+      price: '88',
+      productType: 2,
+      condition: 3,
+      bargainEnabled: '0',
+      sellerId: 99,
+      sellerName: '篡改卖家',
+      sales: 999,
+      views: 999
+    }
+  }, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(updatePayload, {
+    name: '改名商品',
+    price: '88',
+    condition: '8成新',
+    bargainEnabled: false,
+    isSecondhand: true
+  });
+  assert.equal(res.body.evaluationCount, 4);
+});
+
 test('CONTROLLER-ORDER-01: 空订单拒绝创建且不启动事务', async () => {
   const res = response();
   await orderController.createOrder({ body: { items: [] }, user: { id: 1 } }, res);
@@ -149,6 +278,46 @@ test('CONTROLLER-ORDER-03: 买家不能查看他人订单', async (t) => {
   assert.equal(res.statusCode, 403);
 });
 
+test('CONTROLLER-ORDER-06: 非待付款订单不能重复支付', async (t) => {
+  const original = Order.findByPk;
+  let updated = false;
+  Order.findByPk = async () => ({
+    userId: 1,
+    status: '待发货',
+    update: async () => { updated = true; }
+  });
+  t.after(() => { Order.findByPk = original; });
+
+  const res = response();
+  await orderController.payOrder({ params: { id: 1 }, user: { id: 1 } }, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, '此订单状态无法支付');
+  assert.equal(updated, false);
+});
+
+test('CONTROLLER-ORDER-07: 卖家发货缺少物流必填项时不更新订单', async (t) => {
+  const original = Order.findByPk;
+  let updated = false;
+  Order.findByPk = async () => ({
+    status: '待发货',
+    items: [{ sellerId: 9 }],
+    update: async () => { updated = true; }
+  });
+  t.after(() => { Order.findByPk = original; });
+
+  const res = response();
+  await orderController.shipOrder({
+    params: { id: 1 },
+    user: { id: 9, role: 'seller' },
+    body: { company: ' ', trackingNumber: 'SF001' }
+  }, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, '物流公司和物流单号不能为空，请填写完整后再发货');
+  assert.equal(updated, false);
+});
+
 test('CONTROLLER-EVALUATION-01: 空白回复返回 400', async () => {
   const res = response();
   await evaluationController.replyEvaluation({ body: { reply: '  ' } }, res);
@@ -163,6 +332,41 @@ test('CONTROLLER-EVALUATION-02: 非法星级和空评价在数据库访问前被
   }, res);
   assert.equal(res.statusCode, 400);
   assert.match(res.body.message, /评分/);
+});
+
+test('CONTROLLER-EVALUATION-03: 同一订单同一商品不能重复评价', async (t) => {
+  const originals = {
+    findProduct: Product.findByPk,
+    findOrder: Order.findByPk,
+    findEvaluation: Evaluation.findOne,
+    createEvaluation: Evaluation.create
+  };
+  let created = false;
+
+  Product.findByPk = async () => ({ id: 9, sellerId: 2 });
+  Order.findByPk = async () => ({
+    userId: 1,
+    status: '已完成',
+    items: [{ productId: 9 }]
+  });
+  Evaluation.findOne = async () => ({ id: 1 });
+  Evaluation.create = async () => { created = true; };
+  t.after(() => {
+    Product.findByPk = originals.findProduct;
+    Order.findByPk = originals.findOrder;
+    Evaluation.findOne = originals.findEvaluation;
+    Evaluation.create = originals.createEvaluation;
+  });
+
+  const res = response();
+  await evaluationController.createEvaluation({
+    body: { orderId: 3, productId: 9, rating: 5, content: '很好', images: [] },
+    user: { id: 1 }
+  }, res);
+
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, '已经评价过此商品');
+  assert.equal(created, false);
 });
 
 test('CONTROLLER-SHOP-01: 店铺认证逐项校验五个必填字段', async (t) => {
