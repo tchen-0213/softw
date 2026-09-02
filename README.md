@@ -1,5 +1,7 @@
 # 购物与二手交易平台
 
+给老师交作业请打开 [`06_defense/export/`](06_defense/export/)：每份说明书都有 Word（`.docx`）和 PDF，先看 `06_defense/export/00-请先看这个.txt`。仓库里的 Markdown 是协作源文件。
+
 本项目为 2026 软件工程课程大作业，旨在实现一个集新品购物与二手交易于一体的综合交易平台。系统支持用户注册登录、商品浏览与搜索、商品详情查看、购物车、订单管理、二手商品发布、评价体系、个人中心、店铺管理等功能。
 
 ## 一、项目简介
@@ -55,7 +57,7 @@ softw/
 ├── 03_devops/                   # Compose、K8s、数据库与运维脚本
 ├── 04_tests/                    # 压测脚本、报告和实验数据
 ├── 05_management/               # 计划、站会、看板和贡献材料
-├── 06_defense/                  # 答辩提纲、PPT和技术总结
+├── 06_defense/                  # 答辩材料；给老师的 Word/PDF 在 06_defense/export/
 ├── backend/                     # Express 单体后端及邻近测试
 ├── frontend/                    # React 前端及 Playwright E2E
 ├── services/                    # 网关和三个业务微服务

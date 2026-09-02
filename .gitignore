@@ -155,3 +155,6 @@ temp/
 .temp/
 **/.vitepress/dist
 **/.vitepress/cache
+
+# Intermediate HTML for Word/PDF export
+提交包/_html/
