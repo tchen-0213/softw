@@ -3,9 +3,18 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 RUN_ID=${RUN_ID:-2026-08-28}
+MONOLITH_COMPOSE_PROJECT=${MONOLITH_COMPOSE_PROJECT:-softw}
+MICROSERVICE_COMPOSE_PROJECT=${MICROSERVICE_COMPOSE_PROJECT:-softw-microservices}
 RAW_DIR="$ROOT/04_tests/reports/performance/raw/interface-comparison-$RUN_ID"
 CSV="$ROOT/04_tests/reports/performance/interface-comparison-$RUN_ID.csv"
 mkdir -p "$RAW_DIR"
+
+compose_container() {
+  local project=$1 file=$2 service=$3 container_id
+  container_id=$(docker compose -p "$project" --env-file "$ROOT/.env" -f "$file" ps -q "$service")
+  [[ -n $container_id ]] || { echo "$project/$service 容器未运行" >&2; return 1; }
+  printf '%s\n' "$container_id"
+}
 
 cleanup() { "$ROOT/03_devops/scripts/prepare-performance-data.sh" clean >/dev/null 2>&1 || true; }
 trap cleanup EXIT INT TERM
@@ -17,10 +26,17 @@ run_case() {
   prefix="$RAW_DIR/$version-$endpoint-run$run"
   if [[ $version == monolith ]]; then
     base_url=http://127.0.0.1:3001
-    containers=(softw-backend softw-mysql)
+    containers=(
+      "$(compose_container "$MONOLITH_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.yml" backend)"
+      "$(compose_container "$MONOLITH_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.yml" mysql)"
+    )
   else
     base_url=http://127.0.0.1:8081
-    containers=(softw-microservices-api-gateway-1 softw-microservices-product-service-1 softw-microservices-mysql-1)
+    containers=(
+      "$(compose_container "$MICROSERVICE_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.microservices.yml" api-gateway)"
+      "$(compose_container "$MICROSERVICE_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.microservices.yml" product-service)"
+      "$(compose_container "$MICROSERVICE_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.microservices.yml" mysql)"
+    )
   fi
 
   curl -fsS "$base_url/api/products/990001" >/dev/null

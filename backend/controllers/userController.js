@@ -2,6 +2,7 @@ const User = require('../models/User');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const { getJwtSecret } = require('../middleware/auth');
+const { validateNewPassword, validateProfilePayload } = require('../utils/inputValidation');
 
 // 生成JWT令牌
 const generateToken = (id) => {
@@ -131,6 +132,10 @@ exports.updateUserProfile = async (req, res) => {
     }
 
     const { nickname, avatar, gender, birthday, phone, email } = req.body;
+    const validationError = validateProfilePayload(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
 
     if (email && email !== user.email) {
       const emailExists = await User.findOne({
@@ -174,6 +179,11 @@ exports.updatePassword = async (req, res) => {
     const isMatch = await user.matchPassword(oldPassword);
     if (!isMatch) {
       return res.status(401).json({ message: '旧密码错误' });
+    }
+
+    const validationError = validateNewPassword(newPassword);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
 
     await user.update({ password: newPassword });

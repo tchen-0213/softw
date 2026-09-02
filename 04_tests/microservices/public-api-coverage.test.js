@@ -21,7 +21,7 @@ function extractPublicRoutes(service, filename) {
   return routes;
 }
 
-test('D6-02 public API manifest matches code, docs and UC01-UC09 flow mapping', () => {
+test('D6-02 public API manifest matches code, docs and UC01-UC12 flow mapping', () => {
   const manifestKeys = publicApis.map(routeKey);
   assert.equal(new Set(manifestKeys).size, manifestKeys.length, '公开 API 清单存在重复项');
   for (const api of publicApis) {
@@ -34,7 +34,7 @@ test('D6-02 public API manifest matches code, docs and UC01-UC09 flow mapping', 
   const routerManifestKeys = publicApis.filter(api => api.source !== 'static').map(routeKey).sort();
   assert.deepEqual(routerManifestKeys, sourceKeys, '业务服务公开路由与 D6-02 清单不一致');
 
-  const expectedUcs = Array.from({ length: 9 }, (_, index) => `UC${String(index + 1).padStart(2, '0')}`);
+  const expectedUcs = Array.from({ length: 12 }, (_, index) => `UC${String(index + 1).padStart(2, '0')}`);
   assert.deepEqual(scenarioCoverage.map(item => item.uc).sort(), expectedUcs);
   for (const scenario of scenarioCoverage) {
     assert.deepEqual([...scenario.flows].sort(), ['ALT', 'ERR', 'MAIN']);

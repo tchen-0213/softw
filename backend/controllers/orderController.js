@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const ChatConversation = require('../models/ChatConversation');
 const ChatMessage = require('../models/ChatMessage');
+const { validateOrderItems, validateShippingAddress } = require('../utils/inputValidation');
 const {
   SELLER_CANCEL_NON_SHIPMENT_DELTA,
   applyCreditDelta,
@@ -157,8 +158,13 @@ const hasCompleteLogisticsInfo = (logisticsInfo) => Boolean(
 exports.createOrder = async (req, res) => {
   const { items = [], shippingAddress, paymentMethod } = req.body;
 
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: '订单商品不能为空' });
+  const validationError = validateOrderItems(items);
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
+  const addressValidationError = validateShippingAddress(shippingAddress);
+  if (addressValidationError) {
+    return res.status(400).json({ message: addressValidationError });
   }
 
   const transaction = await sequelize.transaction();
@@ -171,7 +177,7 @@ exports.createOrder = async (req, res) => {
 
     for (const item of items) {
       const productId = item.productId || item.id;
-      const quantity = Math.max(parseInt(item.quantity || '1', 10), 1);
+      const quantity = Number(item.quantity ?? 1);
       const product = await Product.findByPk(productId, { transaction });
 
       if (!product) {

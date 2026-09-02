@@ -22,10 +22,12 @@
 
 ```bash
 npm run verify
+npm run verify:full
 npm run test:api
+npm run test:services
 npm run test:services:inventory
 npm run test:services:api
-node --test services/api-gateway/common.test.js
+npm run test:delivery
 API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
 npm run perf:k6
 npm run perf:compare
@@ -37,7 +39,8 @@ npm run experiment:fault
 
 `test:services:inventory` 不依赖容器，校验 49 项公开业务 API 与源码、测试编号和
 `../02_docs/微服务公开API测试映射.md` 无空白项。`test:services:api` 在微服务环境中经网关
-实际执行这些接口，并覆盖 UC01-UC09 的 MAIN、ALT、ERR 路径。
+实际执行这些接口，并覆盖 UC01-UC12 的 MAIN、ALT、ERR 路径。`test:services` 会自行创建带
+随机口令和随机宿主端口的临时 MySQL，逐个验证三个业务服务与网关，结束后自动清理临时容器。
 
 `perf:compare` 会为单体和微服务准备同一批固定数据，对 3 个接口各运行 3 次，并采集 k6、CPU 和
 内存原始数据；结束时自动清理实验商品。正式结论见 `reports/performance/性能对比实验报告.md`。
@@ -52,15 +55,21 @@ k6 时会使用 Docker k6；两项脚本均带自动恢复和无残留校验。
 
 前端覆盖率报告由 `test:coverage` 生成到 `reports/coverage/frontend/`。覆盖范围包括应用路由、公共头部、浮动购物车、购物车与商品 Redux 状态、账户存储、API 客户端、商品筛选/排序/搜索、购物车项、信用徽章、地址管理，以及认证、购物车、结算、商品详情、搜索、订单和公开店铺页面；四项全局门禁均为 80%。
 
-## 2026-08-31 测试补强基线
+## 2026-09-02 完整复核基线
 
-| 层级 | 当前自动化测试数 | 本机实测结果 |
-| --- | ---: | --- |
-| 后端单元/安全/控制器 | 61 | 61 通过，0 失败；API 总入口按设计跳过 1 项 |
-| 前端 Vitest | 93 | 16 个文件，93/93 通过 |
-| 单体 API 集成 | 32 | 由 `test:api` 在 MySQL 环境执行 |
-| Playwright E2E | 6 | GitHub Actions 隔离 MySQL 环境 6/6 通过，覆盖 UC01-UC12 |
-| 微服务/网关 | 25 | 13 条服务/公共层测试 + 1 条公开 API 清单测试 + 11 条公开 API E2E |
-| **完整自动化合计** | **217** | 新增 Vitest 3 条已本机通过；新增 Playwright 2 条已由 GitHub Actions 验证通过 |
+| 层级 | 本机实测结果 | 说明 |
+| --- | --- | --- |
+| 后端单元/安全/控制器 | 80 通过、0 失败、1 个数据库 API 父入口按设计跳过 | 输入边界、控制器拒绝分支、迁移与安全中间件 |
+| 前端 Vitest | 17 个文件，100/100 通过 | 全局覆盖率 94.42%/81.83%/92.34%/94.42% |
+| 单体真实 MySQL API | 32/32 通过 | UC01-UC12、公开路由、上传和运维端点 |
+| Playwright E2E | 6/6 通过 | Compose 与 Kind 单体入口均实测 UC01-UC12 |
+| 微服务静态/公共层 | 18/18 通过 | API 防漂移、校验、安全、上传和运维公共层 |
+| 微服务隔离集成 | 22/22 通过 | 临时 MySQL 下 user 1、product 3、order 1、gateway 17 |
+| 微服务网关 API | 15/15 通过 | 49 项公开 API、UC01-UC12、健康/就绪/版本 |
+| 交付与实验证据 | 18/18 通过 | Docker/Compose/CI/K8s/HPA/故障/三轮性能证据 |
+| 安全扫描 | 通过 | 483 个纳入扫描的文件无密钥；高危/严重依赖漏洞为 0 |
 
-本轮将订单页和公开店铺页纳入覆盖范围后实测：语句 92.77%、分支 81.11%、函数 88.52%、行 92.77%，四项均超过 80% 门禁。`npm run verify` 已完成后端 61/61、前端 16 个文件 93/93 和 Vite 1880 个模块生产构建；新增页面 E2E 已在 GitHub Actions 隔离 MySQL 环境中与原 4 条一起运行并 [6/6 通过](https://github.com/tchen-0213/softw/actions/runs/33365634714/job/99405580347)。
+各命令之间存在公共测试复用，因此不把结果简单相加制造“总测试数”。`npm run verify:full` 已在
+Windows + Docker Desktop 上完成全部无浏览器核心门禁、隔离数据库集成、lint 和 1891 模块生产构建；
+数据库 API、微服务网关 API 与 Playwright 另在 Compose 和 Kind 实机入口执行。完整记录见
+`reports/tests/2026-09-02-功能测试部署完整复核.md`。

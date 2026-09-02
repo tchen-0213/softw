@@ -6,6 +6,7 @@ const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, requireInternalToken } = require('../common/auth');
 const { requestJson } = require('../common/httpClient');
 const { validateProductionSecrets } = require('../common/security');
+const { validateOrderItems, validateShippingAddress } = require('../common/validation');
 
 validateProductionSecrets();
 
@@ -71,7 +72,10 @@ const appendLogistics = (current, description) => ({ ...(current || {}), steps: 
 const router = express.Router();
 
 router.post('/api/orders', requireUser, async (req,res,next) => {
-  if (!Array.isArray(req.body.items) || !req.body.items.length) return res.status(400).json({ message: '订单商品不能为空' });
+  const validationError = validateOrderItems(req.body.items);
+  if (validationError) return res.status(400).json({ message: validationError });
+  const addressValidationError = validateShippingAddress(req.body.shippingAddress);
+  if (addressValidationError) return res.status(400).json({ message: addressValidationError });
   const reservationId = String(req.get('idempotency-key') || randomUUID());
   let reservation;
   try {

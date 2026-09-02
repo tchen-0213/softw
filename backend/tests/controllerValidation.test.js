@@ -86,11 +86,52 @@ test('CONTROLLER-PRODUCT-04: 非法商品状态被拒绝且不写数据库', asy
   assert.equal(updated, false);
 });
 
+test('CONTROLLER-PRODUCT-05: 已认证店铺也不能发布空白或负价商品', async (t) => {
+  const originalShop = Shop.findOne;
+  const originalCreate = Product.create;
+  let created = false;
+  Shop.findOne = async () => ({ verificationStatus: '已认证' });
+  Product.create = async () => { created = true; };
+  t.after(() => { Shop.findOne = originalShop; Product.create = originalCreate; });
+  const res = response();
+  await productController.createProduct({
+    body: { name: ' ', description: '描述', category: 'books', price: -1 },
+    user: { id: 1, role: 'seller' }
+  }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(created, false);
+});
+
+test('CONTROLLER-PRODUCT-06: 商品部分更新拒绝负库存且不写数据库', async (t) => {
+  const original = Product.findByPk;
+  let updated = false;
+  Product.findByPk = async () => ({ sellerId: 1, update: async () => { updated = true; } });
+  t.after(() => { Product.findByPk = original; });
+  const res = response();
+  await productController.updateProduct({ params: { id: 1 }, body: { stock: -1 }, user: { id: 1 } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(updated, false);
+});
+
 test('CONTROLLER-ORDER-01: 空订单拒绝创建且不启动事务', async () => {
   const res = response();
   await orderController.createOrder({ body: { items: [] }, user: { id: 1 } }, res);
   assert.equal(res.statusCode, 400);
   assert.equal(res.body.message, '订单商品不能为空');
+});
+
+test('CONTROLLER-ORDER-04: 非正整数购买数量在事务开始前被拒绝', async () => {
+  const res = response();
+  await orderController.createOrder({ body: { items: [{ productId: 1, quantity: 0 }] }, user: { id: 1 } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, '商品数量必须是正整数');
+});
+
+test('CONTROLLER-ORDER-05: 缺失收货地址在事务开始前被拒绝', async () => {
+  const res = response();
+  await orderController.createOrder({ body: { items: [{ productId: 1, quantity: 1 }] }, user: { id: 1 } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(res.body.message, '收货地址不能为空');
 });
 
 test('CONTROLLER-ORDER-02: 非数字卖家身份返回 401', async () => {
@@ -112,6 +153,16 @@ test('CONTROLLER-EVALUATION-01: 空白回复返回 400', async () => {
   const res = response();
   await evaluationController.replyEvaluation({ body: { reply: '  ' } }, res);
   assert.equal(res.statusCode, 400);
+});
+
+test('CONTROLLER-EVALUATION-02: 非法星级和空评价在数据库访问前被拒绝', async () => {
+  const res = response();
+  await evaluationController.createEvaluation({
+    body: { orderId: 1, productId: 2, rating: 6, content: ' ' },
+    user: { id: 1 }
+  }, res);
+  assert.equal(res.statusCode, 400);
+  assert.match(res.body.message, /评分/);
 });
 
 test('CONTROLLER-SHOP-01: 店铺认证逐项校验五个必填字段', async (t) => {
@@ -161,5 +212,27 @@ test('CONTROLLER-USER-03: 错误旧密码不能修改密码', async (t) => {
   const res = response();
   await userController.updatePassword({ body: { oldPassword: 'bad', newPassword: 'new-pass' }, user: { id: 1 } }, res);
   assert.equal(res.statusCode, 401);
+  assert.equal(updated, false);
+});
+
+test('CONTROLLER-USER-04: 资料更新拒绝非法邮箱且不写数据库', async (t) => {
+  const original = User.findByPk;
+  let updated = false;
+  User.findByPk = async () => ({ id: 1, email: 'old@example.com', update: async () => { updated = true; } });
+  t.after(() => { User.findByPk = original; });
+  const res = response();
+  await userController.updateUserProfile({ body: { email: 'bad-address' }, user: { id: 1 } }, res);
+  assert.equal(res.statusCode, 400);
+  assert.equal(updated, false);
+});
+
+test('CONTROLLER-USER-05: 正确旧密码后仍拒绝过短新密码', async (t) => {
+  const original = User.findByPk;
+  let updated = false;
+  User.findByPk = async () => ({ matchPassword: async () => true, update: async () => { updated = true; } });
+  t.after(() => { User.findByPk = original; });
+  const res = response();
+  await userController.updatePassword({ body: { oldPassword: 'correct', newPassword: '123' }, user: { id: 1 } }, res);
+  assert.equal(res.statusCode, 400);
   assert.equal(updated, false);
 });

@@ -66,7 +66,10 @@ const scenarioCoverage = [
   { uc: 'UC06', testId: 'MS-E2E-TC06', titleMarker: 'UC06 shop', flows: ['MAIN', 'ALT', 'ERR'] },
   { uc: 'UC07', testId: 'MS-E2E-TC07', titleMarker: 'UC07 evaluation', flows: ['MAIN', 'ALT', 'ERR'] },
   { uc: 'UC08', testId: 'MS-E2E-TC08', titleMarker: 'UC08 chat', flows: ['MAIN', 'ALT', 'ERR'] },
-  { uc: 'UC09', testId: 'MS-E2E-TC09', titleMarker: 'UC09 address', flows: ['MAIN', 'ALT', 'ERR'] }
+  { uc: 'UC09', testId: 'MS-E2E-TC09', titleMarker: 'UC09 address', flows: ['MAIN', 'ALT', 'ERR'] },
+  { uc: 'UC10', testId: 'MS-E2E-TC10/11', titleMarker: 'UC10-11 order logistics and cancellation', flows: ['MAIN', 'ALT', 'ERR'] },
+  { uc: 'UC11', testId: 'MS-E2E-TC10/11', titleMarker: 'UC10-11 order logistics and cancellation', flows: ['MAIN', 'ALT', 'ERR'] },
+  { uc: 'UC12', testId: 'MS-E2E-TC12', titleMarker: 'UC12 public shop', flows: ['MAIN', 'ALT', 'ERR'] }
 ];
 
 const routeKey = ({ method, path }) => `${method.toUpperCase()} ${path}`;

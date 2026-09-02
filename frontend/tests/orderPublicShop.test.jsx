@@ -43,6 +43,8 @@ describe('订单查询、取消与公开店铺页面', () => {
     mocks.userId = '9';
     mocks.orderApi.getList.mockResolvedValue({ data: { orders: [pendingOrder] } });
     mocks.orderApi.cancel.mockResolvedValue({ data: { ...pendingOrder, status: '已取消' } });
+    mocks.orderApi.pay.mockResolvedValue({ data: { ...pendingOrder, status: '待发货' } });
+    mocks.orderApi.confirm.mockResolvedValue({ data: { ...pendingOrder, status: '已完成' } });
     mocks.shopApi.getByUser.mockResolvedValue({
       data: {
         id: 3,
@@ -107,5 +109,46 @@ describe('订单查询、取消与公开店铺页面', () => {
     mocks.shopApi.getByUser.mockRejectedValue({ response: { data: { message: '店铺不存在' } } });
     render(<PublicShopPage />);
     expect(await screen.findByText('店铺不存在')).toBeInTheDocument();
+  });
+
+  test('UNIT-TC10-ERR: 未登录时不请求订单并引导到登录页', async () => {
+    mocks.loggedIn = false;
+    render(<OrderPage />);
+    expect(await screen.findByText('请先登录后查看订单')).toBeInTheDocument();
+    expect(mocks.orderApi.getList).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: '去登录' }));
+    expect(mocks.navigate).toHaveBeenCalledWith('/login');
+  });
+
+  test('UNIT-TC10-ALT: 订单加载失败显示服务端原因和空状态', async () => {
+    mocks.orderApi.getList.mockRejectedValue({ response: { data: { message: '订单服务暂不可用' } } });
+    render(<OrderPage />);
+    expect(await screen.findByText('订单服务暂不可用')).toBeInTheDocument();
+    expect(screen.getByText('暂无订单')).toBeInTheDocument();
+  });
+
+  test('UNIT-TC10/11-STATE: 支付与确认收货成功后立即刷新订单状态', async () => {
+    const receivingOrder = { ...pendingOrder, id: 22, name: undefined, status: '待收货', items: [{ ...pendingOrder.items[0], name: '待确认商品' }] };
+    mocks.orderApi.getList.mockResolvedValue({ data: { orders: [pendingOrder, receivingOrder] } });
+    mocks.orderApi.confirm.mockResolvedValue({ data: { ...receivingOrder, status: '已完成' } });
+    render(<OrderPage />);
+    expect(await screen.findByText('可取消商品')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '立即支付' }));
+    await waitFor(() => expect(mocks.orderApi.pay).toHaveBeenCalledWith(21));
+    expect(screen.getByText('待发货')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '确认收货' }));
+    await waitFor(() => expect(mocks.orderApi.confirm).toHaveBeenCalledWith(22));
+    expect(screen.getByText('已完成')).toBeInTheDocument();
+  });
+
+  test('UNIT-TC10-ERR-STATE: 未完成订单点击商品不会进入评价', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    render(<OrderPage />);
+    const item = await screen.findByRole('button', { name: /可取消商品/ });
+    await userEvent.click(item);
+    expect(alertSpy).toHaveBeenCalledWith('订单完成后才能评价，请先确认收货。');
+    expect(mocks.navigate).not.toHaveBeenCalledWith(expect.stringMatching(/^\/evaluation/));
   });
 });

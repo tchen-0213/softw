@@ -1,0 +1,14 @@
+NAME                        READY   STATUS    RESTARTS      AGE
+backend-5cf64dc976-r24ct    1/1     Running   1 (29s ago)   3m29s
+frontend-57b444c749-2nj95   1/1     Running   0             3m29s
+mysql-5b869847d4-kc58m      1/1     Running   0             3m31s
+NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+backend    ClusterIP   10.96.71.127    <none>        3001/TCP       3m31s
+frontend   NodePort    10.96.200.104   <none>        80:30080/TCP   3m31s
+mysql      ClusterIP   10.96.43.195    <none>        3306/TCP       3m31s
+deployment "backend" successfully rolled out
+deployment "frontend" successfully rolled out
+deployment "mysql" successfully rolled out
+{"status":"alive","service":"shopping-platform-backend","uptime":38.311854591}{"status":"ready","service":"shopping-platform-backend","database":"ok"}{"status":"ok","service":"shopping-platform-backend","version":"2.0.0","revision":"c2c5dd284167-audit-20260902","database":"ok","readiness":"ready","uptime":38.335826351,"responseTimeMs":1,"requestId":"8340c135-9468-4956-b2d4-527d229981e6"}{"service":"shopping-platform-backend","version":"2.0.0","revision":"c2c5dd284167-audit-20260902","buildTime":"2026-09-01T17:10:15Z"}
+{"service":"shopping-platform-backend","version":"2.0.0","revision":"c2c5dd284167-audit-20260902","buildTime":"2026-09-01T17:10:15Z"}
+pod "backend-healthcheck" deleted from softw-practice namespace

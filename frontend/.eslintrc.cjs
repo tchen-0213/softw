@@ -26,5 +26,11 @@ module.exports = {
     'no-unused-vars': 'off',
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off'
-  }
+  },
+  overrides: [
+    {
+      files: ['vite.config.js', 'playwright.config.js', 'e2e/**/*.{js,jsx}'],
+      env: { node: true }
+    }
+  ]
 };

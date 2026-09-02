@@ -2,6 +2,7 @@ const Evaluation = require('../models/Evaluation');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const Order = require('../models/Order');
+const { validateEvaluationPayload } = require('../utils/inputValidation');
 const {
   applyCreditDelta,
   getCreditDeltaByRating,
@@ -128,6 +129,11 @@ const updateSellerCredit = async (sellerId, rating, previousLowRatingPenalty = 0
 // 创建评价
 exports.createEvaluation = async (req, res) => {
   const { orderId, productId, rating, content, images = [] } = req.body;
+
+  const validationError = validateEvaluationPayload(req.body);
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
 
   try {
     const product = await Product.findByPk(productId);

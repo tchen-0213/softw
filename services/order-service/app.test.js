@@ -28,7 +28,11 @@ test('order service persists order snapshots through product service API', async
   const server = await new Promise(resolve => { const value = app.listen(0, () => resolve(value)); });
   try {
     const token = jwt.sign({ id: 1 }, 'test_microservice_secret');
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/orders`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'order-reservation' }, body: JSON.stringify({ items: [{ productId: 7, quantity: 2, bargainMessageId: 21 }], shippingAddress: { address: '测试地址' } }) });
+    const invalidAddress = await fetch(`http://127.0.0.1:${server.address().port}/api/orders`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify({ items: [{ productId: 7, quantity: 2 }] }) });
+    assert.equal(invalidAddress.status, 400);
+    assert.equal(reservationRequest, undefined, '地址非法时不能预留库存');
+
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/orders`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, 'idempotency-key': 'order-reservation' }, body: JSON.stringify({ items: [{ productId: 7, quantity: 2, bargainMessageId: 21 }], shippingAddress: { name: '测试买家', phone: '13800138000', address: '测试地址' } }) });
     assert.equal(response.status, 201);
     const order = await response.json();
     assert.equal(Number(order.totalAmount), 80);

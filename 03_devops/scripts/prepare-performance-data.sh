@@ -2,10 +2,27 @@
 set -eu
 
 ACTION=${1:-seed}
-MONOLITH_DB_CONTAINER=${MONOLITH_DB_CONTAINER:-softw-mysql}
-MICROSERVICE_DB_CONTAINER=${MICROSERVICE_DB_CONTAINER:-softw-microservices-mysql-1}
+ROOT=$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)
+MONOLITH_COMPOSE_PROJECT=${MONOLITH_COMPOSE_PROJECT:-softw}
+MICROSERVICE_COMPOSE_PROJECT=${MICROSERVICE_COMPOSE_PROJECT:-softw-microservices}
+MONOLITH_DB_CONTAINER=${MONOLITH_DB_CONTAINER:-}
+MICROSERVICE_DB_CONTAINER=${MICROSERVICE_DB_CONTAINER:-}
 
 command -v docker >/dev/null || { echo "docker 未安装" >&2; exit 1; }
+
+compose_container() {
+  project=$1
+  file=$2
+  service=$3
+  docker compose -p "$project" --env-file "$ROOT/.env" -f "$file" ps -q "$service"
+}
+
+[ -n "$MONOLITH_DB_CONTAINER" ] || MONOLITH_DB_CONTAINER=$(compose_container \
+  "$MONOLITH_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.yml" mysql)
+[ -n "$MICROSERVICE_DB_CONTAINER" ] || MICROSERVICE_DB_CONTAINER=$(compose_container \
+  "$MICROSERVICE_COMPOSE_PROJECT" "$ROOT/03_devops/docker-compose.microservices.yml" mysql)
+[ -n "$MONOLITH_DB_CONTAINER" ] || { echo "$MONOLITH_COMPOSE_PROJECT/mysql 容器未运行" >&2; exit 1; }
+[ -n "$MICROSERVICE_DB_CONTAINER" ] || { echo "$MICROSERVICE_COMPOSE_PROJECT/mysql 容器未运行" >&2; exit 1; }
 
 monolith_mysql() {
   docker exec -i "$MONOLITH_DB_CONTAINER" sh -c \

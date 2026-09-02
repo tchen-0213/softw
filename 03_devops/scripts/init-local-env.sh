@@ -14,7 +14,9 @@ umask 077
 {
   printf 'SOFTW_MYSQL_ROOT_PASSWORD=%s\n' "$(openssl rand -hex 24)"
   printf 'SOFTW_DB_PASSWORD=%s\n' "$(openssl rand -hex 24)"
+  printf 'MONOLITH_MYSQL_PORT=3306\n'
   printf 'SOFTW_JWT_SECRET=%s\n' "$(openssl rand -hex 32)"
   printf 'SOFTW_INTERNAL_SERVICE_TOKEN=%s\n' "$(openssl rand -hex 32)"
+  printf 'RATE_LIMIT_MAX=300\n'
 } > "$TARGET"
 echo "已生成仅供本机使用的 $TARGET"

@@ -6,6 +6,7 @@ const { createService } = require('../common/createService');
 const { createDatabase, initializeDatabase } = require('../common/database');
 const { decodeToken, getJwtSecret, requireInternalToken } = require('../common/auth');
 const { validateProductionSecrets } = require('../common/security');
+const { validateNewPassword, validateProfilePayload } = require('../common/validation');
 
 validateProductionSecrets();
 
@@ -94,6 +95,8 @@ router.post('/api/users/login', async (req, res, next) => {
 router.get('/api/users/profile', requireUser, (req, res) => res.json(safeUser(req.user)));
 router.put('/api/users/profile', requireUser, async (req, res, next) => {
   try {
+    const validationError = validateProfilePayload(req.body);
+    if (validationError) return res.status(400).json({ message: validationError });
     const allowed = ['nickname', 'avatar', 'gender', 'birthday', 'phone', 'email'];
     const updates = {};
     for (const field of allowed) if (req.body[field] !== undefined) updates[field] = req.body[field];
@@ -108,7 +111,8 @@ router.put('/api/users/profile', requireUser, async (req, res, next) => {
 router.put('/api/users/password', requireUser, async (req, res, next) => {
   try {
     if (!await bcrypt.compare(String(req.body.oldPassword || ''), req.user.password)) return res.status(401).json({ message: '旧密码错误' });
-    if (String(req.body.newPassword || '').length < 6) return res.status(400).json({ message: '新密码长度不能少于6位' });
+    const validationError = validateNewPassword(req.body.newPassword);
+    if (validationError) return res.status(400).json({ message: validationError });
     await req.user.update({ password: req.body.newPassword });
     return res.json({ message: '密码修改成功' });
   } catch (error) { return next(error); }

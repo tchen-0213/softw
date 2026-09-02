@@ -90,7 +90,7 @@ const completeOrder = async (buyer, seller, product) => {
   return expectStatus('POST', `/api/orders/${order.id}/confirm`, 200, { token: buyer.token });
 };
 
-test('UC01-UC09 完整 API 主成功、备选和异常流程', { skip: !shouldRun }, async (t) => {
+test('UC01-UC12 完整 API 主成功、备选和异常流程', { skip: !shouldRun }, async (t) => {
   let seller;
   let buyer;
   let outsider;
@@ -211,7 +211,14 @@ test('UC01-UC09 完整 API 主成功、备选和异常流程', { skip: !shouldRu
 
   await t.test('INT-TC04-ERR UC04 拒绝超库存、越权支付、缺失物流和重复支付', async () => {
     await expectStatus('POST', '/api/orders', 400, {
-      token: buyer.token, body: { items: [{ productId: product.id, quantity: 999 }] }
+      token: buyer.token, body: { items: [{ productId: product.id, quantity: 1 }] }
+    });
+    await expectStatus('POST', '/api/orders', 400, {
+      token: buyer.token,
+      body: {
+        items: [{ productId: product.id, quantity: 999 }],
+        shippingAddress: { name: '测试买家', phone: '13800138000', address: '软件工程测试路 1 号' }
+      }
     });
     const order = await createOrder(buyer, product);
     await expectStatus('POST', `/api/orders/${order.id}/pay`, 403, { token: outsider.token });
@@ -489,6 +496,18 @@ test('UC01-UC09 完整 API 主成功、备选和异常流程', { skip: !shouldRu
     const healthPath = process.env.HEALTH_PATH || (BASE_URL.includes(':8081') ? '/health' : '/api/health');
     const health = await expectStatus('GET', healthPath, 200);
     assert.equal(health.status, 'ok');
+    assert.equal(health.readiness, 'ready');
+
+    const operationsPrefix = BASE_URL.includes(':8081') ? '' : '/api';
+    const live = await expectStatus('GET', `${operationsPrefix}/live`, 200);
+    const ready = await expectStatus('GET', `${operationsPrefix}/ready`, 200);
+    const version = await expectStatus('GET', `${operationsPrefix}/version`, 200);
+    assert.equal(live.status, 'alive');
+    assert.equal(ready.status, 'ready');
+    assert.equal(ready.database, 'ok');
+    assert.ok(version.service);
+    assert.ok(version.version);
+    assert.ok(version.revision);
   });
 
   await t.test('INT-SEC-01 上传接口拒绝非图片文件', async () => {

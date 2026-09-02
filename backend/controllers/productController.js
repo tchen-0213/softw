@@ -2,6 +2,7 @@ const { Op } = require('sequelize');
 const Product = require('../models/Product');
 const Shop = require('../models/Shop');
 const User = require('../models/User');
+const { validateProductPayload } = require('../utils/inputValidation');
 
 const conditionMap = {
   1: '全新',
@@ -273,6 +274,11 @@ exports.createProduct = async (req, res) => {
       return res.status(403).json({ message: '请先完成店铺验证后再发布商品' });
     }
 
+    const validationError = validateProductPayload(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
+    }
+
     const secondhand = isSecondhand === undefined ? Number(productType) === 2 : parseBoolean(isSecondhand);
     const product = await Product.create({
       name,
@@ -339,6 +345,10 @@ exports.updateProduct = async (req, res) => {
     }
     if (updates.status && !sellerStatuses.includes(updates.status)) {
       return res.status(400).json({ message: '商品状态不合法' });
+    }
+    const validationError = validateProductPayload(updates, { partial: true });
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
     delete updates.productType;
     delete updates.sellerId;

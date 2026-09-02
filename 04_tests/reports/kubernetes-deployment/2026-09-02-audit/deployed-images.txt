@@ -1,0 +1,22 @@
+image_prefix=softw
+image_tag=c2c5dd284167-audit-20260902
+NAME       READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                                       SELECTOR
+backend    1/1     1            1           3m53s   backend      softw/backend:c2c5dd284167-audit-20260902    app=backend
+frontend   1/1     1            1           3m53s   frontend     softw/frontend:c2c5dd284167-audit-20260902   app=frontend
+mysql      1/1     1            1           3m53s   mysql        mysql:8.0                                    app=mysql
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS        IMAGES                                                    SELECTOR
+api-gateway             1/1     1            1           14h     api-gateway       softw/api-gateway:c2c5dd284167-audit-20260902             app=api-gateway
+microservice-frontend   1/1     1            1           3m52s   frontend          softw/microservice-frontend:c2c5dd284167-audit-20260902   app=microservice-frontend
+microservice-mysql      1/1     1            1           14h     mysql             mysql:8.0                                                 app=microservice-mysql
+order-service           1/1     1            1           14h     order-service     softw/order-service:c2c5dd284167-audit-20260902           app=order-service
+product-service         1/1     1            1           14h     product-service   softw/product-service:c2c5dd284167-audit-20260902         app=product-service
+user-service            1/1     1            1           14h     user-service      softw/user-service:c2c5dd284167-audit-20260902            app=user-service
+backend=softw/backend:c2c5dd284167-audit-20260902
+frontend=softw/frontend:c2c5dd284167-audit-20260902
+mysql=mysql:8.0
+api-gateway=softw/api-gateway:c2c5dd284167-audit-20260902
+microservice-frontend=softw/microservice-frontend:c2c5dd284167-audit-20260902
+microservice-mysql=mysql:8.0
+order-service=softw/order-service:c2c5dd284167-audit-20260902
+product-service=softw/product-service:c2c5dd284167-audit-20260902
+user-service=softw/user-service:c2c5dd284167-audit-20260902

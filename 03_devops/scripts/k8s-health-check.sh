@@ -39,7 +39,21 @@ if [ "$NAMESPACE" = "softw-microservices" ]; then
     --command -- curl --fail --silent http://microservice-frontend/
 else
   kubectl -n "$NAMESPACE" delete pod backend-healthcheck --ignore-not-found >/dev/null
+  revision_arg=""
+  if [ -n "$EXPECTED_REVISION" ]; then
+    revision_arg="--env=EXPECTED_REVISION=$EXPECTED_REVISION"
+  fi
+  # shellcheck disable=SC2086
   kubectl -n "$NAMESPACE" run backend-healthcheck \
-    --image=curlimages/curl:8.16.0 --restart=Never --rm -i \
-    --command -- curl --fail --silent http://backend:3001/api/health
+    --image=curlimages/curl:8.16.0 --restart=Never --rm -i $revision_arg \
+    --command -- sh -ec '
+      curl --fail --silent http://backend:3001/api/live
+      curl --fail --silent http://backend:3001/api/ready
+      curl --fail --silent http://backend:3001/api/health
+      version=$(curl --fail --silent http://backend:3001/api/version)
+      echo "$version"
+      if [ -n "${EXPECTED_REVISION:-}" ]; then
+        echo "$version" | grep -F "$EXPECTED_REVISION"
+      fi
+    '
 fi

@@ -46,6 +46,8 @@ metadata:
   name: microservice-mysql
   namespace: softw-microservices
 spec:
+  strategy:
+    type: Recreate
   replicas: 1
   selector:
     matchLabels:

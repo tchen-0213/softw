@@ -19,11 +19,11 @@
 | 二手 | `GET/PUT/DELETE /api/secondhand/:id` | `MS-E2E-TC05` |
 | 店铺 | `GET/PUT /api/shops/mine` | `MS-E2E-TC06` |
 | 店铺 | `POST /api/shops/mine/verification` | `MS-E2E-TC06` |
-| 店铺 | `GET /api/shops/user/:userId`, `/api/shops/:id` | `MS-E2E-TC06` |
+| 店铺 | `GET /api/shops/user/:userId`, `/api/shops/:id` | `MS-E2E-TC06/12` |
 | 文件 | `POST /api/uploads/images`, `GET /uploads/:file` | `MS-API-UPLOAD` |
 | 订单 | `POST/GET /api/orders` | `MS-E2E-TC04` |
-| 订单 | `GET /api/orders/seller`, `/api/orders/:id` | `MS-E2E-TC04` |
-| 订单 | `POST /api/orders/:id/pay`, `/cancel`, `/ship`, `/confirm` | `MS-E2E-TC04` |
+| 订单 | `GET /api/orders/seller`, `/api/orders/:id` | `MS-E2E-TC04/10` |
+| 订单 | `POST /api/orders/:id/pay`, `/cancel`, `/ship`, `/confirm` | `MS-E2E-TC04/10/11` |
 | 订单 | `PUT /api/orders/:id` | `MS-E2E-TC04` |
 | 订单 | `GET /api/orders/health/dependencies` | `MS-E2E-TC04` |
 | 评价 | `POST /api/evaluations` | `MS-E2E-TC07` |
@@ -35,6 +35,6 @@
 | 聊天 | `PUT /api/chats/messages/:id/decision` | `MS-E2E-TC08` |
 
 每个业务测试同时包含至少一个失败断言，例如重复注册、旧密码错误、未授权地址、店铺材料缺失、
-越权商品修改、非法商品状态、空订单、库存不足、越权支付、物流缺失、重复评价、越权回复、
+越权商品修改、非法商品状态、空订单、非法数量、库存不足、越权支付、物流缺失、越权查看物流、重复取消、重复评价、越权回复、
 自聊、非法议价金额和重复处理申请。测试失败会使 `microservice-api-e2e` job 失败，从而阻止镜像
 构建和 Kubernetes 部署。

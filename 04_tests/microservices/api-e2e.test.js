@@ -101,7 +101,7 @@ async function createOrder(buyer, product, idempotencyKey = randomUUID()) {
   });
 }
 
-test('MS-E2E UC01-UC09 and every public microservice API through gateway', async t => {
+test('MS-E2E UC01-UC12 and every public microservice API through gateway', async t => {
   let seller;
   let buyer;
   let outsider;
@@ -109,6 +109,7 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
   let completedOrder;
   let evaluation;
   let conversation;
+  let shop;
 
   await t.test('OPS-TC01 health, readiness and immutable version are observable', async () => {
     for (const [name, baseUrl] of Object.entries(services)) {
@@ -208,11 +209,11 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     });
     const verified = await verifyShop(seller);
     assert.equal(verified.verificationStatus, '已认证');
-    const updated = await request('PUT', '/api/shops/mine', {
+    shop = await request('PUT', '/api/shops/mine', {
       token: seller.token,
       body: { name: `微服务自动化店铺 ${runId}`, description: '已完成认证和维护' }
     });
-    assert.equal((await request('GET', `/api/shops/${updated.id}`)).name, updated.name);
+    assert.equal((await request('GET', `/api/shops/${shop.id}`)).name, shop.name);
     assert.equal((await request('GET', `/api/shops/user/${seller.id}`)).userId, seller.id);
     await request('GET', '/api/shops/999999999', { expected: 404 });
   });
@@ -274,14 +275,28 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
     await request('POST', '/api/orders', { token: buyer.token, expected: 400, body: { items: [] } });
     await request('POST', '/api/orders', {
       token: buyer.token, expected: 400,
-      body: { items: [{ productId: product.id, quantity: 999 }] }
+      body: { items: [{ productId: product.id, quantity: 0 }] }
+    });
+    await request('POST', '/api/orders', {
+      token: buyer.token, expected: 400,
+      body: { items: [{ productId: product.id, quantity: 1 }] }
+    });
+    await request('POST', '/api/orders', {
+      token: buyer.token, expected: 400,
+      body: {
+        items: [{ productId: product.id, quantity: 999 }],
+        shippingAddress: { name: '微服务买家', phone: '13800138000', address: '测试楼 101' }
+      }
     });
     const key = randomUUID();
     completedOrder = await createOrder(buyer, product, key);
     const repeated = await request('POST', '/api/orders', {
       token: buyer.token,
       headers: { 'idempotency-key': key },
-      body: { items: [{ productId: product.id, quantity: 1 }] }
+      body: {
+        items: [{ productId: product.id, quantity: 1 }],
+        shippingAddress: { name: '微服务买家', phone: '13800138000', address: '测试楼 101' }
+      }
     });
     assert.equal(repeated.id, completedOrder.id);
     assert.ok((await request('GET', '/api/orders', { token: buyer.token })).orders.some(order => order.id === completedOrder.id));
@@ -310,6 +325,44 @@ test('MS-E2E UC01-UC09 and every public microservice API through gateway', async
       token: buyer.token, body: { status: '已完成' }
     })).status, '已完成');
     assert.equal((await request('GET', '/api/orders/health/dependencies')).status, 'ok');
+  });
+
+  await t.test('MS-E2E-TC10/11 UC10-11 order logistics and cancellation MAIN/ALT/ERR', async () => {
+    let logisticsOrder = await createOrder(buyer, product);
+    logisticsOrder = await request('POST', `/api/orders/${logisticsOrder.id}/pay`, { token: buyer.token });
+    logisticsOrder = await request('POST', `/api/orders/${logisticsOrder.id}/ship`, {
+      token: seller.token,
+      body: { company: '中通快递', trackingNumber: `ZT${runId}` }
+    });
+    const listed = await request('GET', '/api/orders?status=待收货&page=1&limit=5', { token: buyer.token });
+    assert.ok(listed.orders.some(order => order.id === logisticsOrder.id));
+    const detail = await request('GET', `/api/orders/${logisticsOrder.id}`, { token: buyer.token });
+    assert.equal(detail.logistics.company, '中通快递');
+    assert.equal(detail.logistics.trackingNumber, `ZT${runId}`);
+    assert.ok(detail.logistics.steps.length >= 1);
+    await request('GET', `/api/orders/${logisticsOrder.id}`, { token: outsider.token, expected: 403 });
+    await request('POST', `/api/orders/${logisticsOrder.id}/cancel`, { token: buyer.token, expected: 400 });
+
+    const stockBefore = Number((await request('GET', `/api/products/${product.id}`)).stock);
+    const cancellable = await createOrder(buyer, product);
+    await request('POST', `/api/orders/${cancellable.id}/pay`, { token: buyer.token });
+    assert.equal(Number((await request('GET', `/api/products/${product.id}`)).stock), stockBefore - 1);
+    await request('POST', `/api/orders/${cancellable.id}/cancel`, { token: outsider.token, expected: 403 });
+    const cancelled = await request('POST', `/api/orders/${cancellable.id}/cancel`, { token: buyer.token });
+    assert.equal(cancelled.status, '已取消');
+    assert.equal(Number((await request('GET', `/api/products/${product.id}`)).stock), stockBefore);
+    await request('POST', `/api/orders/${cancellable.id}/cancel`, { token: buyer.token, expected: 400 });
+  });
+
+  await t.test('MS-E2E-TC12 UC12 public shop MAIN/ALT/ERR', async () => {
+    const byUser = await request('GET', `/api/shops/user/${seller.id}`);
+    const byId = await request('GET', `/api/shops/${shop.id}`);
+    assert.equal(byUser.id, shop.id);
+    assert.equal(byId.name, shop.name);
+    assert.ok(byUser.products.some(item => item.id === product.id && item.status === '在售'));
+    assert.ok(byUser.creditLevel);
+    assert.ok(Number.isFinite(Number(byUser.creditScore)));
+    await request('GET', '/api/shops/999999999', { expected: 404 });
   });
 
   await t.test('MS-E2E-TC07 UC07 evaluation MAIN/ALT/ERR create, three lists, approve, reply and errors', async () => {
