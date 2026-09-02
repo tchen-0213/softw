@@ -7,6 +7,7 @@
 | 当前看板 | `GitHub-Projects使用说明.md`、[GitHub Project「软工小学期」](https://github.com/users/tchen-0213/projects/1) |
 | 每日看板截图 | `看板截图/` |
 | 流水线证据 | `流水线截图/`、[GitHub Actions](https://github.com/tchen-0213/softw/actions) |
+| 贡献与权重 | `个人权重表.md`、`全员确认记录.md` |
 | 收尾跟踪 | `未完成任务清单.md` |
 
 当前任务以 GitHub Issues 为唯一工作项，以 GitHub Project 为唯一看板，以 GitHub Actions 为持续集成与部署证据。所有成员只维护这一套实时状态。

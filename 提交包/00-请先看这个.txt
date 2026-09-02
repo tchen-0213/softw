@@ -1,0 +1,11 @@
+请先看这个
+
+正式 Word / PDF 请打开：
+
+  06_defense/export/
+
+那个文件夹已经在 main 上，Cursor 左侧点 06_defense → export 就能看到。
+请先看 export 里的 00-请先看这个.txt。
+
+本「提交包」文件夹是同一套文档的副本（文件名带 02-/04- 前缀）。
+两套都可以交，优先用 06_defense/export，避免找不到。
