@@ -29,7 +29,7 @@ restore() {
   kubectl apply -f "$ROOT/03_devops/k8s/microservices/03-hpa.yaml" >/dev/null 2>&1 || true
   kubectl scale deployment/product-service -n "$NAMESPACE" --replicas=1 >/dev/null 2>&1 || true
 }
-trap restore EXIT INT TERM
+trap restore EXIT
 
 kubectl get namespace "$NAMESPACE" >/dev/null
 kubectl top pods -n "$NAMESPACE" >/dev/null
