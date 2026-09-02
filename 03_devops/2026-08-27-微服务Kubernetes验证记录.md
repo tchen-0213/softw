@@ -1,5 +1,7 @@
 # 2026-08-27 微服务 Kubernetes 验证记录
 
+最新复核日期：2026-09-02。下列部署结构保留，测试与流水线结果已更新到当前基线。
+
 ## 验证范围
 
 - 三个业务微服务独立构建、启动和健康检查。
@@ -66,18 +68,17 @@ Kubernetes 清单另使用 `kubeconform v0.7.0 -strict` 校验，结果为 17 �
 
 | 测试 | 结果 |
 | --- | --- |
-| 单体后端单元测试 | 18 通过，0 失败，1 个需独立 API 环境的测试跳过 |
-| 前端单元测试 | 2 通过，0 失败 |
-| user-service 数据库集成测试 | 1 通过，0 失败 |
-| product-service 库存幂等集成测试 | 1 通过，0 失败 |
-| order-service 跨服务契约集成测试 | 1 通过，0 失败 |
-| API Gateway 路由与降级测试 | 1 通过，0 失败 |
-| Playwright 微服务页面 E2E | 4 通过，0 失败，覆盖 UC01-UC09 |
+| 单体后端单元测试 | 80 通过、0 失败、1 个 API 父入口按设计跳过 |
+| 前端单元测试 | 17 个文件，100/100 通过 |
+| 微服务静态/公共层 | 18/18 通过 |
+| 微服务隔离集成 | 22/22 通过；user 1、product 3、order 1、gateway 17 |
+| 微服务网关 API/E2E | 15/15 通过，覆盖 UC01-UC12 和 49 项公开业务 API |
+| Playwright 微服务页面 E2E | 6/6 通过，覆盖 UC01-UC12 |
 
 ## 远程流水线状态
 
-- 实现提交：[`63585e0`](https://github.com/tchen-0213/softw/commit/63585e0c9b6cd3b178b61be146c077e98e437dd3)
-- GitHub Actions：[#33037596220](https://github.com/tchen-0213/softw/actions/runs/33037596220)
+- 实现提交：[`c1b73ec`](https://github.com/tchen-0213/softw/commit/c1b73ec607dca49966be0e50f013dd461d6389c0)
+- GitHub Actions：[softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248)
 - 最终结果：`Success`
 - 已通过阶段：后端测试、前端构建、Playwright E2E、四项微服务矩阵测试、七个版本镜像构建、Kind 部署、rollout 和集群内健康检查。
-- 版本标签：`microservices-v1` 指向通过上述流水线验证的真实微服务版本。
+- 完整证据：`04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md`。

@@ -35,9 +35,9 @@ CODESPACE_API_BASE_URL=https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.git
 | 商品接口 | HTTP 200，返回数据库商品 |
 | 浏览器首页 | 商品列表和推荐请求均为 HTTP 200，无 API 请求失败 |
 
-## 公网完整业务回归
+## 公网连通性与当前回归基线
 
-通过真实 GitHub Pages 页面和 Codespaces 后端运行 Playwright：
+GitHub Pages 与 Codespaces 后端的公网连通性已经实测。当前全量 Playwright 统一以 Compose、Kind 和 CI 的 6 条流程为准：
 
 ```bash
 API_BASE_URL=https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev \
@@ -45,14 +45,9 @@ E2E_BASE_URL=https://tchen-0213.github.io/softw/ \
 npm --prefix frontend run test:e2e
 ```
 
-| E2E 编号 | 业务结果 | 结果 |
-| --- | --- | --- |
-| E2E-TC01/02/03/04/09 | 注册登录、检索、加购、维护地址并提交订单 | 通过 |
-| E2E-TC05/06 | 店铺认证、资料维护、发布二手商品 | 通过 |
-| E2E-TC07 | 已完成订单提交评价 | 通过 |
-| E2E-TC08 | 买家聊天议价、卖家接受申请 | 通过 |
-
-最终结果：4 通过、0 失败，UC01-UC09 全部覆盖。
+- Playwright：6/6 通过，覆盖 UC01-UC12。
+- 最新流水线：[softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248)，状态 Success。
+- 完整结果：`04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md`。
 
 ## 问题与修复
 
@@ -62,7 +57,7 @@ npm --prefix frontend run test:e2e
 
 ## 使用限制
 
-- 该公网网页已验证课程定义的 UC01-UC09，但不等于生产级商业系统。
+- 该公网网页用于连通性演示，不等于生产级商业系统；完整业务验收以 UC01-UC12 最新基线为准。
 - 当前 Pages 连接的是 Codespaces 中的单体后端，不是 Kubernetes 微服务网关；微服务版本由 Compose、Kind 和 CI/CD 单独验证。
 - 支付和物流为课程业务状态模拟，没有连接真实支付机构或物流平台。
 - Codespace 休眠或停止后，前端仍可打开，但 API 暂时不可用；重新启动同一 Codespace 后恢复。
