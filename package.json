@@ -18,6 +18,8 @@
     "test:trace-evidence": "node 04_tests/security/trace-evidence.js",
     "test:e2e": "npm --prefix frontend run test:e2e",
     "build": "npm --prefix frontend run build",
+    "audit:deliverables": "node automation/audit-deliverables.js",
+    "export:deliverables": "node automation/export-deliverables.js",
     "verify": "npm run test && npm run test:services:unit && npm run test:delivery && npm --prefix frontend run lint && npm run build",
     "verify:full": "npm run verify && npm run test:services",
     "db:migrate": "npm --prefix backend run db:migrate",

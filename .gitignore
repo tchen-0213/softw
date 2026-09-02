@@ -21,6 +21,8 @@ pids/
 # Dependency directories
 # =========================
 node_modules/
+06_defense/export/images/
+06_defense/export/*.html
 backend/node_modules/
 frontend/node_modules/
 jspm_packages/

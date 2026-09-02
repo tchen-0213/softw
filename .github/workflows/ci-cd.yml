@@ -308,9 +308,25 @@ jobs:
         if: always()
         run: docker compose -f 03_devops/docker-compose.microservices.yml down -v
 
+  deliverable-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Audit course deliverables
+        run: npm run audit:deliverables
+      - name: Upload audit result
+        uses: actions/upload-artifact@v4
+        with:
+          name: deliverables-audit-${{ github.sha }}
+          path: 04_tests/reports/deliverables-audit.json
+          retention-days: 14
+
   docker-build:
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build, security-scan, browser-e2e, microservice-test, microservice-api-e2e]
+    needs: [backend-test, frontend-build, security-scan, browser-e2e, microservice-test, microservice-api-e2e, deliverable-audit]
     strategy:
       fail-fast: false
       matrix:

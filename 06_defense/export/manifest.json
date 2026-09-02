@@ -1,0 +1,95 @@
+{
+  "generatedAt": "2026-09-02T07:35:54.856Z",
+  "files": [
+    {
+      "path": "02_docs/软件需求规格说明书.md",
+      "bytes": 15161,
+      "sha256": "8ac2a0ef6ab2a31267ab1740c92d216f1d6f5eb8efea12f8f8adfa2a62b425ac"
+    },
+    {
+      "path": "06_defense/export/软件需求规格说明书.docx",
+      "bytes": 457745,
+      "sha256": "da1b14fbb217788edc7ac6dea399bd91e2ec6b2819dc7706b68b702e77adb56e"
+    },
+    {
+      "path": "06_defense/export/软件需求规格说明书.pdf",
+      "bytes": 341163,
+      "sha256": "fe243069b2372015a5e97c05868c8bf7dd5fcdf72aa1b7cd6f7d934c85e88383"
+    },
+    {
+      "path": "02_docs/软件概要设计说明书.md",
+      "bytes": 8831,
+      "sha256": "ba8deb494bc2976ad9a764c8047f55fab65d23643c9af7f34a3635798372404b"
+    },
+    {
+      "path": "06_defense/export/软件概要设计说明书.docx",
+      "bytes": 400888,
+      "sha256": "ec4264f97356e7fd93154877f32c35361948daa7dc9b921cc4772b8f7254a3f0"
+    },
+    {
+      "path": "06_defense/export/软件概要设计说明书.pdf",
+      "bytes": 292902,
+      "sha256": "4dea27629752428ba2a5187c4ec7ad86a9b0422bb65881dfe282ba3c4e02f768"
+    },
+    {
+      "path": "02_docs/软件详细设计说明书.md",
+      "bytes": 9445,
+      "sha256": "447886c0b407c038402a2466e78d79434539ed3538fb56e318e1d2a88af103d7"
+    },
+    {
+      "path": "06_defense/export/软件详细设计说明书.docx",
+      "bytes": 494426,
+      "sha256": "b8be14cdcfc85f5e3422bbdfe205de1f0194d5380c4b6505e6daabf789841a3f"
+    },
+    {
+      "path": "06_defense/export/软件详细设计说明书.pdf",
+      "bytes": 278796,
+      "sha256": "355a34fa9d0416070f5e23efe25ff67d4adc18a96414c3c3d4dd14feaa32ee64"
+    },
+    {
+      "path": "02_docs/测试文档.md",
+      "bytes": 9648,
+      "sha256": "0f8d4127dd9cb310f96e7f5eaf8acbbd8e8f5ab227c430c942f47718d720196c"
+    },
+    {
+      "path": "06_defense/export/测试计划.docx",
+      "bytes": 17584,
+      "sha256": "a80fe1e0406da3f7dc6aed1eec92da76f032478703cf27bc002fb7cb7d8ddf00"
+    },
+    {
+      "path": "06_defense/export/测试计划.pdf",
+      "bytes": 316313,
+      "sha256": "f66b4a587e9733e84a4ec63924b486b98c445ed7ffa64a6fdb347b2f70d79bd8"
+    },
+    {
+      "path": "04_tests/reports/tests/测试报告-小学期.md",
+      "bytes": 2158,
+      "sha256": "ccebc8accf5ef274718dc5646ad05f27e86b29a913f5fa8919de3857bcbae7a1"
+    },
+    {
+      "path": "06_defense/export/测试报告-小学期.docx",
+      "bytes": 12864,
+      "sha256": "ed01a989dfb39750014f58f197bd86ee3f608d017da528bb65b425e36ab736c3"
+    },
+    {
+      "path": "06_defense/export/测试报告-小学期.pdf",
+      "bytes": 148036,
+      "sha256": "9a3f5824ec60a5f6f1219ea729f7c629ed54602528af23e15e82af0045112b4d"
+    },
+    {
+      "path": "02_docs/业务场景用例清单与追溯表.md",
+      "bytes": 8910,
+      "sha256": "b6f25ab4212f9b8ea9599181306ae5538842b110780b5eb55fba2c6bf7b83aa9"
+    },
+    {
+      "path": "06_defense/export/业务场景用例清单与追溯表.docx",
+      "bytes": 15475,
+      "sha256": "b8809b6c254d5d06d9a7410b8dffbbbac3b9393ebbdecd997fb66cbde8ad3384"
+    },
+    {
+      "path": "06_defense/export/业务场景用例清单与追溯表.pdf",
+      "bytes": 219802,
+      "sha256": "f07ec7b6465e440246ba0930519afeacdbf0280a60d20e92d8cbd9b9c255757a"
+    }
+  ]
+}
