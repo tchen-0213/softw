@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-09-02T07:41:57.396Z",
+  "required": [
+    {
+      "name": "需求规格说明书",
+      "path": "02_docs/软件需求规格说明书.md",
+      "status": "present"
+    },
+    {
+      "name": "概要设计说明书",
+      "path": "02_docs/软件概要设计说明书.md",
+      "status": "present"
+    },
+    {
+      "name": "详细设计说明书",
+      "path": "02_docs/软件详细设计说明书.md",
+      "status": "present"
+    },
+    {
+      "name": "测试计划",
+      "path": "02_docs/测试文档.md",
+      "status": "present"
+    },
+    {
+      "name": "测试报告",
+      "path": "04_tests/reports/tests/测试报告-小学期.md",
+      "status": "present"
+    },
+    {
+      "name": "回归记录",
+      "path": "04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md",
+      "status": "present"
+    },
+    {
+      "name": "追溯表",
+      "path": "02_docs/业务场景用例清单与追溯表.md",
+      "status": "present"
+    },
+    {
+      "name": "部署文档",
+      "path": "03_devops/部署文档.md",
+      "status": "present"
+    },
+    {
+      "name": "CI/CD",
+      "path": ".github/workflows/ci-cd.yml",
+      "status": "present"
+    },
+    {
+      "name": "AI 与开源来源记录",
+      "path": "06_defense/AI工具与开源来源记录.md",
+      "status": "present"
+    },
+    {
+      "name": "导出文件哈希清单",
+      "path": "06_defense/export/manifest.json",
+      "status": "present"
+    },
+    {
+      "name": "README",
+      "path": "README.md",
+      "status": "present"
+    }
+  ],
+  "counts": {
+    "markdown": 56,
+    "svg": 42,
+    "yaml": 12,
+    "rawPerformanceReports": 34,
+    "exportedDocx": 6,
+    "exportedPdf": 6
+  },
+  "warnings": []
+}

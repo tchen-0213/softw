@@ -8,7 +8,7 @@
 | 单体前端 | `../frontend/` | React、Vite 页面应用 |
 | 微服务版本 | `../services/` | API 网关及用户、商品、订单服务 |
 | 仓库级命令 | `../package.json` | 测试、构建、Compose、Kubernetes 和压测入口 |
-| 提交用 Word/PDF | `../提交包/` | 给老师直接打开的 `.docx` 与带图 `.pdf`，先看 `00-请先看这个.txt` |
+| 提交用 Word/PDF | `../06_defense/export/` | 给老师直接打开的 `.docx` 与 `.pdf`，先看 `00-请先看这个.txt` |
 | CI/CD 工作流 | `../.github/workflows/` | GitHub 规定的流水线固定目录 |
 | Codespaces 配置 | `../.devcontainer/` | 自动准备 Docker，并启动后端、MySQL 和容器前端 |
 
