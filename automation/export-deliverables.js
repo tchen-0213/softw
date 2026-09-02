@@ -23,19 +23,18 @@ async function run() {
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
-    const imageSource = path.join(root, '02_docs', 'images');
+    const imageSource = path.join(root, '02_docs', 'images', 'png');
     const imageOutput = path.join(output, 'images');
     fs.mkdirSync(imageOutput, { recursive: true });
-    for (const file of fs.readdirSync(imageSource).filter(file => file.endsWith('.svg'))) {
-      await page.goto(`file:///${path.join(imageSource, file).replace(/\\/g, '/')}`, { waitUntil: 'load' });
-      await page.locator('svg').screenshot({ path: path.join(imageOutput, file.replace(/\.svg$/, '.png')) });
+    for (const file of fs.readdirSync(imageSource).filter(file => file.endsWith('.png'))) {
+      fs.copyFileSync(path.join(imageSource, file), path.join(imageOutput, file));
     }
     for (const [name, source] of documents) {
       const input = path.join(root, source);
       const docx = path.join(output, `${name}.docx`);
       const html = path.join(output, `${name}.html`);
       const temporary = path.join(output, `${name}.source.md`);
-      fs.writeFileSync(temporary, fs.readFileSync(input, 'utf8').replace(/images\/([^\s)]+)\.svg/g, 'images/$1.png'));
+      fs.writeFileSync(temporary, fs.readFileSync(input, 'utf8').replace(/images\/(?:png\/)?([^\s)]+)\.(?:svg|png)/g, 'images/$1.png'));
       execFileSync(pandoc, [temporary, '--from=gfm', '--to=docx', '--resource-path', output, '--output', docx]);
       fs.unlinkSync(temporary);
       execFileSync(pandoc, [input, '--from=gfm', '--to=html5', '--standalone', '--metadata', `title=${name}`, '--resource-path', path.dirname(input), '--output', html]);

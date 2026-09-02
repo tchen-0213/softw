@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 import markdown
-import pymupdf
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -57,6 +56,25 @@ PDF_MIRROR = {
     "06-答辩提纲": ROOT / "02_docs" / "pdf" / "答辩提纲.pdf",
 }
 
+EXPORT_DIR = ROOT / "06_defense" / "export"
+EXPORT_COPY = {
+    "02-需求规格说明书": "软件需求规格说明书",
+    "02-概要设计说明书": "软件概要设计说明书",
+    "02-详细设计说明书": "软件详细设计说明书",
+    "02-业务场景用例清单与追溯表": "业务场景用例清单与追溯表",
+    "02-测试计划": "测试计划",
+    "04-测试报告": "测试报告-小学期",
+    "02-微服务拆分设计": "微服务拆分设计",
+    "02-微服务接口与数据归属": "微服务接口与数据归属",
+    "04-性能对比实验报告": "性能对比实验报告",
+    "06-技术总结报告": "技术总结报告",
+    "06-最终交付核查清单": "最终交付核查清单",
+    "06-答辩提纲": "答辩提纲",
+    "02-第1天业务场景清单与确认表": "第1天业务场景清单与确认表",
+    "05-个人权重表": "个人权重表",
+    "05-全员确认记录": "全员确认记录",
+}
+
 HTML_CSS = """
 body { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", "Microsoft YaHei", sans-serif;
        font-size: 14px; line-height: 1.6; color: #1f2933; margin: 18mm; }
@@ -74,14 +92,12 @@ blockquote { color: #475569; border-left: 4px solid #93c5fd; padding-left: 10px;
 
 
 def svg_to_png() -> None:
-    PNG_DIR.mkdir(parents=True, exist_ok=True)
-    for svg in sorted(IMG_DIR.glob("*.svg")):
-        png = PNG_DIR / f"{svg.stem}.png"
-        if png.exists() and png.stat().st_mtime >= svg.stat().st_mtime:
-            continue
-        doc = pymupdf.open(svg)
-        pix = doc[0].get_pixmap(dpi=160, alpha=False)
-        pix.save(png)
+    probe = PNG_DIR / "33-MS-SPLIT.png"
+    if probe.exists() and probe.stat().st_size > 100000:
+        return
+    from rasterize_svgs import rasterize_all
+
+    rasterize_all()
 
 
 def rewrite_images(html: str, base: Path) -> str:
@@ -245,6 +261,11 @@ def main() -> int:
             mirror.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(pdf_path, mirror)
         print(f"{stem}.pdf {pdf_path.stat().st_size}  {stem}.docx {docx_path.stat().st_size}")
+        export_name = EXPORT_COPY.get(stem)
+        if export_name:
+            EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(pdf_path, EXPORT_DIR / f"{export_name}.pdf")
+            shutil.copy2(docx_path, EXPORT_DIR / f"{export_name}.docx")
     return 0
 
 
