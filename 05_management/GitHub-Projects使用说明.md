@@ -79,6 +79,16 @@ Project 使用以下状态：
 
 完成顺序为：补齐证据 -> 勾选验收项 -> 更新 Project 为“已完成” -> 关闭 Issue。若仍有失败、阻塞或证据缺失，应保留在当前状态并记录后续动作。
 
+## 6.1 2026-09-03 增量测试工作项
+
+本轮新增测试工作项应放在 Project 的“测试”状态，待前端实测完成并补齐证据后再移动到“已完成”：
+
+| 工作项 | 状态 | 证据 |
+| --- | --- | --- |
+| 前后端各新增 100 个回归用例 | 后端已完成；前端代码已完成，Vitest 待依赖恢复 | `backend/tests/regression100.test.js`、`frontend/tests/regression100.test.js`、`04_tests/reports/tests/测试报告-小学期.md` |
+
+后端新增套件已实测 100/100；前端新增套件已固定注册 `REG-FE-001` 至 `REG-FE-100`，本机 npm 安装异常导致尚未取得 Vitest 通过输出。看板截图仍必须由已登录成员从真实 Project 页面留存，不能用本地文档代替。
+
 ## 6. GitHub Actions 与本地验证
 
 主流水线位于 `.github/workflows/ci-cd.yml`，负责后端测试、API 完整业务流、前端单元测试与构建、Playwright E2E、镜像构建和 Kubernetes manifest 检查。工作流以 GitHub 上的实际运行结果为准。

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-03T02:53:41.273Z",
+  "generatedAt": "2026-09-03T04:56:48.844Z",
   "required": [
     {
       "name": "需求规格说明书",
@@ -63,7 +63,7 @@
     }
   ],
   "counts": {
-    "markdown": 62,
+    "markdown": 61,
     "svg": 42,
     "yaml": 12,
     "rawPerformanceReports": 34,
