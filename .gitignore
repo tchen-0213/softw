@@ -158,3 +158,6 @@ temp/
 
 # Intermediate HTML for Word/PDF export
 提交包/_html/
+
+__pycache__/
+*.pyc
