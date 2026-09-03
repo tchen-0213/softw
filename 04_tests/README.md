@@ -29,6 +29,7 @@ npm run test:services:inventory
 npm run test:services:api
 npm run test:delivery
 API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm run test:e2e
+API_BASE_URL=http://127.0.0.1:3001 E2E_BASE_URL=http://localhost:8080 npm --prefix frontend run test:e2e -- --grep "E2E-TC07:"
 npm run perf:k6
 npm run perf:compare
 npm run perf:orders
@@ -36,6 +37,10 @@ npm run perf:indexes
 npm run experiment:hpa
 npm run experiment:fault
 ```
+
+Playwright 将 UC01-UC12 分成 12 个相互独立的 `E2E-TC01` 至 `E2E-TC12`。每项测试都会自行
+准备所需用户、商品、地址或订单，可使用 `--grep "E2E-TCxx:"` 单独运行，不依赖其他用例的
+执行顺序。
 
 `test:services:inventory` 不依赖容器，校验 49 项公开业务 API 与源码、测试编号和
 `../02_docs/微服务公开API测试映射.md` 无空白项。`test:services:api` 在微服务环境中经网关
@@ -54,6 +59,13 @@ CPU/内存/实际 Pod 时间线和故障原始响应位于 `reports/performance/
 k6 时会使用 Docker k6；两项脚本均带自动恢复和无残留校验。
 
 前端覆盖率报告由 `test:coverage` 生成到 `reports/coverage/frontend/`。覆盖范围包括应用路由、公共头部、浮动购物车、购物车与商品 Redux 状态、账户存储、API 客户端、商品筛选/排序/搜索、购物车项、信用徽章、地址管理，以及认证、购物车、结算、商品详情、搜索、订单和公开店铺页面；四项全局门禁均为 80%。
+
+## 2026-09-03 Playwright 独立用例复核
+
+- 全量运行：12/12 通过。
+- 独立运行：按 TC12 至 TC01 逆序分别筛选，每次只执行一项，12 项全部通过。
+- 覆盖场景：注册登录、检索、详情加购、下单、二手发布、店铺管理、评价、议价、地址、物流、
+  取消恢复库存和公开店铺。
 
 ## 2026-09-02 完整复核基线
 
