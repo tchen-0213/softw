@@ -144,7 +144,7 @@ const productSlice = createSlice({
       })
       .addCase(getProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload;
+        state.products = normalizeList(action.payload);
       })
       .addCase(getProducts.rejected, (state, action) => {
         state.loading = false;
@@ -157,7 +157,7 @@ const productSlice = createSlice({
       })
       .addCase(searchProducts.fulfilled, (state, action) => {
         state.searchLoading = false;
-        state.searchResults = action.payload;
+        state.searchResults = normalizeList(action.payload);
       })
       .addCase(searchProducts.rejected, (state, action) => {
         state.searchLoading = false;
@@ -170,7 +170,7 @@ const productSlice = createSlice({
       })
       .addCase(getProductDetail.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentProduct = action.payload;
+        state.currentProduct = normalizeProduct(action.payload);
       })
       .addCase(getProductDetail.rejected, (state, action) => {
         state.loading = false;
@@ -183,7 +183,7 @@ const productSlice = createSlice({
       })
       .addCase(getRecommendedProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.recommendedProducts = action.payload;
+        state.recommendedProducts = normalizeList(action.payload);
       })
       .addCase(getRecommendedProducts.rejected, (state, action) => {
         state.loading = false;
