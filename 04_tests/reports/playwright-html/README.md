@@ -4,8 +4,8 @@
 
 ## 查看验证结果
 
-- [2026-09-02 功能测试与部署完整复核](../tests/2026-09-02-功能测试部署完整复核.md)：浏览器 E2E 6/6 通过，覆盖 UC01-UC12。
-- [GitHub Actions softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248)：单体与微服务入口各 6/6 通过，可在线查看流水线结果与工件。
+- [2026-09-03 功能测试与部署完整复核](../tests/2026-09-03-功能测试部署完整复核.md)：浏览器 E2E 在单体与微服务入口均 42/42 通过，覆盖 UC01-UC12。
+- [GitHub Actions softw-ci-cd](https://github.com/tchen-0213/softw/actions/workflows/ci-cd.yml)：查看当前提交的单体与微服务入口测试结果及工件。
 
 ## 本地重新生成
 

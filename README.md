@@ -318,7 +318,7 @@ https://tchen-0213.github.io/softw/
 
 - Pages 发布：[运行 #33054053025](https://github.com/tchen-0213/softw/actions/runs/33054053025)，成功。
 - 验证记录：`03_devops/2026-08-27-GitHub-Pages-Codespaces联通验证记录.md`。
-- 最新全量测试：见 `04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md`；Playwright 6/6 通过并覆盖 UC01-UC12，[softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248) 为 Success。
+- 最新全量测试：见 `04_tests/README.md` 与 `04_tests/reports/tests/测试报告-小学期.md`；Playwright 共 42 项，在单体与微服务入口均 42/42 通过并覆盖 UC01-UC12。
 - Codespace 休眠时 API 会暂时离线；重新启动同一 Codespace 后恢复。
 - 重建 Codespace 后域名可能变化，需要更新 `CODESPACE_API_BASE_URL` 并重新运行 Pages 工作流。
 - 删除 Codespace 会删除其中的 Docker volumes，包括该环境的 MySQL 数据和上传文件。

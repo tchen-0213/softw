@@ -15,6 +15,6 @@
 | Playwright | 浏览器测试和 PDF 验证 | `frontend/package-lock.json`，Apache-2.0 |
 | MySQL Community | 数据库 | `03_devops/docker-compose.yml`，GPL-2.0 |
 | Kubernetes/kind | 集群验证 | `03_devops/k8s/`，Apache-2.0 |
-| Pandoc | DOCX/HTML 导出 | `automation/export-deliverables.js`，GPL-2.0-or-later |
+| python-docx / PyMuPDF / marked | DOCX、插图与 HTML 导出 | `02_docs/pdf/export_submission_pack.py`、`automation/export-deliverables.js`；分别使用 MIT、AGPL-3.0/商业双许可、MIT 许可 |
 
 完整 JavaScript 依赖版本和完整性哈希以各目录 `package-lock.json` 为准。演示图片最终公开发布前仍需由负责人逐项确认来源和授权范围。

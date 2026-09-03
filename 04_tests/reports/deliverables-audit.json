@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-02T07:41:57.396Z",
+  "generatedAt": "2026-09-03T02:53:41.273Z",
   "required": [
     {
       "name": "需求规格说明书",
@@ -28,7 +28,7 @@
     },
     {
       "name": "回归记录",
-      "path": "04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md",
+      "path": "04_tests/reports/tests/2026-09-03-功能测试部署完整复核.md",
       "status": "present"
     },
     {
@@ -63,12 +63,12 @@
     }
   ],
   "counts": {
-    "markdown": 56,
+    "markdown": 62,
     "svg": 42,
     "yaml": 12,
     "rawPerformanceReports": 34,
-    "exportedDocx": 6,
-    "exportedPdf": 6
+    "exportedDocx": 15,
+    "exportedPdf": 15
   },
   "warnings": []
 }

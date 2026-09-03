@@ -4,12 +4,16 @@
 from __future__ import annotations
 
 import re
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-import markdown
+try:
+    import markdown
+except ModuleNotFoundError:
+    markdown = None
 import pymupdf
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -100,6 +104,8 @@ def rewrite_images(html: str, base: Path) -> str:
 
 
 def md_to_html(md_path: Path, title: str) -> str:
+    if markdown is None:
+        raise RuntimeError("markdown package is required for PDF export")
     body = markdown.markdown(
         md_path.read_text(encoding="utf-8"),
         extensions=["extra", "tables", "sane_lists", "nl2br"],
@@ -225,11 +231,19 @@ def md_to_docx(md_path: Path, docx_path: Path, title: str) -> None:
 
 
 def main() -> int:
+    docx_only = os.environ.get("DOCX_ONLY") == "1"
+    selected_stems = set(filter(None, os.environ.get("DOCX_DOCUMENTS", "").split(",")))
+    known_stems = {stem for _, stem in DOCUMENTS}
+    if selected_stems - known_stems:
+        raise ValueError("DOCX_DOCUMENTS contains an unknown document name")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     svg_to_png()
-    html_dir = Path("/tmp") / "moyu-submit-html"
-    html_dir.mkdir(exist_ok=True)
+    html_dir = ROOT / "tmp" / "moyu-submit-html"
+    if not docx_only:
+        html_dir.mkdir(parents=True, exist_ok=True)
     for md_path, stem in DOCUMENTS:
+        if selected_stems and stem not in selected_stems:
+            continue
         if not md_path.exists():
             print(f"missing {md_path}", file=sys.stderr)
             return 1
@@ -237,14 +251,17 @@ def main() -> int:
         html_path = html_dir / f"{stem}.html"
         pdf_path = OUT_DIR / f"{stem}.pdf"
         docx_path = OUT_DIR / f"{stem}.docx"
-        html_path.write_text(md_to_html(md_path, title), encoding="utf-8")
-        html_to_pdf(html_path, pdf_path)
         md_to_docx(md_path, docx_path, title)
-        mirror = PDF_MIRROR.get(stem)
-        if mirror is not None:
-            mirror.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(pdf_path, mirror)
-        print(f"{stem}.pdf {pdf_path.stat().st_size}  {stem}.docx {docx_path.stat().st_size}")
+        if not docx_only:
+            html_path.write_text(md_to_html(md_path, title), encoding="utf-8")
+            html_to_pdf(html_path, pdf_path)
+            mirror = PDF_MIRROR.get(stem)
+            if mirror is not None:
+                mirror.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(pdf_path, mirror)
+            print(f"{stem}.pdf {pdf_path.stat().st_size}  {stem}.docx {docx_path.stat().st_size}")
+        else:
+            print(f"{stem}.docx {docx_path.stat().st_size}")
     return 0
 
 

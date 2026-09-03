@@ -37,7 +37,7 @@ CODESPACE_API_BASE_URL=https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.git
 
 ## 公网连通性与当前回归基线
 
-GitHub Pages 与 Codespaces 后端的公网连通性已经实测。当前全量 Playwright 统一以 Compose、Kind 和 CI 的 6 条流程为准：
+GitHub Pages 与 Codespaces 后端的公网连通性已经实测。当前 Playwright 套件统一为 12 个独立主流程、27 个备选/异常流程和 3 个组合流程，共 42 项：
 
 ```bash
 API_BASE_URL=https://softw-defense-demo-5gp6vp6vgjwghv95q-3001.app.github.dev \
@@ -45,9 +45,9 @@ E2E_BASE_URL=https://tchen-0213.github.io/softw/ \
 npm --prefix frontend run test:e2e
 ```
 
-- Playwright：6/6 通过，覆盖 UC01-UC12。
-- 最新流水线：[softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248)，状态 Success。
-- 完整结果：`04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md`。
+- Playwright：单体与微服务入口均 42/42 通过，覆盖 UC01-UC12。
+- 已验证流水线：[softw-ci-cd #77](https://github.com/tchen-0213/softw/actions/runs/33579985248)，状态 Success。
+- 完整结果：`04_tests/reports/tests/2026-09-03-功能测试部署完整复核.md`。
 
 ## 问题与修复
 

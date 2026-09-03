@@ -8,7 +8,7 @@ const required = [
   ['详细设计说明书', '02_docs/软件详细设计说明书.md'],
   ['测试计划', '02_docs/测试文档.md'],
   ['测试报告', '04_tests/reports/tests/测试报告-小学期.md'],
-  ['回归记录', '04_tests/reports/tests/2026-09-02-功能测试部署完整复核.md'],
+  ['回归记录', '04_tests/reports/tests/2026-09-03-功能测试部署完整复核.md'],
   ['追溯表', '02_docs/业务场景用例清单与追溯表.md'],
   ['部署文档', '03_devops/部署文档.md'],
   ['CI/CD', '.github/workflows/ci-cd.yml'],

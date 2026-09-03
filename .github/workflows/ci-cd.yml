@@ -280,12 +280,12 @@ jobs:
             docker --version
             docker compose version
           } > "$RUNNER_TEMP/d6-02/environment.txt"
-      - name: Run all public API and UC01-UC09 gateway regression
+      - name: Run all public API and UC01-UC12 gateway regression
         shell: bash
         run: |
           set -o pipefail
           npm run test:services:api 2>&1 | tee "$RUNNER_TEMP/d6-02/microservice-api-e2e.txt"
-      - name: Run UC01-UC09 browser regression against microservices
+      - name: Run 42 UC01-UC12 browser tests against microservices
         env:
           API_BASE_URL: http://127.0.0.1:8081
           E2E_BASE_URL: http://127.0.0.1:8082

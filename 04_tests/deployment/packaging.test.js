@@ -65,7 +65,7 @@ test('DELIVERY-DATABASE-01: 全新 MySQL 自动创建单体库、三个服务库
 test('DELIVERY-CI-01: lint、安全、三类测试失败都会阻止镜像和 Kubernetes 部署', () => {
   const workflow = read('.github/workflows/ci-cd.yml');
   assert.match(workflow, /frontend-build:[\s\S]*?npm run lint[\s\S]*?npm run test:coverage[\s\S]*?npm run build/);
-  assert.match(workflow, /docker-build:[\s\S]*?needs: \[backend-test, frontend-build, security-scan, browser-e2e, microservice-test, microservice-api-e2e\]/);
+  assert.match(workflow, /docker-build:[\s\S]*?needs: \[backend-test, frontend-build, security-scan, browser-e2e, microservice-test, microservice-api-e2e, deliverable-audit\]/);
   assert.match(workflow, /kubernetes-deploy:[\s\S]*?needs: docker-build/);
   assert.match(workflow, /tags: \$\{\{ env\.IMAGE_PREFIX \}\}\/\$\{\{ matrix\.image \}\}:\$\{\{ github\.sha \}\}/);
   assert.doesNotMatch(workflow, /tags:[^\n]*:latest/);
