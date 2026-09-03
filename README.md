@@ -141,7 +141,11 @@ npm 9+
 
 ### 全新机器容器化复现（推荐）
 
-全新机器只需安装 Git 和 Docker Desktop，不需要预先安装 Node.js 或 MySQL：
+全新机器只需安装 **Git for Windows（包含 Git Bash）** 和 **Docker Desktop**，不需要预先安装 Node.js 或 MySQL。先启动 Docker Desktop 并等待 Docker Engine 就绪，再在仓库页面复制地址。
+
+#### Windows：必须在 Git Bash 中初始化
+
+CMD 和 PowerShell 默认不提供 `sh`，因此请在开始菜单打开 **Git Bash**，或在项目目录空白处右键选择 **Open Git Bash here**，然后逐行执行：
 
 ```bash
 git clone https://github.com/tchen-0213/softw.git
@@ -149,6 +153,17 @@ cd softw
 sh 03_devops/scripts/init-local-env.sh
 docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
 ```
+
+> 路径中的目录名是 `03_devops`。不要把网页或富文本中的 Markdown 转义写成 `03\_devops`。
+
+如果已经位于 CMD 的 `C:\Users\<用户名>\softw`，也可以直接调用 Git 自带的 Bash：
+
+```cmd
+"%ProgramFiles%\Git\bin\bash.exe" 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
+```
+
+初始化脚本只负责在仓库根目录生成被 Git 忽略的 `.env` 密钥文件；首次生成后，后续启动可直接在 Git Bash、CMD 或 PowerShell 执行 `docker compose` 命令。
 
 后端启动时会自动按版本执行 `backend/database/migrations/` 中的数据库迁移。检查容器、迁移版本和健康状态：
 
@@ -170,11 +185,16 @@ docker compose --env-file .env -f 03_devops/docker-compose.yml exec backend npm 
 ```bash
 docker compose --env-file .env -f 03_devops/docker-compose.yml down -v
 docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
+docker compose --env-file .env -f 03_devops/docker-compose.yml exec backend npm run seed:scenario
 ```
+
+> `down -v` 会删除本项目的 MySQL 数据卷和上传文件，只能在确认需要清空全部本地数据时使用。普通重启使用 `docker compose --env-file .env -f 03_devops/docker-compose.yml restart`。
 
 ---
 
 ## 六、后端启动方式
+
+以下是**不使用 Docker 的本地开发方式**，需要另外安装 Node.js 18+ 和 MySQL 8.0+；与上面的全新机器容器化复现二选一即可。
 
 进入后端目录：
 

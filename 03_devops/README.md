@@ -23,10 +23,25 @@
 
 Dockerfile 需要与构建上下文一起使用，因此保留在 `../backend/`、`../frontend/` 和 `../services/*/`。GitHub Actions 工作流必须位于 `.github/workflows/` 才能被平台识别。
 
-常用命令应在仓库根目录执行：
+常用命令应在仓库根目录执行。Windows 上的 `.sh` 脚本必须在 Git Bash 中运行；CMD 和 PowerShell 默认不提供 `sh`。路径应写成 `03_devops`，不要写成 Markdown 转义形式 `03\_devops`。
+
+首次启动（Git Bash）：
 
 ```bash
 sh 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
+```
+
+如果当前位于 Windows CMD，也可以显式调用 Git 自带的 Bash：
+
+```cmd
+"%ProgramFiles%\Git\bin\bash.exe" 03_devops/scripts/init-local-env.sh
+docker compose --env-file .env -f 03_devops/docker-compose.yml up -d --build --wait
+```
+
+其他常用命令：
+
+```bash
 npm run compose:up
 npm run compose:down
 docker compose --env-file .env -f 03_devops/docker-compose.microservices.yml up -d --build --wait
