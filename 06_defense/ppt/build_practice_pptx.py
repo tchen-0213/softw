@@ -39,7 +39,7 @@ def header(im: Image.Image, title: str, page: int) -> ImageDraw.ImageDraw:
     d.rectangle((0, 0, W, 8), fill=BLUE)
     d.text((48, 24), title, font=font(32), fill=BLUE)
     d.line((48, 74, W - 48, 74), fill=LINE, width=2)
-    d.text((48, H - 40), f"13组 摸鱼  ·  练习稿  ·  {page}/{TOTAL}", font=font(16), fill=MUTED)
+    d.text((48, H - 40), f"13组 摸鱼  ·  {page}/{TOTAL}", font=font(16), fill=MUTED)
     d.line((48, H - 54, W - 48, H - 54), fill=LINE, width=1)
     return d
 
@@ -115,25 +115,24 @@ def s1():
     d.text((56, 380), "校园购物 + 二手交易平台", font=font(36), fill=INK)
     d.line((56, 450, 520, 450), fill=BLUE, width=3)
     d.text((56, 480), "杨任宇老师班  ·  13组", font=font(28), fill=INK)
-    d.text((56, 540), "项目与架构约 3 分钟  ·  随后播放演示录屏", font=font(22), fill=MUTED)
-    d.text((56, 620), "https://github.com/tchen-0213/softw", font=font(22), fill=BLUE)
-    d.text((56, 700), "鲁在精  浦灵一  王悠然  赵紫嫣  陈子正  剧博洋", font=font(22), fill=INK)
+    d.text((56, 560), "https://github.com/tchen-0213/softw", font=font(22), fill=BLUE)
+    d.text((56, 640), "鲁在精  浦灵一  王悠然  赵紫嫣  陈子正  剧博洋", font=font(22), fill=INK)
     paste(im, "P00-仓库首页.png", (1020, 160, 820, 760))
-    add(im, "报组号、项目名、仓库。3 分钟架构后切录屏。")
+    add(im, "报组号、项目名、仓库。")
 
 
 def s2():
     im = new()
     d = header(im, "项目目标及全部业务场景完成情况", 2)
-    d.text((48, 90), "校园购物+二手。原系统 React + 一个 Express + MySQL shopping_platform；monolith-start（10fa639）", font=font(18), fill=INK)
-    d.text((48, 122), "小学期：Docker 三容器、Actions、K8s、三业务微服务+网关；microservices-v1（63585e0）。单体 8080/3001；微服务 8082/8081。", font=font(18), fill=INK)
-    d.text((48, 154), "UC01–UC12 全部完成。重点只讲 UC01/UC02/UC04，不等于只做了三条。", font=font(18), fill=BLUE)
-    rows = [["编号", "场景", "汇报"]]
+    d.text((48, 90), "校园购物 + 二手。原系统 React + Express + MySQL shopping_platform，标签 monolith-start（10fa639）", font=font(18), fill=INK)
+    d.text((48, 122), "小学期完成 Docker 三容器、Actions、K8s，以及 user / product / order 与网关，标签 microservices-v1（63585e0）", font=font(18), fill=INK)
+    d.text((48, 154), "单体 8080 / 3001；微服务 8082 / 8081。UC01–UC12 均已完成。", font=font(18), fill=INK)
+    rows = [["编号", "场景", "状态"]]
     data = [
-        ("UC01", "注册并登录", "重点"), ("UC02", "浏览并搜索", "重点"), ("UC03", "详情加购", "完成"),
-        ("UC04", "下单支付发货收货", "重点"), ("UC05", "发布二手", "完成"), ("UC06", "店铺与商品", "完成"),
-        ("UC07", "评价", "完成"), ("UC08", "聊天议价", "完成"), ("UC09", "地址", "完成"),
-        ("UC10", "订单与物流", "完成"), ("UC11", "取消并恢复库存", "完成"), ("UC12", "公开店铺与信用", "完成"),
+        ("UC01", "注册并登录", "已完成"), ("UC02", "浏览并搜索", "已完成"), ("UC03", "详情加购", "已完成"),
+        ("UC04", "下单支付发货收货", "已完成"), ("UC05", "发布二手", "已完成"), ("UC06", "店铺与商品", "已完成"),
+        ("UC07", "评价", "已完成"), ("UC08", "聊天议价", "已完成"), ("UC09", "地址", "已完成"),
+        ("UC10", "订单与物流", "已完成"), ("UC11", "取消并恢复库存", "已完成"), ("UC12", "公开店铺与信用", "已完成"),
     ]
     for a, b, c in data:
         rows.append([a, b, c])
@@ -155,7 +154,7 @@ def s3():
         ],
         16,
     )
-    d.text((48, 320), "系统级顺序图（参与者 + 平台，不出现 Controller）", font=font(18), fill=BLUE)
+    d.text((48, 320), "系统级顺序图：游客 / 买家 / 卖家 与平台的交互", font=font(18), fill=BLUE)
     paste(im, "P01-SYS-SEQ01-注册登录.png", (48, 355, 600, 620))
     paste(im, "P01-SYS-SEQ02-搜索.png", (668, 355, 600, 620))
     paste(im, "P01-SYS-SEQ04-下单履约.png", (1288, 355, 584, 620))
@@ -168,10 +167,10 @@ def s4():
     table(
         d, (48, 90), [280, 520, 420, 560], 48,
         [
-            ["层次", "应出现", "不应出现", "落到代码"],
-            ["系统级 SYS-SEQ04", "买家/卖家、下单支付发货收货", "Controller、SQL", "业务闭环"],
-            ["组件级 COMP-SEQ04", "页面、鉴权、订单控制器、事务", "每一行实现", "orderController + 页面"],
-            ["对象级 OBJ-SEQ04", "createOrder()、pay/ship/confirm", "不存在的 DAO", "与源码函数名一致"],
+            ["层次", "模型", "代码", "图"],
+            ["系统级 SYS-SEQ04", "买家、卖家；下单、支付、发货、收货", "下单到收货闭环", "SYS-SEQ04"],
+            ["组件级 COMP-SEQ04", "结账页、鉴权、订单控制器、事务", "orderController、CheckoutPage", "COMP-SEQ04"],
+            ["对象级 OBJ-SEQ04", "createOrder()、pay / ship / confirm", "与源码函数名一致", "OBJ-SEQ04"],
         ],
         16,
     )
@@ -185,19 +184,19 @@ def s4():
 def s5():
     im = new()
     d = header(im, "业务微服务：职责、划分依据、接口、表归属", 5)
-    d.text((48, 88), "前端 → API Gateway（不算业务服务）→ user / product / order。按身份 / 标的 / 交易过程拆，不是 12 个服务。", font=font(18), fill=INK)
+    d.text((48, 88), "调用链：前端 → API 网关 → user-service / product-service / order-service。按身份、可交易资源、交易过程划分。", font=font(18), fill=INK)
     table(
         d, (48, 125), [240, 520, 360, 660], 44,
         [
             ["服务", "职责", "划分依据", "库与表"],
-            ["user-service", "注册登录、资料、密码、地址、角色、信用", "身份 / 账号生命周期", "softw_users：Users, Addresses"],
+            ["user-service", "注册登录、资料、密码、地址、角色、信用", "身份与账号生命周期", "softw_users：Users, Addresses"],
             ["product-service", "商品、二手、店铺、评价、聊天、议价、图片、库存", "可交易资源", "softw_catalog + uploads"],
-            ["order-service", "下单、支付、取消、发货、收货、状态机", "交易过程与快照", "softw_orders：Orders, OrderSellers"],
-            ["API Gateway", "路由、JWT 透传、超时、CORS", "统一入口，不计入 3", "无库"],
+            ["order-service", "下单、支付、取消、发货、收货、状态机", "交易过程与订单快照", "softw_orders：Orders, OrderSellers"],
+            ["API 网关", "路由、JWT 透传、超时、CORS", "统一入口", "无库"],
         ],
         15,
     )
-    d.text((48, 360), "网关：/api/users,/api/addresses→user；商品/二手/店/评价/聊天/上传→product；/api/orders→order。一表一主，订单存快照，内部接口 X-Internal-Token。", font=font(16), fill=INK)
+    d.text((48, 360), "网关路由：/api/users、/api/addresses → user；商品、二手、店铺、评价、聊天、上传 → product；/api/orders → order。一表由一个服务写；订单保存快照；内部调用带 X-Internal-Token。", font=font(16), fill=INK)
     paste(im, "P03-微服务划分.png", (48, 400, 1800, 570))
     add(im, "三个服务 + 网关不算第四个。评价聊天在商品服务。")
 
@@ -209,16 +208,15 @@ def s6():
         d, (48, 100), [480, 1340], 78,
         [
             ["场景", "处理"],
-            ["网关超时或上游断开", "HTTP 503，不伪造成功业务结果"],
-            ["库存预留失败（无货/超时）", "不创建订单；超时 503"],
-            ["释放 / 完成预留", "按 reservationId 幂等，重复调用不加库存"],
-            ["停 product-service", "商品 503「依赖服务暂不可用」；订单依赖 206 degraded「商品信息暂不可用，订单查询保持可用」；网关/用户/订单仍 1/1"],
-            ["内部库存、信用、购买证明", "必须 X-Internal-Token，外部客户端不能直打"],
+            ["网关超时或上游断开", "返回 HTTP 503"],
+            ["库存预留失败（无货或超时）", "不创建订单；超时返回 503"],
+            ["释放 / 完成预留", "按 reservationId 幂等，重复调用不重复加库存"],
+            ["停 product-service", "商品接口 503「依赖服务暂不可用」；订单依赖检查 206 degraded「商品信息暂不可用，订单查询保持可用」；网关、用户、订单仍 1/1"],
+            ["内部库存、信用、购买证明", "请求须带 X-Internal-Token"],
         ],
         18,
     )
-    d.text((48, 560), "实验 npm run experiment:fault。恢复后商品 200、HPA 重建、无残留。全过程在录屏里播。", font=font(22), fill=INK)
-    d.text((48, 620), "老师要看：一个服务下线不严重影响其它业务，返回事先设计好的提示或备用结果。", font=font(22), fill=RED)
+    d.text((48, 560), "实验：npm run experiment:fault。恢复后商品接口 200，副本重建，无残留。", font=font(22), fill=INK)
     add(im, "抓 503 和 206 两张牌。")
 
 
@@ -228,18 +226,18 @@ def s7():
     table(
         d, (48, 88), [150, 880], 42,
         [
-            ["层级", "结果（2026-09-03，不要加总）"],
-            ["单元", "后端 220 通过 / 0 失败 / 1 跳过（含 REG-BE 100/100）；前端原有 100/100，REG-FE 待 Vitest 复跑"],
+            ["层级", "结果（2026-09-03）"],
+            ["单元", "后端 220 通过 / 0 失败 / 1 跳过（含 REG-BE 100/100）；前端原有 100/100，新增 REG-FE 已注册"],
             ["覆盖率", "语句 94.42% / 分支 81.83% / 函数 92.34% / 行 94.42%"],
             ["集成", "单体 API 32/32；隔离 22/22（网关 17/17）；网关 API/E2E 15/15；公开 API 49 项"],
-            ["端到端", "Playwright 单体与微服务均 42/42（12+27+3）"],
-            ["CI/CD", "softw-ci-cd：先测后 7 镜像+Kind；失败不发版；绿勾 Actions #77（33579985248）"],
-            ["HPA", "1 → 3 → 5 → 1；997 请求、9.49 req/s、错误 0/997；不放进 CI/CD"],
-            ["故障", "停商品服务：503 / 206，其它服务存活"],
+            ["端到端", "Playwright 单体与微服务均为 42/42（12 + 27 + 3）"],
+            ["CI/CD", "工作流 softw-ci-cd：测试通过后构建 7 个镜像并部署 Kind；测试失败不构建。Actions #77（33579985248）"],
+            ["HPA", "1 → 3 → 5 → 1；997 请求、9.49 req/s、错误 0/997"],
+            ["故障", "停商品服务后：503 / 206；网关、用户、订单仍存活"],
         ],
         15,
     )
-    d.text((48, 440), "单体 vs 微服务（2026-08-28，同机同数据同一 k6，18 组错误率 0%）。口播用列表三个数。不能写「微服务天然更快」。", font=font(16), fill=INK)
+    d.text((48, 440), "单体与微服务对比（2026-08-28，同机、同商品数据、同一 k6，18 组，错误率 0%）", font=font(16), fill=INK)
     table(
         d, (48, 478), [220, 200, 200, 180, 180], 40,
         [
@@ -252,28 +250,28 @@ def s7():
     )
     paste(im, "P02-GitHub-Actions-77.png", (1080, 88, 792, 430))
     paste(im, "P02-流水线失败阻断-20260825.png", (1080, 540, 792, 430))
-    d.text((1080, 978), "上：Actions #77    下：8/25 失败阻断（早期，不是 #77）", font=font(14), fill=MUTED)
+    d.text((1080, 978), "上：Actions #77    下：2026-08-25 测试失败，未进入部署", font=font(14), fill=MUTED)
     add(im, "报 220、42/42、#77、1到5再回1、+61.9%。再说不是天然更快。")
 
 
 def s8():
     im = new()
-    d = header(im, "分工、大模型  ·  接下来播放演示录屏", 8)
+    d = header(im, "成员分工", 8)
     table(
-        d, (48, 90), [280, 720], 48,
+        d, (48, 90), [280, 720], 52,
         [
             ["成员", "职责"],
-            ["鲁在精", "组长：计划、协调、汇报"],
-            ["浦灵一", "后端、安全、文档"],
-            ["王悠然", "前端"],
-            ["赵紫嫣", "测试"],
-            ["陈子正", "流水线、部署"],
-            ["剧博洋", "压测、性能"],
+            ["鲁在精", "项目管理；商品搜索与浏览"],
+            ["浦灵一", "在线下单与支付；后端与安全"],
+            ["王悠然", "物流跟踪、订单状态"],
+            ["赵紫嫣", "店铺管理；测试"],
+            ["陈子正", "信用评价；流水线与部署"],
+            ["剧博洋", "二手交易；性能与数据库"],
         ],
         18,
     )
-    d.text((48, 450), "权重待全组确认。大模型：检索、测试建议、文档、部署检查。人工读代码、真跑测试、对版本、扫凭据。", font=font(18), fill=INK)
-    d.text((48, 500), "下面 4 分钟播放录屏（可加速）：流水线  ·  Pod  ·  UC01→UC02→UC04 与自动化测试  ·  HPA 1→3→5→1  ·  停商品服务 503/206", font=font(18), fill=BLUE)
+    d.text((48, 480), "大模型用于仓库检索、测试建议、文档整理和部署检查。", font=font(18), fill=INK)
+    d.text((48, 524), "代码阅读、测试执行、版本核对和凭据扫描由组员完成。", font=font(18), fill=INK)
     paste(im, "P09-GitHub-Pages演示.png", (1080, 90, 792, 880))
     add(im, "分工一句。切录屏。")
 
