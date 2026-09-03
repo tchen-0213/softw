@@ -1,11 +1,16 @@
 请先看这个
 
-正式 Word / PDF 请打开：
+1. 你在 GitHub 的 main 上看到的「02-概要设计说明书.pdf / 1.35 MB」是旧稿。
+   GitHub 网页预览会把旧 PDF 画成黑块，那不是系统架构图。
 
-  06_defense/export/
+2. 本文件夹里的才是新稿：
+   02-概要设计说明书.pdf 大约 2.5 MB
+   另有同名 .docx（用 Word 打开最稳）
 
-那个文件夹已经在 main 上，Cursor 左侧点 06_defense → export 就能看到。
-请先看 export 里的 00-请先看这个.txt。
+3. 只想先看图、不打开 PDF：
+   仓库 02_docs/images/png/
+   例如 12-ARCH-COMP.png、13-COMP-SEQ01.png、33-MS-SPLIT.png
+   GitHub 点 PNG 就能正常预览。
 
-本「提交包」文件夹是同一套文档的副本（文件名带 02-/04- 前缀）。
-两套都可以交，优先用 06_defense/export，避免找不到。
+4. 交作业优先用 06_defense/export/ 或本「提交包」里的 Word + PDF。
+   不要用系统预览直接打开 .svg。

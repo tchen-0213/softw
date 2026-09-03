@@ -4,17 +4,12 @@
 from __future__ import annotations
 
 import re
-import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
-try:
-    import markdown
-except ModuleNotFoundError:
-    markdown = None
-import pymupdf
+import markdown
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -61,6 +56,25 @@ PDF_MIRROR = {
     "06-答辩提纲": ROOT / "02_docs" / "pdf" / "答辩提纲.pdf",
 }
 
+EXPORT_DIR = ROOT / "06_defense" / "export"
+EXPORT_COPY = {
+    "02-需求规格说明书": "软件需求规格说明书",
+    "02-概要设计说明书": "软件概要设计说明书",
+    "02-详细设计说明书": "软件详细设计说明书",
+    "02-业务场景用例清单与追溯表": "业务场景用例清单与追溯表",
+    "02-测试计划": "测试计划",
+    "04-测试报告": "测试报告-小学期",
+    "02-微服务拆分设计": "微服务拆分设计",
+    "02-微服务接口与数据归属": "微服务接口与数据归属",
+    "04-性能对比实验报告": "性能对比实验报告",
+    "06-技术总结报告": "技术总结报告",
+    "06-最终交付核查清单": "最终交付核查清单",
+    "06-答辩提纲": "答辩提纲",
+    "02-第1天业务场景清单与确认表": "第1天业务场景清单与确认表",
+    "05-个人权重表": "个人权重表",
+    "05-全员确认记录": "全员确认记录",
+}
+
 HTML_CSS = """
 body { font-family: "Noto Sans CJK SC", "WenQuanYi Micro Hei", "Microsoft YaHei", sans-serif;
        font-size: 14px; line-height: 1.6; color: #1f2933; margin: 18mm; }
@@ -78,14 +92,39 @@ blockquote { color: #475569; border-left: 4px solid #93c5fd; padding-left: 10px;
 
 
 def svg_to_png() -> None:
-    PNG_DIR.mkdir(parents=True, exist_ok=True)
-    for svg in sorted(IMG_DIR.glob("*.svg")):
-        png = PNG_DIR / f"{svg.stem}.png"
-        if png.exists() and png.stat().st_mtime >= svg.stat().st_mtime:
-            continue
-        doc = pymupdf.open(svg)
-        pix = doc[0].get_pixmap(dpi=160, alpha=False)
-        pix.save(png)
+    probe = PNG_DIR / "33-MS-SPLIT.png"
+    if probe.exists() and probe.stat().st_size > 100000:
+        return
+    from rasterize_svgs import rasterize_all
+
+    rasterize_all()
+
+
+def sanitize_pdf(pdf_path: Path) -> None:
+    """Rewrite Chrome/Skia images as DeviceRGB JPEG so GitHub preview is not black boxes."""
+    import pymupdf
+
+    doc = pymupdf.open(pdf_path)
+    for page in doc:
+        seen: set[int] = set()
+        for im in page.get_images(full=True):
+            xref = im[0]
+            if xref in seen:
+                continue
+            seen.add(xref)
+            pix = pymupdf.Pixmap(doc, xref)
+            if pix.n != 3 or pix.alpha:
+                pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+            else:
+                pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+            while pix.width > 1600:
+                pix.shrink(1)
+            page.replace_image(xref, stream=pix.tobytes("jpeg", jpg_quality=85))
+            doc.xref_set_key(xref, "ColorSpace", "/DeviceRGB")
+    tmp = pdf_path.with_suffix(".sanitized.pdf")
+    doc.save(tmp, garbage=4, deflate=True)
+    doc.close()
+    tmp.replace(pdf_path)
 
 
 def rewrite_images(html: str, base: Path) -> str:
@@ -104,8 +143,6 @@ def rewrite_images(html: str, base: Path) -> str:
 
 
 def md_to_html(md_path: Path, title: str) -> str:
-    if markdown is None:
-        raise RuntimeError("markdown package is required for PDF export")
     body = markdown.markdown(
         md_path.read_text(encoding="utf-8"),
         extensions=["extra", "tables", "sane_lists", "nl2br"],
@@ -231,19 +268,11 @@ def md_to_docx(md_path: Path, docx_path: Path, title: str) -> None:
 
 
 def main() -> int:
-    docx_only = os.environ.get("DOCX_ONLY") == "1"
-    selected_stems = set(filter(None, os.environ.get("DOCX_DOCUMENTS", "").split(",")))
-    known_stems = {stem for _, stem in DOCUMENTS}
-    if selected_stems - known_stems:
-        raise ValueError("DOCX_DOCUMENTS contains an unknown document name")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     svg_to_png()
-    html_dir = ROOT / "tmp" / "moyu-submit-html"
-    if not docx_only:
-        html_dir.mkdir(parents=True, exist_ok=True)
+    html_dir = Path("/tmp") / "moyu-submit-html"
+    html_dir.mkdir(exist_ok=True)
     for md_path, stem in DOCUMENTS:
-        if selected_stems and stem not in selected_stems:
-            continue
         if not md_path.exists():
             print(f"missing {md_path}", file=sys.stderr)
             return 1
@@ -251,17 +280,20 @@ def main() -> int:
         html_path = html_dir / f"{stem}.html"
         pdf_path = OUT_DIR / f"{stem}.pdf"
         docx_path = OUT_DIR / f"{stem}.docx"
+        html_path.write_text(md_to_html(md_path, title), encoding="utf-8")
+        html_to_pdf(html_path, pdf_path)
+        sanitize_pdf(pdf_path)
         md_to_docx(md_path, docx_path, title)
-        if not docx_only:
-            html_path.write_text(md_to_html(md_path, title), encoding="utf-8")
-            html_to_pdf(html_path, pdf_path)
-            mirror = PDF_MIRROR.get(stem)
-            if mirror is not None:
-                mirror.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(pdf_path, mirror)
-            print(f"{stem}.pdf {pdf_path.stat().st_size}  {stem}.docx {docx_path.stat().st_size}")
-        else:
-            print(f"{stem}.docx {docx_path.stat().st_size}")
+        mirror = PDF_MIRROR.get(stem)
+        if mirror is not None:
+            mirror.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(pdf_path, mirror)
+        print(f"{stem}.pdf {pdf_path.stat().st_size}  {stem}.docx {docx_path.stat().st_size}")
+        export_name = EXPORT_COPY.get(stem)
+        if export_name:
+            EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(pdf_path, EXPORT_DIR / f"{export_name}.pdf")
+            shutil.copy2(docx_path, EXPORT_DIR / f"{export_name}.docx")
     return 0
 
 

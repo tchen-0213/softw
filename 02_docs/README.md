@@ -17,9 +17,9 @@
 ## 图与模型
 
 - `图表绘制与插入位置清单.md`：UC01-UC12 对应的 40 张必需图、订单状态图和中期检查微服务划分图的编号、内容与插入位置。
-- `images/`：42 张已渲染 SVG。
-- `models/`：42 个可编辑 Mermaid 模型源文件，与 `images/` 中的同名 SVG 一一对应。
-- 三份说明书正文直接嵌入 SVG 实图，并在图下链接对应的 Mermaid 源文件。
+- `images/`：42 张 Mermaid SVG（模型源配套）；`images/png/` 为浏览器实渲 PNG，说明书正文嵌入 PNG，避免 Word/预览把 SVG 变成黑块。
+- `models/`：42 个可编辑 Mermaid 源文件。
+- 图下仍链接对应的 Mermaid 源文件。
 
 ## 原始要求
 
