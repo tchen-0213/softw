@@ -1,0 +1,304 @@
+#!/usr/bin/env python3
+"""Practice deck: TA architecture order + original PNGs. White 16:9."""
+from __future__ import annotations
+
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+from pptx import Presentation
+from pptx.util import Emu, Inches
+
+ROOT = Path(__file__).resolve().parents[2]
+IMG = ROOT / "06_defense" / "配图"
+OUT_DIR = Path(__file__).resolve().parent / "练习预览"
+PPTX = ROOT / "06_defense" / "13组-摸鱼-答辩练习.pptx"
+FONT = "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"
+
+W, H = 1920, 1080
+BG = (255, 255, 255)
+INK = (32, 32, 32)
+MUTED = (90, 90, 90)
+BLUE = (31, 78, 121)
+LINE = (210, 216, 224)
+BAND = (242, 246, 250)
+RED = (192, 80, 77)
+WHITE = (255, 255, 255)
+TOTAL = 8
+
+
+def font(n: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(FONT, n)
+
+
+def new() -> Image.Image:
+    return Image.new("RGB", (W, H), BG)
+
+
+def header(im: Image.Image, title: str, page: int) -> ImageDraw.ImageDraw:
+    d = ImageDraw.Draw(im)
+    d.rectangle((0, 0, W, 8), fill=BLUE)
+    d.text((48, 24), title, font=font(32), fill=BLUE)
+    d.line((48, 74, W - 48, 74), fill=LINE, width=2)
+    d.text((48, H - 40), f"13组 摸鱼  ·  练习稿  ·  {page}/{TOTAL}", font=font(16), fill=MUTED)
+    d.line((48, H - 54, W - 48, H - 54), fill=LINE, width=1)
+    return d
+
+
+def table(d, origin, col_w, row_h, rows, fs=16):
+    x0, y0 = origin
+    for r, row in enumerate(rows):
+        y = y0 + r * row_h
+        bg = BLUE if r == 0 else (BAND if r % 2 else WHITE)
+        fg = WHITE if r == 0 else INK
+        cx = x0
+        for i, cell in enumerate(row):
+            d.rectangle((cx, y, cx + col_w[i], y + row_h), fill=bg, outline=LINE)
+            use = font(fs)
+            s = str(cell)
+            pad = 8
+            max_w = col_w[i] - 2 * pad
+            lines = wrap(d, s, use, max_w)
+            while (len(lines) * (use.size + 4) > row_h - 4 or any(d.textlength(ln, font=use) > max_w for ln in lines)) and use.size > 11:
+                use = font(use.size - 1)
+                lines = wrap(d, s, use, max_w)
+            block_h = len(lines) * (use.size + 3)
+            ty = y + max(2, (row_h - block_h) // 2)
+            for ln in lines:
+                d.text((cx + pad, ty), ln, font=use, fill=fg)
+                ty += use.size + 3
+            cx += col_w[i]
+
+
+def paste(im, name, box):
+    path = IMG / name
+    x, y, w, h = box
+    src = Image.open(path).convert("RGB")
+    scale = min(w / src.width, h / src.height)
+    nw, nh = max(1, int(src.width * scale)), max(1, int(src.height * scale))
+    src = src.resize((nw, nh), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (w, h), WHITE)
+    canvas.paste(src, ((w - nw) // 2, (h - nh) // 2))
+    ImageDraw.Draw(im).rectangle((x - 1, y - 1, x + w, y + h), outline=LINE)
+    im.paste(canvas, (x, y))
+
+
+def wrap(d, text, f, max_w):
+    lines, cur = [], ""
+    for ch in text:
+        t = cur + ch
+        if d.textlength(t, font=f) <= max_w:
+            cur = t
+        else:
+            if cur:
+                lines.append(cur)
+            cur = ch
+    lines.append(cur)
+    return lines
+
+
+SLIDES: list[Image.Image] = []
+NOTES: list[str] = []
+
+
+def add(im, note):
+    SLIDES.append(im)
+    NOTES.append(note)
+
+
+def s1():
+    im = new()
+    d = ImageDraw.Draw(im)
+    d.rectangle((0, 0, 16, H), fill=BLUE)
+    d.rectangle((0, 0, W, 8), fill=BLUE)
+    d.text((56, 200), "软件工程基础实践  2026 夏", font=font(26), fill=MUTED)
+    d.text((56, 260), "摸鱼", font=font(88), fill=BLUE)
+    d.text((56, 380), "校园购物 + 二手交易平台", font=font(36), fill=INK)
+    d.line((56, 450, 520, 450), fill=BLUE, width=3)
+    d.text((56, 480), "杨任宇老师班  ·  13组", font=font(28), fill=INK)
+    d.text((56, 540), "项目与架构约 3 分钟  ·  随后播放演示录屏", font=font(22), fill=MUTED)
+    d.text((56, 620), "https://github.com/tchen-0213/softw", font=font(22), fill=BLUE)
+    d.text((56, 700), "鲁在精  浦灵一  王悠然  赵紫嫣  陈子正  剧博洋", font=font(22), fill=INK)
+    paste(im, "P00-仓库首页.png", (1020, 160, 820, 760))
+    add(im, "报组号、项目名、仓库。3 分钟架构后切录屏。")
+
+
+def s2():
+    im = new()
+    d = header(im, "项目目标及全部业务场景完成情况", 2)
+    d.text((48, 90), "校园购物+二手。原系统 React + 一个 Express + MySQL shopping_platform；monolith-start（10fa639）", font=font(18), fill=INK)
+    d.text((48, 122), "小学期：Docker 三容器、Actions、K8s、三业务微服务+网关；microservices-v1（63585e0）。单体 8080/3001；微服务 8082/8081。", font=font(18), fill=INK)
+    d.text((48, 154), "UC01–UC12 全部完成。重点只讲 UC01/UC02/UC04，不等于只做了三条。", font=font(18), fill=BLUE)
+    rows = [["编号", "场景", "汇报"]]
+    data = [
+        ("UC01", "注册并登录", "重点"), ("UC02", "浏览并搜索", "重点"), ("UC03", "详情加购", "完成"),
+        ("UC04", "下单支付发货收货", "重点"), ("UC05", "发布二手", "完成"), ("UC06", "店铺与商品", "完成"),
+        ("UC07", "评价", "完成"), ("UC08", "聊天议价", "完成"), ("UC09", "地址", "完成"),
+        ("UC10", "订单与物流", "完成"), ("UC11", "取消并恢复库存", "完成"), ("UC12", "公开店铺与信用", "完成"),
+    ]
+    for a, b, c in data:
+        rows.append([a, b, c])
+    table(d, (48, 195), [110, 420, 120], 52, rows, 17)
+    paste(im, "P01-总用例图.png", (740, 195, 1132, 780))
+    add(im, "12 个都完成。现场重点三条。")
+
+
+def s3():
+    im = new()
+    d = header(im, "代表性用例：需求 — 设计 — 代码 — 测试", 3)
+    table(
+        d, (48, 90), [100, 170, 180, 170, 620, 540], 52,
+        [
+            ["用例", "系统级", "组件级", "对象级", "代码", "测试"],
+            ["UC01", "SYS-SEQ01", "COMP-SEQ01", "OBJ-SEQ01", "user.js / userController / AuthPage", "UNIT/INT/E2E-TC01"],
+            ["UC02", "SYS-SEQ02", "COMP-SEQ02", "OBJ-SEQ02", "product.js / productController / SearchPage", "UNIT/INT/E2E-TC02"],
+            ["UC04", "SYS-SEQ04", "COMP-SEQ04", "OBJ-SEQ04", "order.js / orderController / CheckoutPage", "UNIT/INT/E2E-TC04"],
+        ],
+        16,
+    )
+    d.text((48, 320), "系统级顺序图（参与者 + 平台，不出现 Controller）", font=font(18), fill=BLUE)
+    paste(im, "P01-SYS-SEQ01-注册登录.png", (48, 355, 600, 620))
+    paste(im, "P01-SYS-SEQ02-搜索.png", (668, 355, 600, 620))
+    paste(im, "P01-SYS-SEQ04-下单履约.png", (1288, 355, 584, 620))
+    add(im, "点 UC04：需求图、代码 orderController、测试 E2E-TC04 能对上。")
+
+
+def s4():
+    im = new()
+    d = header(im, "模型到代码（以 UC04 为例）", 4)
+    table(
+        d, (48, 90), [280, 520, 420, 560], 48,
+        [
+            ["层次", "应出现", "不应出现", "落到代码"],
+            ["系统级 SYS-SEQ04", "买家/卖家、下单支付发货收货", "Controller、SQL", "业务闭环"],
+            ["组件级 COMP-SEQ04", "页面、鉴权、订单控制器、事务", "每一行实现", "orderController + 页面"],
+            ["对象级 OBJ-SEQ04", "createOrder()、pay/ship/confirm", "不存在的 DAO", "与源码函数名一致"],
+        ],
+        16,
+    )
+    d.text((48, 300), "状态：待付款 → 待发货 → 待收货 → 已完成。order-service 按 reservationId 调 product-service 预留/释放/完成。", font=font(18), fill=INK)
+    paste(im, "P01-COMP-SEQ04-下单组件.png", (48, 345, 620, 630))
+    paste(im, "P01-OBJ-SEQ04-下单对象.png", (688, 345, 600, 630))
+    paste(im, "P04-订单状态机.png", (1308, 345, 564, 630))
+    add(im, "三层图指到 createOrder 即可，不要念每条箭头。")
+
+
+def s5():
+    im = new()
+    d = header(im, "业务微服务：职责、划分依据、接口、表归属", 5)
+    d.text((48, 88), "前端 → API Gateway（不算业务服务）→ user / product / order。按身份 / 标的 / 交易过程拆，不是 12 个服务。", font=font(18), fill=INK)
+    table(
+        d, (48, 125), [240, 520, 360, 660], 44,
+        [
+            ["服务", "职责", "划分依据", "库与表"],
+            ["user-service", "注册登录、资料、密码、地址、角色、信用", "身份 / 账号生命周期", "softw_users：Users, Addresses"],
+            ["product-service", "商品、二手、店铺、评价、聊天、议价、图片、库存", "可交易资源", "softw_catalog + uploads"],
+            ["order-service", "下单、支付、取消、发货、收货、状态机", "交易过程与快照", "softw_orders：Orders, OrderSellers"],
+            ["API Gateway", "路由、JWT 透传、超时、CORS", "统一入口，不计入 3", "无库"],
+        ],
+        15,
+    )
+    d.text((48, 360), "网关：/api/users,/api/addresses→user；商品/二手/店/评价/聊天/上传→product；/api/orders→order。一表一主，订单存快照，内部接口 X-Internal-Token。", font=font(16), fill=INK)
+    paste(im, "P03-微服务划分.png", (48, 400, 1800, 570))
+    add(im, "三个服务 + 网关不算第四个。评价聊天在商品服务。")
+
+
+def s6():
+    im = new()
+    d = header(im, "调用失败时的处理办法", 6)
+    table(
+        d, (48, 100), [480, 1340], 78,
+        [
+            ["场景", "处理"],
+            ["网关超时或上游断开", "HTTP 503，不伪造成功业务结果"],
+            ["库存预留失败（无货/超时）", "不创建订单；超时 503"],
+            ["释放 / 完成预留", "按 reservationId 幂等，重复调用不加库存"],
+            ["停 product-service", "商品 503「依赖服务暂不可用」；订单依赖 206 degraded「商品信息暂不可用，订单查询保持可用」；网关/用户/订单仍 1/1"],
+            ["内部库存、信用、购买证明", "必须 X-Internal-Token，外部客户端不能直打"],
+        ],
+        18,
+    )
+    d.text((48, 560), "实验 npm run experiment:fault。恢复后商品 200、HPA 重建、无残留。全过程在录屏里播。", font=font(22), fill=INK)
+    d.text((48, 620), "老师要看：一个服务下线不严重影响其它业务，返回事先设计好的提示或备用结果。", font=font(22), fill=RED)
+    add(im, "抓 503 和 206 两张牌。")
+
+
+def s7():
+    im = new()
+    d = header(im, "关键数据：测试 · CI/CD · HPA · 故障 · 性能", 7)
+    table(
+        d, (48, 88), [150, 880], 42,
+        [
+            ["层级", "结果（2026-09-03，不要加总）"],
+            ["单元", "后端 220 通过 / 0 失败 / 1 跳过（含 REG-BE 100/100）；前端原有 100/100，REG-FE 待 Vitest 复跑"],
+            ["覆盖率", "语句 94.42% / 分支 81.83% / 函数 92.34% / 行 94.42%"],
+            ["集成", "单体 API 32/32；隔离 22/22（网关 17/17）；网关 API/E2E 15/15；公开 API 49 项"],
+            ["端到端", "Playwright 单体与微服务均 42/42（12+27+3）"],
+            ["CI/CD", "softw-ci-cd：先测后 7 镜像+Kind；失败不发版；绿勾 Actions #77（33579985248）"],
+            ["HPA", "1 → 3 → 5 → 1；997 请求、9.49 req/s、错误 0/997；不放进 CI/CD"],
+            ["故障", "停商品服务：503 / 206，其它服务存活"],
+        ],
+        15,
+    )
+    d.text((48, 440), "单体 vs 微服务（2026-08-28，同机同数据同一 k6，18 组错误率 0%）。口播用列表三个数。不能写「微服务天然更快」。", font=font(16), fill=INK)
+    table(
+        d, (48, 478), [220, 200, 200, 180, 180], 40,
+        [
+            ["接口", "吞吐", "延迟", "CPU", "内存"],
+            ["商品列表", "+61.9%", "−38.6%", "+55.2%", "+5.1%"],
+            ["商品搜索", "+53.9%", "−35.5%", "+50.7%", "+17.3%"],
+            ["商品详情", "+30.9%", "−26.2%", "+6.9%", "+14.0%"],
+        ],
+        16,
+    )
+    paste(im, "P02-GitHub-Actions-77.png", (1080, 88, 792, 430))
+    paste(im, "P02-流水线失败阻断-20260825.png", (1080, 540, 792, 430))
+    d.text((1080, 978), "上：Actions #77    下：8/25 失败阻断（早期，不是 #77）", font=font(14), fill=MUTED)
+    add(im, "报 220、42/42、#77、1到5再回1、+61.9%。再说不是天然更快。")
+
+
+def s8():
+    im = new()
+    d = header(im, "分工、大模型  ·  接下来播放演示录屏", 8)
+    table(
+        d, (48, 90), [280, 720], 48,
+        [
+            ["成员", "职责"],
+            ["鲁在精", "组长：计划、协调、汇报"],
+            ["浦灵一", "后端、安全、文档"],
+            ["王悠然", "前端"],
+            ["赵紫嫣", "测试"],
+            ["陈子正", "流水线、部署"],
+            ["剧博洋", "压测、性能"],
+        ],
+        18,
+    )
+    d.text((48, 450), "权重待全组确认。大模型：检索、测试建议、文档、部署检查。人工读代码、真跑测试、对版本、扫凭据。", font=font(18), fill=INK)
+    d.text((48, 500), "下面 4 分钟播放录屏（可加速）：流水线  ·  Pod  ·  UC01→UC02→UC04 与自动化测试  ·  HPA 1→3→5→1  ·  停商品服务 503/206", font=font(18), fill=BLUE)
+    paste(im, "P09-GitHub-Pages演示.png", (1080, 90, 792, 880))
+    add(im, "分工一句。切录屏。")
+
+
+def pack(pptx_path: Path):
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    prs = Presentation()
+    prs.slide_width = Inches(13.333333)
+    prs.slide_height = Inches(7.5)
+    blank = prs.slide_layouts[6]
+    for i, im in enumerate(SLIDES):
+        png = OUT_DIR / f"S{i + 1:02d}.png"
+        im.save(png, "PNG", optimize=True)
+        slide = prs.slides.add_slide(blank)
+        slide.shapes.add_picture(str(png), Emu(0), Emu(0), width=prs.slide_width, height=prs.slide_height)
+        slide.notes_slide.notes_text_frame.text = NOTES[i]
+    prs.save(pptx_path)
+
+
+def main():
+    for fn in (s1, s2, s3, s4, s5, s6, s7, s8):
+        fn()
+    pack(PPTX)
+    print(PPTX)
+
+
+if __name__ == "__main__":
+    main()
