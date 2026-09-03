@@ -100,6 +100,33 @@ def svg_to_png() -> None:
     rasterize_all()
 
 
+def sanitize_pdf(pdf_path: Path) -> None:
+    """Rewrite Chrome/Skia images as DeviceRGB JPEG so GitHub preview is not black boxes."""
+    import pymupdf
+
+    doc = pymupdf.open(pdf_path)
+    for page in doc:
+        seen: set[int] = set()
+        for im in page.get_images(full=True):
+            xref = im[0]
+            if xref in seen:
+                continue
+            seen.add(xref)
+            pix = pymupdf.Pixmap(doc, xref)
+            if pix.n != 3 or pix.alpha:
+                pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+            else:
+                pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+            while pix.width > 1600:
+                pix.shrink(1)
+            page.replace_image(xref, stream=pix.tobytes("jpeg", jpg_quality=85))
+            doc.xref_set_key(xref, "ColorSpace", "/DeviceRGB")
+    tmp = pdf_path.with_suffix(".sanitized.pdf")
+    doc.save(tmp, garbage=4, deflate=True)
+    doc.close()
+    tmp.replace(pdf_path)
+
+
 def rewrite_images(html: str, base: Path) -> str:
     def repl(match: re.Match[str]) -> str:
         src = match.group(1)
@@ -255,6 +282,7 @@ def main() -> int:
         docx_path = OUT_DIR / f"{stem}.docx"
         html_path.write_text(md_to_html(md_path, title), encoding="utf-8")
         html_to_pdf(html_path, pdf_path)
+        sanitize_pdf(pdf_path)
         md_to_docx(md_path, docx_path, title)
         mirror = PDF_MIRROR.get(stem)
         if mirror is not None:
