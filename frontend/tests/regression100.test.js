@@ -21,7 +21,7 @@ const add = (name, run, expected) => cases.push({ name, run, expected });
 const cartState = items => ({ items, storageKey: 'shopping-cart:guest', loading: false, error: null });
 const productState = () => productReducer(undefined, { type: '@@regression/init' });
 
-describe('REG-FE-100 frontend regression cases', () => {
+describe('REG-FE-101 frontend regression cases', () => {
   beforeEach(() => window.localStorage.clear());
 
   [
@@ -134,7 +134,7 @@ describe('REG-FE-100 frontend regression cases', () => {
     ['fulfilled empty recommendations', () => productReducer(productState(), getRecommendedProducts.fulfilled([])).recommendedProducts, []]
   ].forEach(([name, run, expected]) => add(`product reducer ${name}`, run, expected));
 
-  expect(cases.length).toBe(100);
+  expect(cases.length).toBe(101);
 
   cases.forEach((scenario, index) => {
     test(`REG-FE-${String(index + 1).padStart(3, '0')}: ${scenario.name}`, () => {
