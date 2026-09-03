@@ -4,7 +4,7 @@
 | --- | --- |
 | 项目计划 | `软件开发计划书.md`、`小学期重构计划.md` |
 | 敏捷记录 | `敏捷开发记录.md`、`站会简报/` |
-| 当前看板 | `GitHub-Projects使用说明.md`、[GitHub Project「软工小学期」](https://github.com/users/tchen-0213/projects/1) |
+| 当前看板 | `GitHub-Projects使用说明.md` 第 7 节（卡片应对齐表）、[GitHub Project「软工小学期」](https://github.com/users/tchen-0213/projects/1) |
 | 每日看板截图 | `看板截图/` |
 | 流水线证据 | `流水线截图/`、[GitHub Actions](https://github.com/tchen-0213/softw/actions) |
 | 贡献与权重 | `个人权重表.md`、`全员确认记录.md` |
